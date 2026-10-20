@@ -1,0 +1,67 @@
+0x2365BC
+0x23EB38
+0x24FCB0
+0x3D3EF0
+0x3DB098
+0x3E26BC
+C:\Users\tal\AppData\Local\Temp\claude\D--minimax\dbd5f9a6-4961-4a0a-84ab-0df13ee8d327\scratchpad\wiz1
+D:\GBA\editor\tests\out\qa_game_en
+D:\GBA\editor\tests\out\qa_game_he
+D:\GBA\projects\KacholLavan
+D:\GBA\projects\docs_en
+D:\GBA\projects\docs_he
+HM02 תעופה
+HM03 גלישה
+Maps: 43 groups, 425 maps. Free space: 0x724BB0–0xD00000 (5997 KB).
+Pokémon FireRed · "POKEMON FIRE" · BPRE · 16 MB
+abilityNames
+backPics
+baseStats
+dexEntries
+dexNums
+evolutions
+frontPics
+iconPalIdx
+iconPals
+iconTable
+keyboard
+keyboardRows
+learnsets
+mapGroups
+moveData
+moveNames
+pals
+regionMapEntries
+shinyPals
+speciesNames
+tmCompat
+tmMoves
+typeNames
+wildOriginal
+אחרי “לנצח את מנהיג המכון BLAINE”
+אחרי “לנצח את מנהיג המכון ERIKA”
+אחרי “לנצח את מנהיג המכון GIOVANNI”
+אחרי “לנצח את מנהיג המכון KOGA”
+אחרי “לנצח את מנהיג המכון LT. SURGE”
+אחרי “לנצח את מנהיג המכון SABRINA”
+דוג׳ו הקרב (KOICHI)
+הקפטן נותן את HM01 חיתוך
+השומר נותן את HM04 כוח
+לנצח את מנהיג המכון BLAINE
+לנצח את מנהיג המכון ERIKA
+לנצח את מנהיג המכון GIOVANNI
+לנצח את מנהיג המכון KOGA
+לנצח את מנהיג המכון LT. SURGE
+לנצח את מנהיג המכון SABRINA
+קבלת הספיר (GIDEON)
+“OAK: Good to see you! How is your POKéDEX comi…”
+⚔ RIVAL TERRY — טוטודייל 5
+⚔ RIVAL TERRY — סינדקוויל 5
+⚔ RIVAL TERRY — צ'יקוריטה 5
+📁 KacholLavan
+📁 docs_en
+📁 docs_he
+📁 qa_game_en
+📁 qa_game_he
+📁 wiz1
+🔥 Ember Studio

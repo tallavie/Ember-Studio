@@ -1,0 +1,1073 @@
+<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><title>Ember Studio – User Guide</title><style>
+@page { size: A4; margin: 18mm 16mm 20mm 16mm; }
+body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.55; color: #1d2230; }
+h1 { font-size: 22pt; color: #b33a12; border-bottom: 3px solid #f0a050; padding-bottom: 4px; page-break-before: always; margin-top: 0; }
+h2 { font-size: 15pt; color: #2a3a8a; margin-top: 18px; }
+h3 { font-size: 12pt; color: #333; }
+p, li { text-align: start; }
+img { max-width: 100%; border: 1px solid #ccd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+figure { margin: 10px 0 14px; text-align: center; page-break-inside: avoid; }
+figcaption { font-size: 9pt; color: #666; margin-top: 4px; }
+code, kbd { font-family: Consolas, monospace; background: #f1f2f6; padding: 0 4px; border-radius: 3px; font-size: 9.5pt; }
+kbd { border: 1px solid #ccd; }
+pre { background: #f1f2f6; padding: 8px; border-radius: 6px; direction: ltr; text-align: left; white-space: pre-wrap; font-size: 9pt; }
+table { border-collapse: collapse; width: 100%; margin: 8px 0; page-break-inside: avoid; }
+th, td { border: 1px solid #ccd; padding: 4px 7px; font-size: 9.5pt; text-align: start; vertical-align: top; }
+th { background: #f4ecff; }
+blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inline-start: 4px solid #f0a050; border-radius: 4px; }
+.cover { height: 250mm; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.cover img { border: none; box-shadow: none; width: 110px; }
+.cover h1 { border: none; page-break-before: avoid; font-size: 34pt; color: #b33a12; margin: 10px 0 4px; }
+.cover .sub { font-size: 15pt; color: #555; }
+.cover .ver { margin-top: 30px; color: #888; }
+.tocpage { page-break-before: always; }
+.tocpage h1 { page-break-before: avoid; }
+.tocpage ul { list-style: none; padding-inline-start: 0; margin: 0; }
+.tocpage > .toc > ul > li { margin: 7px 0 2px; font-weight: 600; }
+.tocpage li li { padding-inline-start: 18px; font-size: 9.5pt; font-weight: 400; margin: 1px 0; }
+.tocpage a { color: #1d2230; text-decoration: none; }
+</style></head><body>
+<div class="cover"><img src="../../ember/icon.png"><h1>Ember Studio</h1><div class="sub">User Guide</div><div class="ver">Version 0.1.0</div></div>
+<div class="tocpage"><h1>Contents</h1><div class="toc">
+<ul>
+<li><a href="#welcome">Welcome</a><ul>
+<li><a href="#what-you-can-do-with-it">What you can do with it</a></li>
+<li><a href="#how-this-guide-is-organised">How this guide is organised</a></li>
+<li><a href="#important-the-rom">Important: the ROM</a></li>
+</ul>
+</li>
+<li><a href="#installing-and-starting">Installing and starting</a><ul>
+<li><a href="#what-you-need">What you need</a></li>
+<li><a href="#installing">Installing</a></li>
+<li><a href="#what-happens-on-first-start">What happens on first start</a></li>
+<li><a href="#choosing-the-language">Choosing the language</a></li>
+<li><a href="#running-from-the-source-code">Running from the source code</a></li>
+</ul>
+</li>
+<li><a href="#your-first-game-the-wizard">Your first game: the wizard</a><ul>
+<li><a href="#step-1-the-basics">Step 1: The basics</a></li>
+<li><a href="#step-2-the-professor">Step 2: The professor</a></li>
+<li><a href="#step-3-starter-pokémon">Step 3: Starter Pokémon</a></li>
+<li><a href="#step-4-town-names">Step 4: Town names</a></li>
+<li><a href="#step-5-gym-leaders-story">Step 5: Gym leaders &amp; story</a></li>
+<li><a href="#step-6-create">Step 6: Create</a></li>
+</ul>
+</li>
+<li><a href="#a-tour-of-the-window">A tour of the window</a><ul>
+<li><a href="#saving-and-building-in-short">Saving and building, in short</a></li>
+</ul>
+</li>
+<li><a href="#maps">Maps</a><ul>
+<li><a href="#finding-a-map">Finding a map</a></li>
+<li><a href="#painting">Painting</a></li>
+<li><a href="#collision-where-the-player-can-walk">Collision: where the player can walk</a></li>
+<li><a href="#objects">Objects</a></li>
+<li><a href="#map-settings">Map settings</a></li>
+<li><a href="#play-from-here">▶ Play from here</a></li>
+</ul>
+</li>
+<li><a href="#the-world-view">The world view</a><ul>
+<li><a href="#what-you-can-do-here">What you can do here</a></li>
+<li><a href="#going-through-doors">Going through doors</a></li>
+<li><a href="#play-from-here-world-view">▶ Play from here (world view)</a></li>
+<li><a href="#wild-pokémon">Wild Pokémon</a></li>
+</ul>
+</li>
+<li><a href="#blocks-and-tiles">Blocks and tiles</a><ul>
+<li><a href="#importing-a-picture-as-new-blocks">Importing a picture as new blocks</a></li>
+</ul>
+</li>
+<li><a href="#objects-in-depth">Objects in depth</a><ul>
+<li><a href="#people">People</a></li>
+<li><a href="#trainers">Trainers</a></li>
+<li><a href="#item-balls">Item balls</a></li>
+<li><a href="#signs-and-triggers">Signs and triggers</a></li>
+</ul>
+</li>
+<li><a href="#blocks">Blocks</a><ul>
+<li><a href="#all-the-blocks">All the blocks</a></li>
+<li><a href="#picking-places-and-people">Picking places and people</a></li>
+<li><a href="#preview">Preview</a></li>
+</ul>
+</li>
+<li><a href="#the-story">The story</a><ul>
+<li><a href="#how-it-works">How it works</a></li>
+<li><a href="#kinds-of-steps">Kinds of steps</a></li>
+<li><a href="#writing-a-step">Writing a step</a></li>
+<li><a href="#choices-and-endings">Choices and endings</a></li>
+<li><a href="#roadblocks-guards">Roadblocks (guards)</a></li>
+<li><a href="#characters-who-change-over-time">Characters who change over time</a></li>
+<li><a href="#applying-the-story">Applying the story</a></li>
+<li><a href="#the-games-own-story">The game's own story</a></li>
+</ul>
+</li>
+<li><a href="#pokémon">Pokémon</a><ul>
+<li><a href="#starters-gift-pokémon-and-fixed-battles">Starters, gift Pokémon and fixed battles</a></li>
+</ul>
+</li>
+<li><a href="#trainers_1">Trainers</a><ul>
+<li><a href="#difficulty-along-the-story">Difficulty along the story</a></li>
+</ul>
+</li>
+<li><a href="#items-and-shops">Items and shops</a><ul>
+<li><a href="#shops">Shops</a></li>
+</ul>
+</li>
+<li><a href="#moves">Moves</a><ul>
+<li><a href="#tms-hms-and-move-tutors">TMs, HMs and move tutors</a></li>
+</ul>
+</li>
+<li><a href="#text-and-translation">Text and translation</a><ul>
+<li><a href="#the-built-in-hebrew-translation">The built-in Hebrew translation</a></li>
+<li><a href="#line-width">Line width</a></li>
+</ul>
+</li>
+<li><a href="#hebrew-and-fonts">Hebrew and fonts</a></li>
+<li><a href="#graphics">Graphics</a><ul>
+<li><a href="#a-character-from-a-picture">A character from a picture</a></li>
+<li><a href="#the-title-screen">The title screen</a></li>
+</ul>
+</li>
+<li><a href="#music">Music</a></li>
+<li><a href="#game-check">Game check</a></li>
+<li><a href="#playing-and-testing">Playing and testing</a><ul>
+<li><a href="#ways-to-play">Ways to play</a></li>
+<li><a href="#keys">Keys</a></li>
+<li><a href="#the-emulator-window">The emulator window</a></li>
+<li><a href="#the-test-team">The test team</a></li>
+</ul>
+</li>
+<li><a href="#projects-and-sharing">Projects and sharing</a><ul>
+<li><a href="#what-is-inside-a-project-folder">What is inside a project folder</a></li>
+<li><a href="#using-git">Using Git</a></li>
+<li><a href="#sharing-your-game">Sharing your game</a></li>
+<li><a href="#turning-an-existing-rom-into-a-project">Turning an existing ROM into a project</a></li>
+<li><a href="#build-steps-advanced">Build steps (advanced)</a></li>
+</ul>
+</li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#licences-and-thanks">Licences and thanks</a></li>
+</ul>
+</div>
+</div>
+<h1 id="welcome">Welcome</h1>
+<p><strong>Ember Studio</strong> is a free, open-source program for making your own Pokémon game. You start from a copy of <em>Pokémon FireRed (US) v1.1</em>. From there you change whatever you want: the maps, the people in them, the story, the Pokémon, the trainers, the items, the text, the graphics and the music. The result is a new GBA game that plays on any emulator or flash cart.</p>
+<p>You don't need to know programming, hex editing or assembly. Everything is done with forms, a map painter and <strong>blocks</strong>: little coloured cards that you stack to say what happens in the game ("say this", "give a Potion", "walk three steps left").</p>
+<h2 id="what-you-can-do-with-it">What you can do with it</h2>
+<ul>
+<li><strong>Start a new game in a few minutes</strong> with the <em>New game</em> wizard. You choose the name, the language (English or Hebrew), the professor, the three starter Pokémon, the town names and the gym leaders.</li>
+<li><strong>Build maps</strong>: paint blocks, mark where the player can walk, and place people, trainers, items and signs. You can also draw new blocks from any picture.</li>
+<li><strong>Write a story</strong> as a list of steps: talk to someone, beat a trainer, reach a place, a scene, a yes/no choice, a rival battle. Ember Studio turns the steps into game scripts for you.</li>
+<li><strong>Change Pokémon</strong> (stats, types, moves, evolutions), <strong>wild encounters</strong>, <strong>trainers and gym leaders</strong>, <strong>items and shops</strong>, and <strong>moves, TMs and tutors</strong>.</li>
+<li><strong>Translate</strong> all the text, with full right-to-left Hebrew support.</li>
+<li><strong>Replace graphics</strong>: a new hero or character from a picture, your own title screen, and new map blocks.</li>
+<li><strong>Play instantly</strong> in the built-in emulator. Start from the beginning, or from any spot on any map with <strong>▶ Play from here</strong>.</li>
+<li><strong>Check the game</strong> for common mistakes before you share it.</li>
+</ul>
+<h2 id="how-this-guide-is-organised">How this guide is organised</h2>
+<ol>
+<li><strong>Installing</strong> Ember Studio and starting it.</li>
+<li><strong>Your first game</strong> with the wizard.</li>
+<li>A <strong>tour of the window</strong>.</li>
+<li>One chapter for each part of the game: maps and the world, objects and blocks, the story, Pokémon, trainers, items, moves, text, graphics and music.</li>
+<li><strong>Testing and playing</strong>, the <strong>game check</strong>, and <strong>projects and sharing</strong>.</li>
+<li><strong>Troubleshooting</strong>, and the licences.</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> The pictures in this guide come from the example game <em>Ember Quest</em>, made with the wizard. Your screens will look the same, with your own names and Pokémon.</p>
+</blockquote>
+<h2 id="important-the-rom">Important: the ROM</h2>
+<p>Ember Studio does <strong>not</strong> include any Nintendo game. You need your own copy of <strong>Pokémon FireRed (US) version 1.1</strong>, as a <code>.gba</code> file. The original file is never changed: your project stores only <em>your changes</em>. That means you can share a project, or a patch made from it, without sharing the game itself.</p>
+<h1 id="installing-and-starting">Installing and starting</h1>
+<h2 id="what-you-need">What you need</h2>
+<ul>
+<li>Windows 10 or 11, 64-bit.</li>
+<li><strong>Microsoft Edge WebView2</strong>. It is part of Windows 10/11 and is almost always installed already.</li>
+<li>Your FireRed (US) v1.1 ROM.</li>
+<li>About 200 MB of free disk space.</li>
+</ul>
+<h2 id="installing">Installing</h2>
+<p>Ember Studio is a single file, <strong><code>EmberStudio.exe</code></strong>, so there is nothing to install. Download it from the project's <em>Releases</em> page on GitHub and put it in any folder, for example <code>Documents\Ember Studio</code>. Then double-click it.</p>
+<h3 id="the-windows-protected-your-pc-message">The "Windows protected your PC" message</h3>
+<p>The first time you run it, Windows SmartScreen may show a blue window saying the app is not recognised. This happens with new programs from small open-source projects, not because something is wrong.</p>
+<ol>
+<li>Click <strong>More info</strong>.</li>
+<li>Click <strong>Run anyway</strong>.</li>
+</ol>
+<p>The EXE is signed, and you can see the certificate in <em>Properties → Digital Signatures</em>. Windows only trusts a new signature after many people have downloaded the program. If you prefer, you can also build the EXE yourself from the source code (see <em>Projects and sharing</em>).</p>
+<h2 id="what-happens-on-first-start">What happens on first start</h2>
+<ul>
+<li>The editor opens in its own window.</li>
+<li>The built-in emulator (mGBA) is copied once to <code>%LOCALAPPDATA%\EmberStudio\mgba</code>.</li>
+<li>Your settings, the language, the autosave and a work folder are kept in <code>%LOCALAPPDATA%\EmberStudio</code>. Your projects themselves live wherever you choose, usually in <code>Documents</code>.</li>
+</ul>
+<h2 id="choosing-the-language">Choosing the language</h2>
+<p>The button at the top right toggles between <strong>English</strong> and <strong>עברית</strong>. The whole interface switches immediately, and in Hebrew the layout runs right-to-left. The language of the <em>interface</em> has nothing to do with the language of <em>your game</em>: you can make an English game with the Hebrew interface, and the other way round.</p>
+<h2 id="running-from-the-source-code">Running from the source code</h2>
+<p>If you are a developer, or you don't want to run an unsigned EXE:</p>
+<p><code>python editor/ember/server.py      # opens the editor in your browser at http://localhost:8765
+python editor/ember/app.py         # the same window as the EXE (pip install pywebview pillow)</code></p>
+<h1 id="your-first-game-the-wizard">Your first game: the wizard</h1>
+<p>The quickest way to start is the <strong>New game</strong> wizard. It asks a few questions and then creates a complete, playable project.</p>
+<figure><img src="img/en/home.png" alt="The home screen"><figcaption>The home screen</figcaption></figure>
+<p>On the home screen you have four choices:</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>✨ New game</strong></td>
+<td>Asks a few questions and creates a project. Start here.</td>
+</tr>
+<tr>
+<td><strong>📂 Open project</strong></td>
+<td>Opens a project folder you made before.</td>
+</tr>
+<tr>
+<td><strong>📥 Turn a ROM into a project</strong></td>
+<td>Takes an existing hack or translation (a <code>.gba</code> file) and turns it into a project, so you can keep working on it.</td>
+</tr>
+<tr>
+<td><strong>🎮 Open a ROM file</strong></td>
+<td>Quick editing of a <code>.gba</code> file directly, with no project and no building. Good for small fixes.</td>
+</tr>
+</tbody>
+</table>
+<p>Your recent projects are listed below the buttons. Click one to open it.</p>
+<h2 id="step-1-the-basics">Step 1: The basics</h2>
+<figure><img src="img/en/wizard-basics.png" alt="Step 1 of the wizard"><figcaption>Step 1 of the wizard</figcaption></figure>
+<ul>
+<li><strong>Game name</strong>: shown in the title bar and saved in the project. You can change it later.</li>
+<li><strong>Game language</strong>:<ul>
+<li><strong>English</strong> keeps the game in English.</li>
+<li><strong>עברית (Hebrew)</strong> adds Hebrew letters, right-to-left writing, and a full Hebrew translation of the game.</li>
+</ul>
+</li>
+<li><strong>Project folder</strong>: everything you make is saved here. The folder is small (usually less than 1 MB) and is ideal for Git.</li>
+<li><strong>FireRed ROM</strong>: your own FireRed (US) v1.1 file. Ember Studio checks that it's the right version. The ROM is never changed and never copied into the project.</li>
+</ul>
+<h2 id="step-2-the-professor">Step 2: The professor</h2>
+<p>Choose the professor's name. All of the professor's lines are updated to use the new name.</p>
+<h2 id="step-3-starter-pokémon">Step 3: Starter Pokémon</h2>
+<figure><img src="img/en/wizard-starters.png" alt="Choosing the starters"><figcaption>Choosing the starters</figcaption></figure>
+<p>Choose the three Pokémon the player can pick at the start. You can choose any of the first 386 Pokémon. Ember Studio updates everything that depends on the choice:</p>
+<ul>
+<li>the Poké Balls on the professor's table;</li>
+<li>the professor's lines about them;</li>
+<li>the rival's team, which grows with the rival through the game.</li>
+</ul>
+<h2 id="step-4-town-names">Step 4: Town names</h2>
+<p>Rename the towns and cities. The new names appear on signs, on the town map, in the "you arrived at…" pop-ups and in all dialogue.</p>
+<h2 id="step-5-gym-leaders-story">Step 5: Gym leaders &amp; story</h2>
+<figure><img src="img/en/wizard-gyms.png" alt="Gym leaders"><figcaption>Gym leaders</figcaption></figure>
+<p>For each of the eight gyms, choose the leader's name and the type of their Pokémon. The leader's whole team changes to Pokémon of that type, at the right levels.</p>
+<p>The wizard also starts your <strong>story</strong>: one chapter for each badge, each with a step "Beat the gym leader". You fill in the rest later in the <em>Story</em> tab.</p>
+<h2 id="step-6-create">Step 6: Create</h2>
+<p>Ember Studio creates the project folder and builds the game. You land in the editor with your game open. Press <strong>▶ Play</strong> (or <strong>Build &amp; play</strong>) to try it straight away.</p>
+<blockquote>
+<p><strong>Tip:</strong> Every answer in the wizard can be changed later in the editor, so don't worry about getting everything right the first time.</p>
+</blockquote>
+<h1 id="a-tour-of-the-window">A tour of the window</h1>
+<figure><img src="img/en/header.png" alt="The top of the window"><figcaption>The top of the window</figcaption></figure>
+<p>At the top of the window:</p>
+<ul>
+<li><strong>The title</strong>: Ember Studio and the name of the open project.</li>
+<li><strong>The tabs</strong>, one for each part of the game:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>What you edit there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Home</strong></td>
+<td>Open, create or import a project.</td>
+</tr>
+<tr>
+<td><strong>Text / Translation</strong></td>
+<td>All the text in the game.</td>
+</tr>
+<tr>
+<td><strong>Hebrew &amp; Fonts</strong></td>
+<td>Hebrew letters, the font and right-to-left settings.</td>
+</tr>
+<tr>
+<td><strong>Pokémon</strong></td>
+<td>Stats, types, moves, evolutions, starters and gift Pokémon.</td>
+</tr>
+<tr>
+<td><strong>Trainers</strong></td>
+<td>Every trainer and gym leader and their teams.</td>
+</tr>
+<tr>
+<td><strong>Items &amp; shops</strong></td>
+<td>Items, prices, descriptions and what every shop sells.</td>
+</tr>
+<tr>
+<td><strong>Moves</strong></td>
+<td>Moves, TMs and HMs, and move tutors.</td>
+</tr>
+<tr>
+<td><strong>Maps &amp; Wild</strong></td>
+<td>The map editor, the world view, wild Pokémon, and blocks &amp; tiles.</td>
+</tr>
+<tr>
+<td><strong>📖 Story</strong></td>
+<td>The storyline, step by step.</td>
+</tr>
+<tr>
+<td><strong>Graphics</strong></td>
+<td>Pokémon pictures, characters from a picture, and the title screen.</td>
+</tr>
+<tr>
+<td><strong>Music</strong></td>
+<td>Which song plays where, and importing music.</td>
+</tr>
+<tr>
+<td><strong>🩺 Game check</strong></td>
+<td>Looks for problems in the whole game.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>The project buttons</strong>:<ul>
+<li><strong>💾 Save</strong> writes your changes to the project folder. Ember Studio also autosaves while you work, so you won't lose much if something goes wrong.</li>
+<li><strong>🔨 Build</strong> makes the final game file, <code>out/game.gba</code>.</li>
+<li><strong>▶ Build &amp; play</strong> builds, then opens the game in the emulator.</li>
+<li><strong>🎮 Play</strong> plays the game as it is right now, without building.</li>
+<li><strong>English / עברית</strong> switches the interface language.</li>
+</ul>
+</li>
+</ul>
+<h2 id="saving-and-building-in-short">Saving and building, in short</h2>
+<ul>
+<li><strong>Saving</strong> stores <em>your changes</em>: a small patch file and a few readable JSON files.</li>
+<li><strong>Building</strong> applies those changes to your original ROM and writes a complete game to <code>out/game.gba</code>.</li>
+<li>You can save as often as you like. You only need to build when you want the final file: to share it, or to play it in another emulator.</li>
+</ul>
+<h1 id="maps">Maps</h1>
+<p>The <strong>Maps &amp; Wild</strong> tab has three views at the top: <strong>Map editor</strong>, <strong>World view</strong> (all connected maps together) and <strong>Blocks &amp; tiles</strong>.</p>
+<figure><img src="img/en/map-editor.png" alt="The map editor"><figcaption>The map editor</figcaption></figure>
+<h2 id="finding-a-map">Finding a map</h2>
+<p>The list on the side shows every map in the game, by number and name, for example <em>3.0 Pallet Town</em>. Type in the box above the list to filter it. The numbers are <em>group.map</em>: group 3 is the outdoor towns and routes, and the other groups are mostly buildings and caves.</p>
+<h2 id="painting">Painting</h2>
+<ol>
+<li>Choose <strong>🖌 Paint tiles</strong>.</li>
+<li>Click a block in the block picker on the side.</li>
+<li>Click or drag on the map to paint with it.</li>
+</ol>
+<p>Some useful shortcuts:</p>
+<ul>
+<li><strong>Right-click</strong> a block on the map to pick it up as your brush.</li>
+<li><strong>Zoom</strong> with the zoom menu (×1 to ×4).</li>
+<li><strong>Undo</strong> with the ↶ button or <kbd>Ctrl</kbd>+<kbd>Z</kbd>.</li>
+<li><strong>💧 Pick</strong> takes a block from the map, like right-click.</li>
+</ul>
+<p>The <strong>Collision</strong>, <strong>Events</strong> and <strong>Grid</strong> checkboxes show or hide those layers over the map.</p>
+<h2 id="collision-where-the-player-can-walk">Collision: where the player can walk</h2>
+<figure><img src="img/en/map-collision.png" alt="Collision mode"><figcaption>Collision mode</figcaption></figure>
+<p>In <strong>⛔ Collision</strong> mode every square shows whether the player can walk on it:</p>
+<ul>
+<li><strong>Free</strong>: the player can walk here.</li>
+<li><strong>Blocked</strong>: walls, trees and the edges of buildings.</li>
+<li><strong>Elevation</strong>: for bridges and ledges.</li>
+</ul>
+<p>Choose a brush from the <em>Collision brush</em> panel and paint over the map. If the player walks through walls or gets stuck on an empty floor, the collision is wrong. Fix it here.</p>
+<h2 id="objects">Objects</h2>
+<figure><img src="img/en/map-objects.png" alt="Objects mode"><figcaption>Objects mode</figcaption></figure>
+<p>In <strong>👤 Events</strong> mode you see everything that <em>does</em> something on the map:</p>
+<ul>
+<li><strong>People</strong>: anyone the player can talk to. They can stand still, look around or walk in an area.</li>
+<li><strong>Trainers</strong>: people who battle the player when they see them.</li>
+<li><strong>Item balls</strong>: Poké Balls on the ground with an item inside.</li>
+<li><strong>Signs</strong>: text that appears when the player reads the sign.</li>
+<li><strong>Hidden items</strong>: items hidden on a square, found by pressing A there.</li>
+<li><strong>Triggers</strong>: invisible squares that start a script when the player steps on them.</li>
+<li><strong>Doors and warps</strong>: where the player goes to another map.</li>
+</ul>
+<p>Some useful actions:</p>
+<ul>
+<li><strong>Add an object</strong> with the buttons in the side panel (<strong>+ Talking person</strong>, <strong>+ Item ball</strong>, <strong>+ Trainer</strong>, <strong>+ Sign</strong>, <strong>+ Hidden item</strong>, <strong>+ Door / warp</strong>, <strong>+ Trigger</strong>). Then click on the map to place it.</li>
+<li><strong>🗑 Delete selected</strong> removes the selected object.</li>
+<li><strong>Move an object</strong> by dragging it.</li>
+<li><strong>Select an object</strong> by clicking it. Its settings open in the side panel.</li>
+<li>Hover over an object to see who it is and what it says.</li>
+</ul>
+<p>The next chapter goes into objects in detail.</p>
+<h2 id="map-settings">Map settings</h2>
+<p>Under <strong>Map settings</strong> in the side panel you can change the map's name (as shown in the game), its music, its <strong>weather</strong> and its <strong>map type</strong> (town, route, indoors, cave…).</p>
+<h2 id="play-from-here">▶ Play from here</h2>
+<p>The <strong>▶ Play from here</strong> button lets you test any spot in the game:</p>
+<ol>
+<li>Press <strong>▶ Play from here</strong>. The cursor becomes a crosshair.</li>
+<li>Click any square on the map.</li>
+<li>The game starts <em>right there</em>, with a test team, so you can walk around and talk to people at once.</li>
+</ol>
+<p>This is the fastest way to check a change. The test team can be changed with the 🎒 button.</p>
+<h1 id="the-world-view">The world view</h1>
+<p>The <strong>World view</strong> shows all the maps that connect to each other, laid out the way they are in the game. Here you can see the shape of your region, move maps relative to each other, and paint across map edges.</p>
+<figure><img src="img/en/world.png" alt="The world view"><figcaption>The world view</figcaption></figure>
+<h2 id="what-you-can-do-here">What you can do here</h2>
+<ul>
+<li><strong>Navigate</strong>: drag with the mouse to move around, and use the mouse wheel to zoom. The mini-map in the corner shows where you are.</li>
+<li><strong>🧭 General map management</strong> (the first mode, and a button at the top of the side panel): click a map to select it, and drag it to move it anywhere. Connections to maps it moves away from are removed, and maps it touches after the move are connected. Ctrl+Z undoes it. A map that ends up connected to nothing stays where you put it, marked <em>not connected</em>.</li>
+<li><strong>The name tag</strong> in the corner of every map moves the map when you drag it, in every mode, even while painting.</li>
+<li><strong>Deselect</strong> with Esc, a click on the empty area (in management mode), or <em>Deselect</em> in the right-click menu.</li>
+<li><strong>Right click on a map</strong> opens a menu with everything you can do with it: select or deselect, paint, collision, people &amp; doors, resize, connections, pick the block under the mouse, play from here, open in the map editor, build the world from this map, and delete the map. Dragging with the right button still copies blocks.</li>
+<li><strong>Select a map</strong> by clicking it. The side panel shows its name, size and connections, plus buttons to open it in the map editor.</li>
+<li><strong>✏ Paint</strong> on any map, exactly as in the map editor. Painting works across the edges between maps.</li>
+<li><strong>↔ Resize: drag an edge</strong>: a thick yellow frame appears around the map. Drag an edge or a corner to make the map bigger or smaller, like a window.</li>
+<li><strong>🗑 Delete map</strong> (right-click menu) removes all the map's connections, and the map leaves the world. It also leaves the game's map list only when it is the last map of its group and no door leads to it (for example a map you just made). Otherwise it stays in the list, because removing it from the middle would renumber the maps after it and break their doors. The question before deleting says which maps have doors to it.</li>
+<li><strong>🔗 Connections</strong> shows and edits which maps lead to which.</li>
+<li><strong>🗺 Redraw town map</strong> redraws the town map (the region map in the game) so that it follows your world.</li>
+<li><strong>💾 Export map changes</strong> and <strong>📂 Import edits</strong> save your world edits to a file (<code>world_edits.json</code>) and load them into another copy of the game.</li>
+</ul>
+<p>If two maps overlap, or their connections disagree, a warning appears above the map. Fix it before you share the game.</p>
+<h2 id="going-through-doors">Going through doors</h2>
+<p>In <strong>👤 People &amp; doors</strong> you can follow a door to the map it leads to, and come back:</p>
+<ul>
+<li><strong>Right click on a door</strong> and choose <em>🚪 Go through the door to …</em>, or <strong>double-click the door</strong>.</li>
+<li>If the map behind the door is already in the world (for example a cave that comes out on another route), the view jumps to it. Otherwise the view shows that map on its own (for example the inside of a house).</li>
+<li>The door you arrive at is selected and centred, with its panel open on the side.</li>
+<li><strong>↩ Back to …</strong> (in the right-click menu and as a button in the toolbar) goes back one step, to the map you came from, with the door you left by selected.</li>
+<li>After going several steps in (town → house → upstairs), <strong>🌍 Back to the world map</strong> goes all the way back.</li>
+<li>Some doors send the player back to wherever they came from (the game decides). They lead to no fixed map, so they cannot be followed.</li>
+</ul>
+<h2 id="play-from-here-world-view">▶ Play from here (world view)</h2>
+<p>It works the same way as in the map editor:</p>
+<ol>
+<li>Click a map to select it. The <strong>▶ Play from here</strong> button changes from grey to active.</li>
+<li>Press the button.</li>
+<li>Click a spot on the map. The game starts there.</li>
+</ol>
+<h2 id="wild-pokémon">Wild Pokémon</h2>
+<figure><img src="img/en/world-wild.png" alt="Painting wild Pokémon"><figcaption>Painting wild Pokémon</figcaption></figure>
+<p>Choose a map and open the <strong>🌿 Wild</strong> tab in the side panel. For each kind of encounter (<em>grass / cave</em>, <em>surfing</em>, <em>fishing</em>, <em>rock smash</em>) you can:</p>
+<ul>
+<li>choose <strong>how often</strong> encounters happen (rare, normal, often…);</li>
+<li>add Pokémon with <strong>+ add a Pokémon…</strong>;</li>
+<li>set the <strong>level range</strong> of each Pokémon;</li>
+<li>set each one's <strong>chance</strong> in percent. The chances always add up to 100. Change one, and the others adjust. The 🔒 lock keeps a value fixed.</li>
+</ul>
+<p>The real game picks encounters from fixed slots. The chances shown are therefore rounded to the nearest possible values (≈).</p>
+<h1 id="blocks-and-tiles">Blocks and tiles</h1>
+<p>Maps are made of <strong>blocks</strong> of 16×16 pixels. Each block is made of four 8×8 <strong>tiles</strong>. The blocks of a map come from its <strong>tileset</strong>: the town tileset, the cave tileset and so on.</p>
+<figure><img src="img/en/tiles.png" alt="Blocks and tiles"><figcaption>Blocks and tiles</figcaption></figure>
+<p>In <strong>Blocks &amp; tiles</strong> you can:</p>
+<ul>
+<li>see all the blocks of the current map's tileset;</li>
+<li>change what each block looks like, and whether it is walkable;</li>
+<li><strong>import a picture as new blocks</strong>.</li>
+</ul>
+<h2 id="importing-a-picture-as-new-blocks">Importing a picture as new blocks</h2>
+<p>This is the easy way to add something new to your maps, such as a statue, a flag, a building or a sign.</p>
+<ol>
+<li>Draw or find a picture. Width and height should be multiples of 16 pixels, for example 32×48.</li>
+<li>Click <strong>Import a picture as new blocks</strong> and choose the file.</li>
+<li>Ember Studio cuts the picture into blocks, matches the colours to the tileset's palette, and adds the blocks to the tileset.</li>
+<li>Go back to the map editor and paint with the new blocks.</li>
+</ol>
+<blockquote>
+<p><strong>Tip:</strong> Pictures with few colours and clear outlines look best. Every tileset has a limited number of colours, and Ember Studio chooses the closest ones it has.</p>
+</blockquote>
+<h1 id="objects-in-depth">Objects in depth</h1>
+<p>Click an object in <strong>👤 Events</strong> mode to open its settings.</p>
+<h2 id="people">People</h2>
+<ul>
+<li><strong>Looks like</strong>: the sprite. Click <strong>🖼 Change sprite…</strong> to choose from all the characters in the game.</li>
+<li><strong>Movement</strong>: stands still, looks around, walks in an area, or walks up and down.</li>
+<li><strong>Script</strong>: what happens when the player talks to them. See <em>Blocks</em> below.</li>
+<li><strong>Name</strong>: a note for you, shown only in the editor.</li>
+</ul>
+<figure><img src="img/en/sprite-gallery.png" alt="Choosing a sprite"><figcaption>Choosing a sprite</figcaption></figure>
+<h2 id="trainers">Trainers</h2>
+<figure><img src="img/en/object-trainer.png" alt="A trainer"><figcaption>A trainer</figcaption></figure>
+<p>A trainer is a person who battles the player when they meet:</p>
+<ul>
+<li><strong>Trainer</strong>: which trainer from the <em>Trainers</em> tab. That decides the team, the class and the picture.</li>
+<li><strong>Sight range</strong>: how many squares away they notice the player.</li>
+<li><strong>Intro text and defeat text</strong>: what they say before and after the battle.</li>
+<li><strong>Open in the Trainers tab</strong>: jumps to their team.</li>
+</ul>
+<h2 id="item-balls">Item balls</h2>
+<figure><img src="img/en/object-item.png" alt="An item ball"><figcaption>An item ball</figcaption></figure>
+<ul>
+<li><strong>Item</strong>: what the player gets.</li>
+<li><strong>Flag</strong>: remembers that the ball was picked up, so it doesn't come back. Ember Studio chooses a free flag for new balls automatically.</li>
+</ul>
+<h2 id="signs-and-triggers">Signs and triggers</h2>
+<ul>
+<li><strong>Signs</strong> show text when the player faces them and presses A.</li>
+<li><strong>Triggers</strong> are invisible squares that start a script when the player steps on them. They are used for scenes like "the professor stops you at the edge of town". Most of the time you will make triggers through the <em>Story</em> tab, which does it for you.</li>
+</ul>
+<h1 id="blocks">Blocks</h1>
+<p>A <strong>script</strong> is what happens when the player talks to someone, reads a sign or steps on a trigger. In Ember Studio you write scripts with <strong>blocks</strong>. You stack them from top to bottom, and the game runs them in that order.</p>
+<figure><img src="img/en/object-blocks.png" alt="The blocks editor"><figcaption>The blocks editor</figcaption></figure>
+<p>To edit a script:</p>
+<ol>
+<li>Click <strong>Write it with blocks</strong> (or <strong>Edit the blocks</strong>) on a person, sign or trigger.</li>
+<li>Click <strong>+ Add a block</strong> to choose a block.</li>
+<li>Fill in its fields.</li>
+<li>Drag blocks to change their order. <strong>⧉</strong> copies a block and <strong>✕</strong> deletes it.</li>
+<li>Press <strong>💾 Write to the game</strong>.</li>
+</ol>
+<figure><img src="img/en/block-palette.png" alt="Choosing a block"><figcaption>Choosing a block</figcaption></figure>
+<h2 id="all-the-blocks">All the blocks</h2>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Block</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Talk</strong></td>
+<td>💬 Say</td>
+<td>Shows a message. Press Enter in the text for a new line.</td>
+</tr>
+<tr>
+<td></td>
+<td>❓ Ask yes / no</td>
+<td>Asks a question. You put different blocks under <em>yes</em> and under <em>no</em>.</td>
+</tr>
+<tr>
+<td><strong>Give &amp; take</strong></td>
+<td>🎁 Give an item</td>
+<td>Gives the player an item (and a quantity).</td>
+</tr>
+<tr>
+<td></td>
+<td>➖ Take an item</td>
+<td>Takes an item away.</td>
+</tr>
+<tr>
+<td></td>
+<td>🐾 Give a Pokémon</td>
+<td>Gives a Pokémon at a level, with an optional message.</td>
+</tr>
+<tr>
+<td></td>
+<td>❤ Heal the Pokémon</td>
+<td>Heals the whole team, like a Pokémon Center.</td>
+</tr>
+<tr>
+<td></td>
+<td>🛒 Open a shop</td>
+<td>Opens a shop with the items you choose.</td>
+</tr>
+<tr>
+<td><strong>Battle</strong></td>
+<td>🌿 Battle a wild Pokémon</td>
+<td>Starts a battle with a wild Pokémon.</td>
+</tr>
+<tr>
+<td></td>
+<td>⚔ Battle a trainer</td>
+<td>Battles a trainer, with intro and defeat text.</td>
+</tr>
+<tr>
+<td><strong>Movement</strong></td>
+<td>🚶 Walk</td>
+<td>Moves the player or a person, step by step, at normal, slow or fast speed.</td>
+</tr>
+<tr>
+<td></td>
+<td>↻ Turn</td>
+<td>Turns someone in a direction.</td>
+</tr>
+<tr>
+<td></td>
+<td>🙂 Look at the player</td>
+<td>The person turns to face the player.</td>
+</tr>
+<tr>
+<td></td>
+<td>❗ Emote</td>
+<td>Shows ❗, ❓ or ♥ above someone's head.</td>
+</tr>
+<tr>
+<td></td>
+<td>⏱ Wait</td>
+<td>Waits a number of seconds.</td>
+</tr>
+<tr>
+<td></td>
+<td>👻 Disappear / ✨ Appear</td>
+<td>Hides or shows a person. This is remembered.</td>
+</tr>
+<tr>
+<td><strong>Story &amp; conditions</strong></td>
+<td>🚩 If flag</td>
+<td>Runs different blocks depending on a flag.</td>
+</tr>
+<tr>
+<td></td>
+<td>🎒 If the player has</td>
+<td>Runs different blocks depending on whether the player has an item.</td>
+</tr>
+<tr>
+<td></td>
+<td>🚩 Set flag / 🏳 Clear flag</td>
+<td>Remembers (or forgets) that something happened.</td>
+</tr>
+<tr>
+<td><strong>Effects</strong></td>
+<td>🎵 Play music</td>
+<td>Changes the music.</td>
+</tr>
+<tr>
+<td></td>
+<td>🔔 Play a sound</td>
+<td>Plays a sound effect.</td>
+</tr>
+<tr>
+<td></td>
+<td>🌑 Fade the screen</td>
+<td>Fades to black, or back in.</td>
+</tr>
+<tr>
+<td></td>
+<td>🚪 Warp to a map</td>
+<td>Sends the player to another map.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>What is a flag?</strong> A flag is an on/off switch that the game remembers in the save file. For example "the player already got the Potion from Mom". With flags, people say something new the second time you talk to them, and items don't come back. The <em>Story</em> tab takes care of most flags for you.</p>
+</blockquote>
+<h2 id="picking-places-and-people">Picking places and people</h2>
+<p>Fields like <em>who walks</em>, <em>who</em> or <em>where</em> have a <strong>👆 Pick on the map</strong> button (<em>Pick the person on the map</em>, <em>Pick the spot on the map</em>). Click it, then click on the map. You never need to type coordinates.</p>
+<h2 id="preview">Preview</h2>
+<p>In the <em>Story</em> tab, <strong>▶ Play the preview</strong> shows a quick animation of the walking and messages in a scene, right in the editor. It's a sketch: the real result is in the game. Use <strong>▶ Play from here</strong> or <strong>Test from this step</strong> to see that.</p>
+<h1 id="the-story">The story</h1>
+<p>The <strong>📖 Story</strong> tab is where you write the plot of your game: what the player must do, in what order, and what people say along the way. You don't write scripts and flags by hand. You make a list of <strong>steps</strong>, and Ember Studio builds everything else.</p>
+<figure><img src="img/en/story.png" alt="The Story tab"><figcaption>The Story tab</figcaption></figure>
+<h2 id="how-it-works">How it works</h2>
+<ul>
+<li>The story is a list of <strong>chapters</strong> (on the side). Each chapter is a list of <strong>steps</strong>.</li>
+<li>Steps happen <strong>in order</strong>. Each step opens the next one.</li>
+<li>The game remembers how far the player got in one number, the <strong>story stage</strong>. You don't need to manage it, but you can see which variable it uses at the top of the tab.</li>
+</ul>
+<p>Click a step to edit it. Its settings open on the right.</p>
+<h2 id="kinds-of-steps">Kinds of steps</h2>
+<figure><img src="img/en/story-add.png" alt="Adding a step"><figcaption>Adding a step</figcaption></figure>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>💬 <strong>Talk to someone</strong></td>
+<td>The player talks to a person, and the blocks you write run. Example: "Mom gives you running shoes".</td>
+</tr>
+<tr>
+<td>⚔ <strong>Beat a trainer</strong></td>
+<td>The player must beat a trainer or gym leader. You can add blocks that run right after the win.</td>
+</tr>
+<tr>
+<td>📍 <strong>Reach a place</strong></td>
+<td>Something happens when the player steps on a spot. Example: the professor stops you at the edge of town.</td>
+</tr>
+<tr>
+<td>🎬 <strong>A scene when you arrive</strong></td>
+<td>A scene runs as soon as the player arrives on a map, for example a cutscene in a new town.</td>
+</tr>
+<tr>
+<td>❓ <strong>A choice (yes / no)</strong></td>
+<td>Someone asks a question, and the story splits into two paths.</td>
+</tr>
+<tr>
+<td>🥊 <strong>Rival battle</strong></td>
+<td>A battle with your rival, whose team depends on the starter the player chose.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="writing-a-step">Writing a step</h2>
+<p>For most steps you fill in:</p>
+<ol>
+<li><strong>Title (only for you)</strong>: a short name that appears in the list.</li>
+<li><strong>Who</strong> or <strong>Where</strong>: the person, or the map and spot. Use <strong>👆 Pick on the map</strong>.</li>
+<li><strong>What happens</strong>: blocks, exactly like in the blocks editor.</li>
+</ol>
+<p>Each step has a <strong>Test from this step</strong> button (▶). It starts the game right before that step, with the story stage already set. You see exactly what a player sees at that point, without playing the whole game up to it.</p>
+<h2 id="choices-and-endings">Choices and endings</h2>
+<figure><img src="img/en/story-choice.png" alt="A choice"><figcaption>A choice</figcaption></figure>
+<p>A <strong>choice</strong> step asks a yes/no question. Under it there are two columns:</p>
+<ul>
+<li><strong>✔ If they answer yes</strong> has its own steps.</li>
+<li><strong>✘ If they answer no</strong> has different steps.</li>
+</ul>
+<p>Each path can have its own steps, its own scenes and even its own ending. After the paths, the story continues together.</p>
+<h2 id="roadblocks-guards">Roadblocks (guards)</h2>
+<p>Often the player must not go somewhere yet: "You can't leave town without a Pokémon!". In a <strong>Reach a place</strong> step or a <strong>Talk</strong> step you can add a <strong>guard</strong>: a person who stands in the way until the step is done, and then disappears. Ember Studio takes care of hiding them at the right moment.</p>
+<h2 id="characters-who-change-over-time">Characters who change over time</h2>
+<p>Under <strong>Characters: lines that change with the story</strong>, a person can say different lines at different points in the story. For example, a villager says "I heard about a strange Pokémon…" at the start, and "You beat the gym leader!" after the first badge. You add a line and choose <strong>after "…"</strong>, the step after which it starts.</p>
+<h2 id="applying-the-story">Applying the story</h2>
+<p>Press <strong>✨ Apply the story to the game</strong>. Ember Studio writes all the scripts, triggers and scenes into the game. You can change the story and apply it again at any time: the old version is removed first, so nothing is left behind.</p>
+<blockquote>
+<p><strong>Tip:</strong> Work in small pieces. Write one or two steps, apply, and try them with <strong>Test from this step</strong>.</p>
+</blockquote>
+<h2 id="the-games-own-story">The game's own story</h2>
+<p>The Story tab also shows the story that is <strong>already in the game</strong>: Oak stopping you at the tall grass, choosing your first Pokémon, the rival battle, the parcel, every gym leader, Team Rocket, the Elite Four… Ember Studio finds it by following every script in the game, so it works for FireRed and for hacks built on it. FireRed's own moments have proper names. In a hack, whatever still matches keeps its name, and anything new is named after what it does.</p>
+<figure><img src="img/en/story-original.png" alt="The game's own story, with a moment open"><figcaption>The game's own story, with a moment open</figcaption></figure>
+<p>The moments of the game are the grey cards under <strong>The story of the game</strong>, in chapters by place: Pallet Town, Viridian City, Pewter City and so on. Your own steps are in colour.</p>
+<h3 id="three-ways-to-look-at-it">Three ways to look at it</h3>
+<p>The buttons at the top switch between three views:</p>
+<ul>
+<li><strong>📜 Timeline</strong>: the whole story, chapter by chapter, in the order of the game.</li>
+<li><strong>📍 By place</strong>: one map at a time, with everything that happens there in order. For example, in Oak's lab: arriving, choosing a Pokémon, the rival battle, then the parcel and the Pokédex. In the map editor, <strong>📖 Story here</strong> opens this view for the map you are on.</li>
+<li><strong>🔀 Flowchart</strong>: boxes and arrows. An arrow means "this has to happen first".</li>
+</ul>
+<p>The menu next to them switches between <strong>The main story</strong> and <strong>Everything that happens</strong>, which adds side events such as gifts, fishing rods and Team Rocket grunts. The search box finds a moment by name or by place.</p>
+<figure><img src="img/en/story-place.png" alt="One place: Oak's lab"><figcaption>One place: Oak's lab</figcaption></figure>
+<figure><img src="img/en/story-flow.png" alt="The flowchart"><figcaption>The flowchart</figcaption></figure>
+<h3 id="changing-a-moment">Changing a moment</h3>
+<p>Click a moment to open it on the right:</p>
+<ul>
+<li><strong>Happens after</strong>: the moments that have to come first. Click one to jump to it.</li>
+<li><strong>What happens</strong>: the Pokémon or item it gives, and the battle. You can change the Pokémon, its level, the item and how many. <strong>Edit the team</strong> opens the trainer in the Trainers tab. When a moment has alternatives, each one is listed: one per starter, or a different rival team for each starter.</li>
+<li><strong>What they say</strong>: every line of the moment. Click a line to edit it; the preview shows the message box.</li>
+<li><strong>▶ Test from here</strong>: starts the game on a spot you choose, with the flags and variables set as they are right before this moment.</li>
+<li><strong>How the game decides</strong> (closed by default): the flags and variables behind it, for those who want to know.</li>
+</ul>
+<p>Changes to lines, Pokémon, items and teams go straight into the game, like any other edit.</p>
+<h3 id="skipping-a-moment">Skipping a moment</h3>
+<p>Tick <strong>⏭ Skip this moment</strong> to cut a moment out, for example "Oak stops you at the tall grass". It no longer plays, but what it changes still happens, so the rest of the story does not get stuck. Its gifts are given quietly. The skip goes into the game when you press <strong>✨ Apply the story to the game</strong>, and you can untick it at any time.</p>
+<h3 id="your-steps-between-two-moments">Your steps between two moments</h3>
+<p>The <strong>+</strong> next to a moment (or <strong>+ Add a step after this</strong>) starts a chapter of your own right after it. Use it for something like a new scene between choosing the starter and the rival battle:</p>
+<ol>
+<li>Click <strong>+</strong> next to <strong>Choose your first Pokémon</strong>.</li>
+<li>Add your steps, exactly as in your other chapters.</li>
+<li>Under the chapter's title, choose which moment of the game waits for it: by default the next one, here <strong>First battle with the rival</strong>. Or choose <em>the game goes on as usual</em>.</li>
+<li>Press <strong>✨ Apply the story to the game</strong>.</li>
+</ol>
+<p>Now the rival battle does not start until your steps are done. Each such chapter has its own story variable, so a chapter after the rival does not wait for one after Brock.</p>
+<blockquote>
+<p><strong>Tip:</strong> Undo is exact. Untick a skip or delete your chapter, put the story into the game again, and the game's scripts are back byte for byte.</p>
+</blockquote>
+<h1 id="pokémon">Pokémon</h1>
+<figure><img src="img/en/pokemon.png" alt="The Pokémon tab"><figcaption>The Pokémon tab</figcaption></figure>
+<p>Choose a Pokémon from the list (you can search by name or number). You can change:</p>
+<ul>
+<li><strong>Base stats</strong>: HP, Attack, Defense, Speed, Sp. Atk and Sp. Def. The total is shown.</li>
+<li><strong>Types and abilities.</strong></li>
+<li><strong>Catch rate, experience, gender ratio</strong> and egg groups.</li>
+<li><strong>Evolutions</strong>: at what level, with which stone, or by trade.</li>
+<li><strong>Learnset</strong>: which moves it learns at each level.</li>
+<li><strong>TM/HM compatibility</strong>: which TMs it can learn.</li>
+<li><strong>The Pokédex entry.</strong></li>
+</ul>
+<h2 id="starters-gift-pokémon-and-fixed-battles">Starters, gift Pokémon and fixed battles</h2>
+<figure><img src="img/en/gifts.png" alt="Gift Pokémon"><figcaption>Gift Pokémon</figcaption></figure>
+<p><strong>🎁 Starters &amp; gift Pokémon</strong> lists every place in the game where the player gets a Pokémon or meets a fixed one:</p>
+<ul>
+<li>the starters;</li>
+<li>gifts, like the Lapras in Silph Co.;</li>
+<li>fixed battles, like Snorlax or the legendary birds.</li>
+</ul>
+<p>Change the Pokémon or the level, and Ember Studio changes the script and the picture shown with it.</p>
+<p><strong>💾 Export Pokémon changes</strong> saves your Pokémon edits as a file you can share or import into another project.</p>
+<h1 id="trainers_1">Trainers</h1>
+<figure><img src="img/en/trainers.png" alt="The Trainers tab"><figcaption>The Trainers tab</figcaption></figure>
+<p>On the left is the list of all trainers. You can filter it to show only <strong>gym leaders and rivals</strong>, by <strong>map</strong>, or by <strong>class</strong>. For each trainer you can change:</p>
+<ul>
+<li><strong>Name</strong> and <strong>class</strong> (Youngster, Lass, Leader…), plus the <strong>music</strong> played when they spot you.</li>
+<li><strong>Picture</strong>: the trainer's battle picture.</li>
+<li><strong>Double battle</strong>: battle with two Pokémon at once.</li>
+<li><strong>Team</strong>: up to six Pokémon, each with a level, and, if you want, its own moves and held item.</li>
+<li><strong>Items</strong> the trainer uses in battle (up to four), and <strong>how smart</strong> they are.</li>
+</ul>
+<h2 id="difficulty-along-the-story">Difficulty along the story</h2>
+<p>The <strong>📈 Difficulty along the story</strong> chart shows every trainer as a point: how strong their strongest Pokémon is, from the start of the game to the end. Gym leaders are gold, rivals are blue, and trainers who are much stronger or weaker than the trainers around them are red.</p>
+<ul>
+<li>Click a point to open that trainer.</li>
+<li><strong>Fit them to the curve</strong> fixes the trainers that stand out.</li>
+<li><strong>All trainers on the map… %</strong> makes all the trainers of a map stronger or weaker by a percentage.</li>
+</ul>
+<h1 id="items-and-shops">Items and shops</h1>
+<figure><img src="img/en/items.png" alt="Items"><figcaption>Items</figcaption></figure>
+<p>For each item:</p>
+<ul>
+<li><strong>Name</strong>, <strong>price</strong> and <strong>description</strong>.</li>
+<li><strong>Icon</strong>.</li>
+<li><strong>Pocket</strong> (items, key items, Poké Balls, TMs, berries) and what it does.</li>
+</ul>
+<h2 id="shops">Shops</h2>
+<figure><img src="img/en/shops.png" alt="Shops"><figcaption>Shops</figcaption></figure>
+<p>The <strong>Shops</strong> view lists every shop in the game: each Poké Mart counter and each special shop. Choose one to change what it sells, add or remove items, and change the order.</p>
+<p>You can also create a new shop anywhere with the <strong>🛒 Open a shop</strong> block.</p>
+<h1 id="moves">Moves</h1>
+<figure><img src="img/en/moves.png" alt="Moves"><figcaption>Moves</figcaption></figure>
+<p>For each move:</p>
+<ul>
+<li><strong>Name</strong> and <strong>description</strong>.</li>
+<li><strong>Type</strong>, <strong>power</strong>, <strong>accuracy</strong> and <strong>PP</strong>.</li>
+<li><strong>Category</strong>: physical or special (as in FireRed, decided by the type).</li>
+<li><strong>Effect</strong> and its chance, plus <strong>priority</strong>.</li>
+</ul>
+<h2 id="tms-hms-and-move-tutors">TMs, HMs and move tutors</h2>
+<figure><img src="img/en/tms.png" alt="TMs and tutors"><figcaption>TMs and tutors</figcaption></figure>
+<ul>
+<li><strong>TMs and HMs</strong>: which move each TM teaches. The TM's name and description follow the move.</li>
+<li><strong>Move tutors</strong>: which move each tutor in the game teaches.</li>
+</ul>
+<p>Which Pokémon can learn each TM is set in the <em>Pokémon</em> tab.</p>
+<h1 id="text-and-translation">Text and translation</h1>
+<figure><img src="img/en/text.png" alt="Text and translation"><figcaption>Text and translation</figcaption></figure>
+<p>The <strong>Text / Translation</strong> tab shows every piece of text in the game: dialogue, signs, menus and names. More than 9,000 strings.</p>
+<ul>
+<li><strong>Search</strong> in English (the original) or in your translation.</li>
+<li><strong>Filter</strong> to show only untranslated, translated or changed lines.</li>
+<li><strong>Type the new text</strong> in the box. The preview on the left shows exactly how it will look in the game's message box, line by line.</li>
+<li><strong>Save</strong> each line, or <strong>Save all changes</strong> at once.</li>
+<li><strong>Export translations</strong> and <strong>Import translations</strong> move all the text to and from a file, so you can translate in another program or with friends.</li>
+</ul>
+<h2 id="the-built-in-hebrew-translation">The built-in Hebrew translation</h2>
+<p>Ember Studio comes with a full Hebrew translation of FireRed (more than 7,000 lines). It does not contain the original English text, which belongs to Nintendo: each line carries only a short fingerprint (a hash) of the English line, and Ember Studio compares it with the text in your own ROM. A line that does not match your ROM is skipped.</p>
+<h2 id="line-width">Line width</h2>
+<p>A line that is too wide for the message box is shown in red. Break it with a new line, or make it shorter. The <em>Game check</em> also finds these lines.</p>
+<h1 id="hebrew-and-fonts">Hebrew and fonts</h1>
+<figure><img src="img/en/hebrew.png" alt="Hebrew &amp; Fonts"><figcaption>Hebrew &amp; Fonts</figcaption></figure>
+<p>When the game language is Hebrew, Ember Studio:</p>
+<ul>
+<li>adds <strong>Hebrew letters</strong> to the game's font;</li>
+<li>patches the game to write <strong>right-to-left</strong>, including mixed lines with numbers and English names;</li>
+<li>can apply a <strong>complete Hebrew translation</strong> of the original game, which you can then change.</li>
+</ul>
+<p>The <strong>font sheet</strong> shows all the letters. You can redraw any letter pixel by pixel, for example to make the Hebrew letters match your style.</p>
+<h1 id="graphics">Graphics</h1>
+<figure><img src="img/en/graphics.png" alt="Graphics"><figcaption>Graphics</figcaption></figure>
+<p>The <strong>Graphics</strong> tab has three parts:</p>
+<ul>
+<li><strong>Pokémon pictures</strong>: front and back pictures, colours and icons of every Pokémon.</li>
+<li><strong>All graphics</strong>: title, intro, sprites and more, everything compressed in the ROM.</li>
+<li><strong>🧍 Characters &amp; title screen</strong>: described below.</li>
+</ul>
+<h2 id="a-character-from-a-picture">A character from a picture</h2>
+<figure><img src="img/en/character.png" alt="A character from a picture"><figcaption>A character from a picture</figcaption></figure>
+<p>Make a new character, for example a new hero, from one picture:</p>
+<ol>
+<li>Click <strong>Choose a picture…</strong> and pick any image with a transparent background (PNG or WebP).</li>
+<li>Ember Studio makes the <strong>battle picture</strong> (64×64, up to 15 colours plus transparency) and the <strong>map sprite</strong> (16×32), in the colours of the character it replaces.</li>
+<li>Choose which character to replace, and fix single pixels if you want: the editor has a pen, fill, a colour picker (Pick) and undo.</li>
+<li>Write it to the game.</li>
+</ol>
+<h2 id="the-title-screen">The title screen</h2>
+<p>Under <strong>🎬 Title screen</strong>:</p>
+<ul>
+<li><strong>Logo picture</strong> replaces the Pokémon logo (up to 60 colours, fitted to the logo area).</li>
+<li><strong>Subtitle</strong> is one or two lines under the logo.</li>
+<li><strong>Hero picture</strong> is a large character on the title screen.</li>
+<li><strong>Background</strong>: keep the original, or a new one.</li>
+</ul>
+<p>Press <strong>✨ Write the title screen</strong>. <strong>👁 Show the title screen</strong> runs the game in the background and shows you the result.</p>
+<h1 id="music">Music</h1>
+<figure><img src="img/en/music.png" alt="Music"><figcaption>Music</figcaption></figure>
+<ul>
+<li><strong>Which song plays where</strong>: for each map, battle type and event.</li>
+<li><strong>Listen</strong> to every song in the game, inside the editor.</li>
+<li><strong>Import music</strong>: <strong>🎹 Import MIDI…</strong> or <strong>🎵 Import WAV/MP3 as song…</strong>. The song is written into free space in the game, and you choose where it plays.</li>
+</ul>
+<h1 id="game-check">Game check</h1>
+<figure><img src="img/en/doctor.png" alt="Game check"><figcaption>Game check</figcaption></figure>
+<p>Before sharing your game, open <strong>🩺 Game check</strong>. It goes through the whole game and lists problems by category:</p>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A map that can't be loaded</td>
+<td>The game would crash there.</td>
+</tr>
+<tr>
+<td>A door that leads to a map that doesn't exist, or to a door number the map doesn't have</td>
+<td>The player gets stuck or the game crashes.</td>
+</tr>
+<tr>
+<td>An object outside the map</td>
+<td>Often intended (someone who walks in during a scene), so this is only a note.</td>
+</tr>
+<tr>
+<td>An item ball with no flag, or two balls sharing a flag</td>
+<td>The item comes back every time, or picking one hides the other.</td>
+</tr>
+<tr>
+<td>The same trainer used twice</td>
+<td>Beating one counts for both.</td>
+</tr>
+<tr>
+<td>A line too wide for the message box</td>
+<td>The text gets cut off.</td>
+</tr>
+<tr>
+<td>A line still in English (in a Hebrew game)</td>
+<td>Something was left untranslated.</td>
+</tr>
+<tr>
+<td>A gym leader weaker than the one before</td>
+<td>The difficulty goes backwards.</td>
+</tr>
+<tr>
+<td>Almost no free space left in the ROM</td>
+<td>New scripts and pictures may not fit.</td>
+</tr>
+</tbody>
+</table>
+<p>Each problem has a <strong>Show</strong> button that takes you to the right place. Press <strong>Check again</strong> after fixing things.</p>
+<h1 id="playing-and-testing">Playing and testing</h1>
+<figure><img src="img/en/emulator.png" alt="The built-in emulator"><figcaption>The built-in emulator</figcaption></figure>
+<p>Ember Studio has the <strong>mGBA</strong> emulator built in. It opens in a window inside the editor.</p>
+<h2 id="ways-to-play">Ways to play</h2>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Where the game starts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>🎮 Play</strong></td>
+<td>From the beginning, as the game is right now.</td>
+</tr>
+<tr>
+<td><strong>▶ Build &amp; play</strong></td>
+<td>Builds <code>out/game.gba</code>, then plays it from the beginning.</td>
+</tr>
+<tr>
+<td><strong>▶ Play from here</strong> (map editor or world view)</td>
+<td>On the spot you click, with a test team.</td>
+</tr>
+<tr>
+<td><strong>▶ Test from this step</strong> (story)</td>
+<td>Right before that step of the story, with the story stage set.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="keys">Keys</h2>
+<table>
+<thead>
+<tr>
+<th>Keyboard</th>
+<th>GBA</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arrow keys</td>
+<td>D-pad</td>
+</tr>
+<tr>
+<td><kbd>X</kbd></td>
+<td>A</td>
+</tr>
+<tr>
+<td><kbd>Z</kbd></td>
+<td>B</td>
+</tr>
+<tr>
+<td><kbd>Enter</kbd></td>
+<td>Start</td>
+</tr>
+<tr>
+<td><kbd>Backspace</kbd></td>
+<td>Select</td>
+</tr>
+<tr>
+<td><kbd>A</kbd> / <kbd>S</kbd></td>
+<td>L / R</td>
+</tr>
+</tbody>
+</table>
+<p>Click the game picture first so it gets the keys.</p>
+<h2 id="the-emulator-window">The emulator window</h2>
+<ul>
+<li><strong>⏸</strong> pauses and resumes.</li>
+<li><strong>×1 / ×2 / ×4 ⏩</strong> is fast forward. It's great for walking long distances or skipping the intro.</li>
+<li><strong>🔊</strong> turns the sound on or off.</li>
+<li><strong>💾 / 📂</strong> save and load a state, a snapshot of the exact moment.</li>
+<li><strong>↻</strong> restarts.</li>
+<li><strong>✕</strong> closes.</li>
+</ul>
+<h2 id="the-test-team">The test team</h2>
+<p><strong>▶ Play from here</strong> and <strong>Test from this step</strong> give the player a test team, so you can battle right away. Change it with the <strong>🎒</strong> button: choose Pokémon and levels.</p>
+<blockquote>
+<p><strong>Tip:</strong> The test only changes a copy of the game in memory. Your project is not touched.</p>
+</blockquote>
+<h1 id="projects-and-sharing">Projects and sharing</h1>
+<h2 id="what-is-inside-a-project-folder">What is inside a project folder</h2>
+<p><code>My Game/
+  project.json        name, language, base ROM, build steps
+  rom/patch.bin       your changes to the ROM (small)
+  data/*.json         the story, scripts, test team, Pokémon edits, map moves (readable)
+  out/game.gba        the built game (not saved in Git)
+  README.md, .gitignore</code></p>
+<ul>
+<li>The project <strong>never contains the original ROM</strong>. When you open a project on another computer, Ember Studio asks for your own FireRed ROM once, and checks that it's the right one.</li>
+<li>Everything except <code>out/</code> is small and readable, which makes it perfect for <strong>Git</strong>: you can see what changed and go back to any version.</li>
+</ul>
+<h2 id="using-git">Using Git</h2>
+<p><code>cd "My Game"
+git init
+git add .
+git commit -m "First version"</code></p>
+<p>The <code>.gitignore</code> that Ember Studio creates already leaves out <code>out/</code> and save files. You can put the project on GitHub and work on it with friends. Each person needs their own ROM.</p>
+<h2 id="sharing-your-game">Sharing your game</h2>
+<p>You must not share the ROM itself (<code>out/game.gba</code>), because it contains Nintendo's game. Share one of these instead:</p>
+<ul>
+<li><strong>The project folder</strong> (or its Git repository). Others open it in Ember Studio with their own ROM.</li>
+<li><strong>A patch</strong> that turns the original FireRed into your game. Make one from the original ROM and <code>out/game.gba</code> with a free tool such as <em>Floating IPS (Flips)</em>. Players apply it to their own ROM with the same tool. (When you edit a ROM file directly, without a project, the <strong>IPS file</strong> button in the top bar makes the patch for you.)</li>
+</ul>
+<h2 id="turning-an-existing-rom-into-a-project">Turning an existing ROM into a project</h2>
+<p><strong>📥 Turn a ROM into a project</strong> takes a finished hack or translation and makes a project from it:</p>
+<ol>
+<li>Choose the <code>.gba</code> file.</li>
+<li>Choose the original FireRed (US) v1.1.</li>
+<li>Ember Studio saves the difference as <code>rom/patch.bin</code>.</li>
+</ol>
+<p>From then on, you work on it like any other project.</p>
+<h2 id="build-steps-advanced">Build steps (advanced)</h2>
+<p>A project can run its own <strong>build steps</strong>: Python scripts that run during the build and change the game further. The example game <em>Kachol-Lavan</em> uses one for its title screen and graphics. Steps are listed in <code>project.json</code>. Ember Studio runs them only when their files change, so builds stay fast.</p>
+<h1 id="troubleshooting">Troubleshooting</h1>
+<p><strong>Windows says the app is not recognised.</strong>
+Click <em>More info → Run anyway</em>. See <em>Installing</em>.</p>
+<p><strong>"This is not FireRed (US) v1.1".</strong>
+Ember Studio only works with that version: game code BPRE, revision 1. Other versions (v1.0, European, Japanese) have the data in different places.</p>
+<p><strong>The emulator window stays black.</strong>
+Wait a few seconds: the first start copies the emulator. If it stays black, close the window with ✕ and press Play again.</p>
+<p><strong>▶ Play from here does nothing.</strong>
+In the world view, first click a map to select it. The button is grey until a map is selected.</p>
+<p><strong>I changed the story, but nothing changed in the game.</strong>
+Press <strong>✨ Apply the story to the game</strong> after changing steps, then test again.</p>
+<p><strong>The game crashes when entering a door.</strong>
+Run the <strong>🩺 Game check</strong>. It finds doors that lead nowhere.</p>
+<p><strong>The text is cut off.</strong>
+The line is too wide. Break it into two lines. The Text tab shows too-wide lines in red.</p>
+<p><strong>I want to undo everything.</strong>
+If you use Git, go back to an older commit. If not, the project's <code>rom/patch.bin</code> is your work: keep copies of the folder from time to time.</p>
+<p><strong>Where are my settings?</strong>
+In <code>%LOCALAPPDATA%\EmberStudio</code>. Delete that folder to reset Ember Studio. Your projects are not there, so they are safe.</p>
+<h1 id="licences-and-thanks">Licences and thanks</h1>
+<ul>
+<li><strong>Ember Studio</strong> is free software under the <strong>GNU General Public License v3.0</strong> (GPL-3.0). You can use, change and share it. If you share a changed version of the program, you must share its source code too.</li>
+<li><strong>Games you make</strong> with Ember Studio are yours. The GPL applies to the editor, not to your game. Pokémon and FireRed belong to Nintendo, Game Freak and The Pokémon Company. Share patches or projects, not ROMs.</li>
+<li><strong>mGBA</strong> (the built-in emulator) is by Vicki Pfau and contributors, under the Mozilla Public License 2.0. The WebAssembly build is by thenick775.</li>
+<li><strong>pywebview</strong>, <strong>Pillow</strong> and <strong>PyInstaller</strong> are used under their own licences.</li>
+</ul>
+<p>This guide was made from the program itself: all the pictures are taken automatically from Ember Studio. Corrections and translations are welcome on GitHub.</p></body></html>

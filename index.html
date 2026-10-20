@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ember Studio</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header>
+  <div class="brand">🔥 Ember Studio <span id="projname" class="projname"></span></div>
+  <nav id="nav"></nav>
+  <div class="right">
+    <span id="romname" class="muted"></span>
+    <span id="watching" class="muted"></span>
+    <span id="dirty" class="warn"></span>
+    <button id="btnProjSave" class="needproj primary" hidden title="Ctrl+S">💾 Save</button>
+    <button id="btnProjBuild" class="needproj" hidden title="Makes out/game.gba in the project folder">🔨 Build</button>
+    <button id="btnProjPlay" class="needproj" hidden title="Build the game and play it in mGBA">▶ Build & play</button>
+    <button id="btnSaveFile" class="needrom romonly" hidden>💾 Save to file</button>
+    <button id="btnPatch" class="needrom romonly" disabled title="Adds Hebrew fonts, the right-to-left engine and the Hebrew keyboard, then saves a NEW .gba file">🔧 Patch game → new .gba</button>
+    <button id="btnIPS" class="needrom romonly" disabled title="Patch file with all your changes (share this instead of the ROM)">IPS patch</button>
+    <button id="btnDownload" class="needrom romonly primary" disabled>Download ROM</button>
+    <button id="btnPlay" class="needrom" disabled title="Play the game as it is now, inside the editor">🎮 Play</button>
+    <button id="btnHelp" title="Open the user guide (PDF)">❓ Guide</button>
+    <button id="btnLang" title="Interface language">English</button>
+  </div>
+</header>
+<main id="main"></main>
+<div id="toasts"></div>
+<script src="js/i18n.js"></script>
+<script src="js/i18n_he.js"></script>
+<script src="js/i18n_he2.js"></script>
+<script src="js/i18n_he3.js"></script>
+<script src="js/i18n_he4.js"></script>
+<script src="js/i18n_he5.js"></script>
+<script src="js/i18n_he6.js"></script>
+<script src="js/i18n_he7.js"></script>
+<script src="js/i18n_he8.js"></script>
+<script src="js/rom.js"></script>
+<script src="js/host.js"></script>
+<script src="js/charmap.js"></script>
+<script src="js/game.js"></script>
+<script src="js/rtl_patch.js"></script>
+<script src="data/hebrew_names.js"></script>
+<script src="data/translation_BPRE1.js"></script>
+<script src="js/font.js"></script>
+<script src="js/text.js"></script>
+<script src="js/graphics.js"></script>
+<script src="js/artstudio.js"></script>
+<script src="js/wild.js"></script>
+<script src="js/pokemon.js"></script>
+<script src="js/pokeexport.js"></script>
+<script src="js/objects.js"></script>
+<script src="js/trainers.js"></script>
+<script src="js/items.js"></script>
+<script src="js/moves.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/imgtools.js"></script>
+<script src="js/tileset.js"></script>
+<script src="js/townmap_data.js"></script>
+<script src="js/townmap.js"></script>
+<script src="js/world.js"></script>
+<script src="js/music.js"></script>
+<script src="js/music_ui.js"></script>
+<script src="js/script.js"></script>
+<script src="js/blocks.js"></script>
+<script src="js/storymap.js"></script>
+<script src="js/storymap_fr.js"></script>
+<script src="js/storyview.js"></script>
+<script src="js/story.js"></script>
+<script src="js/emulator.js"></script>
+<script src="js/project.js"></script>
+<script src="js/wizard.js"></script>
+<script src="js/doctor.js"></script>
+<script src="js/filelink.js"></script>
+<script src="js/docshot.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

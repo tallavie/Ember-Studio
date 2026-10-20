@@ -1,0 +1,36 @@
+# Ember Studio - what stays out of the repository
+
+# Nintendo's games and anything made from them: never commit a ROM, a save or a save state
+*.gba
+*.gb
+*.gbc
+*.nds
+*.sav
+*.sgm
+*.ss[0-9]
+*.ips
+*.ups
+*.bps
+
+# the original English text of FireRed, extracted from your own ROM (tools/build_translation.py reads it locally)
+data/firered_he/_english.json
+
+# Kachol-Lavan (the author's own game): its data and art live in its own project, not in the editor
+data/kachol_lavan/
+tools/kl/art/
+
+# test runs and builds
+tests/out/
+build_exe/
+dist/
+dist_new/
+__pycache__/
+*.pyc
+*.log
+
+# editors and the OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store

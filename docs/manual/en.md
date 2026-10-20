@@ -549,6 +549,16 @@ Choose a Pokémon from the list (you can search by name or number). You can chan
 
 Change the Pokémon or the level, and Ember Studio changes the script and the picture shown with it.
 
+## Legendaries in the world
+
+**🐉 Legendaries in the world** lists every Pokémon that stands on a map and is battled once: Mewtwo, the legendary birds, Lugia, Ho-Oh, Deoxys, Snorlax, the Electrode in the Power Plant, and the ones you added. Choose one to see its card:
+
+- **Which Pokémon**, its **level** and what it **holds** (the player gets the item when catching it).
+- **👁 How it looks on the map:** the sprite standing in the world. **🖼 Choose a sprite…** picks another one from the gallery. **✨ Make it from the Pokémon's picture** shrinks its battle picture to a 32×32 sprite, in the game palette that fits it best, and opens it in the pixel editor so you can touch it up before saving. When you change a legendary to a Pokémon that has no sprite of its own (for example Moltres to Kyogre), the card suggests making one.
+- **📍 Where it stands:** the map, its x and y, and **🗺 Open in the map editor** to drag it somewhere else.
+
+**➕ New legendary** puts a new one on any map: choose the Pokémon, the level, the map and the spot. The player talks to it, hears its cry and battles it; afterwards it is gone, caught or not. If the Pokémon has no sprite of its own, one is made from its picture.
+
 **💾 Export Pokémon changes** saves your Pokémon edits as a file you can share or import into another project.
 
 # Trainers

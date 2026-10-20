@@ -205,7 +205,7 @@ const PokemonTab = (() => {
     root.innerHTML = '';
     if (O().baseStats < 0) { root.append(h('div', { class: 'panel' }, 'Base stats table not found in this ROM.')); return; }
     avgCache = null; preCache = null;
-    root.append(h('div', { class: 'cols mon2' }, listPanel(root), view === 'gifts' ? giftsPanel(root) : card(root)));
+    root.append(h('div', { class: 'cols mon2' }, listPanel(root), view === 'gifts' ? giftsPanel(root) : view === 'legends' ? Legends.panel(root, () => render(root)) : card(root)));
   }
   function listPanel(root) {
     const box = h('div', { class: 'monrows' });
@@ -224,6 +224,7 @@ const PokemonTab = (() => {
     setTimeout(() => { const r = box.querySelector('.sel'); if (r) r.scrollIntoView({ block: 'center' }); }, 0);
     return h('div', { class: 'panel monlistp' },
       h('button', { class: view === 'gifts' ? 'sel' : '', style: { width: '100%', marginBottom: '6px' }, onclick: () => { view = 'gifts'; render(root); } }, '🎁 Starters & gift Pokémon'),
+      h('button', { class: view === 'legends' ? 'sel' : '', style: { width: '100%', marginBottom: '6px' }, onclick: () => { view = 'legends'; render(root); } }, '🐉 ' + T('Legendaries in the world')),
       h('button', { style: { width: '100%', marginBottom: '6px' }, title: 'for build.py: data/kachol_lavan/pokemon_edits.json', onclick: () => PokeExport.exportFile() }, '💾 Export Pokémon changes'),
       inp, box);
   }
@@ -542,6 +543,7 @@ const Gifts = (() => {
       const op = r.u8[p];
       if ((op === 0x75 || op === 0x79 || op === 0xB6) && r.r16(p + 1) === old) r.w16(p + 1, sp);
       else if (op === 0x7D && r.r16(p + 2) === old) r.w16(p + 2, sp);
+      else if (op === 0xA1 && r.r16(p + 1) === old) r.w16(p + 1, sp);                       // playmoncry
       else if (op === 0x16 && r.r16(p + 3) === old && r.r16(p + 1) >= 0x4000) r.w16(p + 3, sp);
     }
     x.species = sp;

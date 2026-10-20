@@ -128,4 +128,19 @@ Object.assign(I18N.dicts.he, {
   'Restores PP (like Ether)': 'מחזיר PP (כמו אתר)', 'Raises a stat for good (like Protein)': 'מעלה נתון לתמיד (כמו חלבון)',
   'Raises a stat in battle (like X Attack)': 'מעלה נתון בקרב (כמו X התקפה)', 'Evolution stone (like Fire Stone)': 'אבן התפתחות (כמו אבן אש)',
   'Held item (like Charcoal)': 'חפץ להחזקה (כמו פחם)', 'Repel (like Repel)': 'ספריי (כמו ספריי)', 'Something to sell (like Nugget)': 'משהו למכירה (כמו גוש זהב)',
+  // legendaries in the world (js/legends.js)
+  'Legendaries in the world': 'אגדיים בעולם', 'New legendary': 'אגדי חדש', 'lv': 'רמה', 'nothing': 'כלום', 'Which Pokémon': 'איזה פוקימון', 'Holds': 'מחזיק',
+  'Pokémon that stand on a map and are battled once. Change who it is, how it looks on the map and where it stands, or put a new one on any map.':
+    'פוקימונים שעומדים במפה ונלחמים בהם פעם אחת. אפשר לשנות מי הוא, איך הוא נראה במפה ואיפה הוא עומד, או להציב אגדי חדש בכל מפה.',
+  'How it looks on the map': 'איך הוא נראה במפה', 'No person on the map belongs to this battle (it starts from a script).': 'אין במפה דמות ששייכת לקרב הזה (הוא מתחיל מסקריפט).',
+  'Choose a sprite…': 'בחירת דמות…', "Use {name}'s own sprite": 'שימוש בדמות של {name}', "Make it from the Pokémon's picture": 'יצירה מהתמונה של הפוקימון',
+  '{name} has no sprite of its own: make one from its picture (✨), or choose one.': 'ל{name} אין דמות משלו: אפשר ליצור אחת מהתמונה שלו (✨) או לבחור דמות קיימת.',
+  'Where it stands': 'איפה הוא עומד', 'Open in the map editor': 'פתיחה בעורך המפה', 'In the map editor you can also drag it to another spot.': 'בעורך המפה אפשר גם לגרור אותו למקום אחר.',
+  "A sprite from the Pokémon's picture": 'דמות מהתמונה של הפוקימון',
+  'The battle picture, made smaller and drawn in the closest palette of the game. Touch up the pixels, then save.': 'תמונת הקרב, מוקטנת ומצוירת בפלטה הקרובה ביותר במשחק. אפשר לתקן פיקסלים ואז לשמור.',
+  'Save the sprite': 'שמירת הדמות', 'Cancel': 'ביטול', 'New sprite #{n} saved': 'דמות חדשה #{n} נשמרה',
+  'No free sprite number is left for a new sprite': 'לא נשאר מספר פנוי לדמות חדשה', 'The sprite template (Articuno) was not found': 'תבנית הדמות (ארטיקונו) לא נמצאה', 'This Pokémon has no picture': 'לפוקימון הזה אין תמונה',
+  'The player talks to it, hears its cry and battles it. Afterwards it is gone (caught or not). If it has no sprite of its own, one is made from its picture.':
+    'השחקן מדבר איתו, שומע את הצעקה שלו ונלחם בו. אחרי הקרב הוא נעלם (בין אם נתפס ובין אם לא). אם אין לו דמות משלו, נוצרת אחת מהתמונה שלו.',
+  'Put it on the map': 'הצבה במפה', '{name} now stands on {map}': '{name} עומד עכשיו ב{map}', 'a sprite was made from its picture': 'נוצרה דמות מהתמונה שלו',
 });

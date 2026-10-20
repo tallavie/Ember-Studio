@@ -1195,7 +1195,7 @@ const WorldTab = (() => {
   function side() {
     const el = $('#wv-side'); if (!el) return;
     el.innerHTML = '';
-    el.append(h('div', { class: 'row', style: { alignItems: 'flex-start', gap: '8px', marginBottom: '8px' } },
+    el.append(h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', marginBottom: '8px' } },
       h('button', { class: S.mode === 'manage' ? 'sel' : '', style: { whiteSpace: 'nowrap' }, onclick: () => { S.mode = 'manage'; S.addKind = null; render(S.root_el); } }, '🧭 General map management'),
       h('span', { class: 'muted', style: { fontSize: '12px' } }, 'Change the world on the big map: click a map to select it, drag it to move it (connections to maps it leaves are removed, maps it touches are connected). In every mode the name tag drags the map. Right click a map for everything you can do with it. Esc or a click on the empty area deselects.')));
     if (S.pending) { newMapForm(el); if (S.active) el.append(paletteSection(S.active)); if (TownMap.supported()) el.append(townPanel()); return; }

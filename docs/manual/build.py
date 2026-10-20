@@ -15,7 +15,7 @@ PORT, CDP_PORT = 8792, 9333
 PROJECTS = {'he': os.path.join(ROOT, 'projects', 'docs_he'), 'en': os.path.join(ROOT, 'projects', 'docs_en')}
 SHOTS = ['home', 'header', 'wizard-basics', 'wizard-starters', 'wizard-gyms', 'map-editor', 'map-collision', 'map-objects', 'object-trainer',
          'object-item', 'object-blocks', 'sprite-gallery', 'world', 'world-wild', 'tiles', 'story', 'story-choice', 'story-add', 'block-palette', 'story-original', 'story-flow', 'story-place',
-         'pokemon', 'gifts', 'trainers', 'items', 'shops', 'moves', 'tms', 'text', 'hebrew', 'graphics', 'character', 'music', 'doctor', 'emulator']
+         'pokemon', 'gifts', 'legends', 'trainers', 'items', 'item-icon', 'shops', 'moves', 'tms', 'text', 'hebrew', 'graphics', 'character', 'music', 'doctor', 'emulator']
 TITLES = {'he': 'Ember Studio – מדריך למשתמש', 'en': 'Ember Studio – User Guide'}
 OUT = {'he': os.path.join(APP, 'docs', 'Ember-Studio-Guide-he.pdf'), 'en': os.path.join(APP, 'docs', 'Ember-Studio-Guide-en.pdf')}
 

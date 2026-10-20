@@ -32,6 +32,8 @@ const DocShot = (() => {
     gifts: async () => { App.show('pokemon'); await wait(300); const b = $b('🎁 Starters & gift Pokémon'); if (b) b.click(); await wait(500); return null; },
     trainers: async () => { TrainersTab.select(414); App.show('trainers'); await wait(800); return null; },
     items: async () => { App.show('items'); await wait(500); return null; },
+    'item-icon': async () => { App.show('items'); await wait(400); const b = [...document.querySelectorAll('.tr-item')].find(x => /ULTRA|אולטרה/i.test(x.textContent)); if (b) b.click(); await wait(400); const d = document.querySelector('.tr-card details.tr-sec'); if (d) { d.open = true; d.scrollIntoView(); } await wait(300); return null; },
+    legends: async () => { App.show('pokemon'); await wait(300); const b = $b('Legendaries in the world'); if (b) b.click(); await wait(500); const l = [...document.querySelectorAll('.leg-list .monrow')].find(x => /LUGIA|לוגיה/i.test(x.textContent)); if (l) l.click(); await wait(500); return null; },
     shops: async () => { App.show('items'); await wait(300); const b = $b('Shops'); if (b) b.click(); await wait(500); return null; },
     moves: async () => { MovesTab.select(53); App.show('moves'); await wait(500); return null; },
     tms: async () => { App.show('moves'); await wait(300); const b = $b('TMs, HMs & tutors'); if (b) b.click(); await wait(400); return null; },

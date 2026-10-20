@@ -350,7 +350,9 @@ js/project.js    projects: open / save / build / import, patch.bin
 js/wizard.js     the New game wizard
 js/doctor.js     Game check
 js/trainers.js   Trainers tab + difficulty curve
-js/items.js      Items & shops tab
+js/items.js      Items & shops tab (icon editor, what an item does, new items)
+js/itemfx.js     item effects: medicine table, hold effects, ball catch bonuses, repels
+js/i18n_he9.js   Hebrew strings of the items tab
 js/moves.js      Moves tab (+ TM/HM, tutors)
 js/i18n_he3.js   Hebrew strings of the trainers / items / moves tabs
 js/script.js     script assembler + blocks compiler (FireRed script language)

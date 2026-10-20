@@ -110,6 +110,9 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 </ul>
 </li>
 <li><a href="#items-and-shops">Items and shops</a><ul>
+<li><a href="#what-it-does">✨ What it does</a></li>
+<li><a href="#how-it-looks">🎨 How it looks</a></li>
+<li><a href="#new-items">➕ New items</a></li>
 <li><a href="#shops">Shops</a></li>
 </ul>
 </li>
@@ -800,10 +803,32 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <figure><img src="img/en/items.png" alt="Items"><figcaption>Items</figcaption></figure>
 <p>For each item:</p>
 <ul>
-<li><strong>Name</strong>, <strong>price</strong> and <strong>description</strong>.</li>
-<li><strong>Icon</strong>.</li>
-<li><strong>Pocket</strong> (items, key items, Poké Balls, TMs, berries) and what it does.</li>
+<li><strong>Name</strong>, <strong>price</strong> and <strong>description</strong>, where it is sold and where it lies on the maps.</li>
+<li><strong>Pocket</strong> (items, key items, Poké Balls, TMs, berries).</li>
 </ul>
+<h2 id="what-it-does">✨ What it does</h2>
+<p>At the top of the card, a few short sentences say what the item does, for example <em>Restores 20 HP</em> or <em>Catch chance ×2</em>. Below them are fields for what you can change:</p>
+<ul>
+<li><strong>Poké Balls:</strong> the catch bonus of the Ultra, Great, Poké and Safari Balls (×2 = twice as easy as a Poké Ball). The rules of the special balls (Net, Nest, Timer…) are part of the game's code: they are explained but not editable.</li>
+<li><strong>Medicine:</strong> how much HP it heals (an amount, all, or half), which status problems it cures (sleep, poison, burn, freeze, paralysis, confusion), whether it revives a fainted Pokémon, whether it works on the whole party, how much PP it restores, and the effort points of vitamins.</li>
+<li><strong>Battle items</strong> (X Attack and the like): how many stages each stat goes up.</li>
+<li><strong>Evolution stones:</strong> the list of Pokémon that evolve with the stone. Add a new pair (from → into) or remove one.</li>
+<li><strong>Repels:</strong> for how many steps they work.</li>
+<li><strong>When a Pokémon holds it:</strong> the effect chosen from a list in words (for example <em>Restores HP every turn</em> or <em>Boosts Fire moves</em>), its strength with a label that says what the number means, and an explanation.</li>
+</ul>
+<p>The raw numbers are still under <strong>Advanced</strong>.</p>
+<h2 id="how-it-looks">🎨 How it looks</h2>
+<p>Open <strong>How it looks (icon)</strong> to draw the 24×24 icon:</p>
+<ul>
+<li>a pixel editor with a pen, fill, colour picker and undo;</li>
+<li>double-click a colour to change it, and the whole icon changes with it (colour 0 is transparent);</li>
+<li><strong>🖼 Import a picture…</strong> fits a picture into 24×24 with 15 colours of its own;</li>
+<li><strong>Copy the icon of another item</strong> starts from an existing icon;</li>
+<li><strong>💾 Save icon</strong> saves it. Icons are often shared between items: saving gives this item a copy of its own, so the others do not change.</li>
+</ul>
+<h2 id="new-items">➕ New items</h2>
+<p><strong>➕ New item…</strong> at the top of the list makes a new item in one of the game's unused slots (named <em>????????</em>). Choose what it is like: heals HP (like Potion), cures status, revives, restores PP, raises a stat for good, raises a stat in battle, an evolution stone, a held item, a repel, or something to sell. The new item copies that item's behaviour, effect and icon. Then give it a name, an icon and a description, and put it in a shop or on a map.</p>
+<p>New Poké Balls and new berries are not possible: the game recognises them by their number.</p>
 <h2 id="shops">Shops</h2>
 <figure><img src="img/en/shops.png" alt="Shops"><figcaption>Shops</figcaption></figure>
 <p>The <strong>Shops</strong> view lists every shop in the game: each Poké Mart counter and each special shop. Choose one to change what it sells, add or remove items, and change the order.</p>

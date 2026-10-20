@@ -577,9 +577,37 @@ The **📈 Difficulty along the story** chart shows every trainer as a point: ho
 
 For each item:
 
-- **Name**, **price** and **description**.
-- **Icon**.
-- **Pocket** (items, key items, Poké Balls, TMs, berries) and what it does.
+- **Name**, **price** and **description**, where it is sold and where it lies on the maps.
+- **Pocket** (items, key items, Poké Balls, TMs, berries).
+
+## ✨ What it does
+
+At the top of the card, a few short sentences say what the item does, for example *Restores 20 HP* or *Catch chance ×2*. Below them are fields for what you can change:
+
+- **Poké Balls:** the catch bonus of the Ultra, Great, Poké and Safari Balls (×2 = twice as easy as a Poké Ball). The rules of the special balls (Net, Nest, Timer…) are part of the game's code: they are explained but not editable.
+- **Medicine:** how much HP it heals (an amount, all, or half), which status problems it cures (sleep, poison, burn, freeze, paralysis, confusion), whether it revives a fainted Pokémon, whether it works on the whole party, how much PP it restores, and the effort points of vitamins.
+- **Battle items** (X Attack and the like): how many stages each stat goes up.
+- **Evolution stones:** the list of Pokémon that evolve with the stone. Add a new pair (from → into) or remove one.
+- **Repels:** for how many steps they work.
+- **When a Pokémon holds it:** the effect chosen from a list in words (for example *Restores HP every turn* or *Boosts Fire moves*), its strength with a label that says what the number means, and an explanation.
+
+The raw numbers are still under **Advanced**.
+
+## 🎨 How it looks
+
+Open **How it looks (icon)** to draw the 24×24 icon:
+
+- a pixel editor with a pen, fill, colour picker and undo;
+- double-click a colour to change it, and the whole icon changes with it (colour 0 is transparent);
+- **🖼 Import a picture…** fits a picture into 24×24 with 15 colours of its own;
+- **Copy the icon of another item** starts from an existing icon;
+- **💾 Save icon** saves it. Icons are often shared between items: saving gives this item a copy of its own, so the others do not change.
+
+## ➕ New items
+
+**➕ New item…** at the top of the list makes a new item in one of the game's unused slots (named *????????*). Choose what it is like: heals HP (like Potion), cures status, revives, restores PP, raises a stat for good, raises a stat in battle, an evolution stone, a held item, a repel, or something to sell. The new item copies that item's behaviour, effect and icon. Then give it a name, an icon and a description, and put it in a shop or on a map.
+
+New Poké Balls and new berries are not possible: the game recognises them by their number.
 
 ## Shops
 

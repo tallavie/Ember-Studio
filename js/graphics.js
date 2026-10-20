@@ -28,7 +28,7 @@ function PixelEditor(opts) {
   const drawSw = () => {
     swatches.innerHTML = '';
     pal.forEach((c, i) => {
-      const s = h('div', { class: 'sw' + (i === color ? ' sel' : ''), style: { background: Gfx.hex(c) }, title: i + ': ' + Gfx.hex(c) + ' (double-click to change)' }, i.toString(16).toUpperCase());
+      const s = h('div', { class: 'sw' + (i === color ? ' sel' : ''), style: { background: Gfx.hex(c) }, title: i + ': ' + Gfx.hex(c) + ' (' + T('double-click to change') + ')' }, i.toString(16).toUpperCase());
       s.onclick = () => { color = i; drawSw(); };
       s.ondblclick = () => {
         const inp = h('input', { type: 'color', value: Gfx.hex(c) });

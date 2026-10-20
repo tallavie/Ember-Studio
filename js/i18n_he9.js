@@ -119,6 +119,7 @@ Object.assign(I18N.dicts.he, {
   'Boosts Ditto Defense': 'מחזק הגנה של דיטו', 'Doubles the Defense of Ditto.': 'מכפיל את ההגנה של דיטו.',
   'Boosts Cubone / Marowak': 'מחזק את קיובון / מרוואק', 'Doubles the Attack of Cubone and Marowak.': 'מכפיל את ההתקפה של קיובון ומרוואק.',
   'Raises Farfetch\'d\'s critical hits': 'מעלה מכות קריטיות של פארפצ\'ד', 'Farfetch\'d lands critical hits more often.': 'פארפצ\'ד פוגע במכות קריטיות לעתים קרובות יותר.',
+  'double-click to change': 'דאבל-קליק כדי לשנות',
   // new items
   'New item…': 'חפץ חדש…', 'New item': 'חפץ חדש', 'A new item.': 'חפץ חדש.',
   'There is no free item slot left for this kind of item': 'לא נשאר מקום פנוי לחפץ מהסוג הזה',

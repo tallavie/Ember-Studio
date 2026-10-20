@@ -32,12 +32,19 @@ def imports_of(paths):
     return sorted(out)
 
 
+def public_data(stage):
+    """data/ without what is not ours to publish (the same as .gitignore): FireRed's English text and the author's own game"""
+    dst = os.path.join(stage, 'data')
+    shutil.copytree(os.path.join(APP, 'data'), dst, ignore=shutil.ignore_patterns('_english.json', 'kachol_lavan'))
+    return dst
+
+
 def main():
     no_mgba, no_sign = '--no-mgba' in sys.argv, '--no-sign' in sys.argv
     stage = os.path.join(ROOT, 'build_exe'); shutil.rmtree(stage, ignore_errors=True); os.makedirs(stage)
     # mGBA, with a version stamp (the EXE reinstalls it only when the stamp changes)
     datas = [(os.path.join(APP, 'index.html'), '.'), (os.path.join(APP, 'css'), 'css'), (os.path.join(APP, 'js'), 'js'),
-             (os.path.join(APP, 'lib'), 'lib'), (os.path.join(APP, 'data'), 'data'),
+             (os.path.join(APP, 'lib'), 'lib'), (public_data(stage), 'data'),
              (os.path.join(APP, 'tools', 'kl', '*.py'), os.path.join('tools', 'kl')), (os.path.join(HERE, '*.py'), 'ember'),
              (os.path.join(HERE, 'icon.png'), 'ember')]
     if glob.glob(os.path.join(APP, 'docs', '*.pdf')): datas.append((os.path.join(APP, 'docs', '*.pdf'), 'docs'))   # the user guides (❓ Guide)

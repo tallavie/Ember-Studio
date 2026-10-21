@@ -11,7 +11,7 @@ sys.path.insert(0, HERE)
 import project as P                                          # noqa: E402
 import tools as T                                            # noqa: E402
 
-VERSION = '0.1.0'
+VERSION = '0.3.0'
 TEST_DIR = os.path.join(os.path.dirname(APP), 'tools', 'test')
 MGBA_DIRS = [os.path.join(os.environ.get('LOCALAPPDATA', ''), 'EmberStudio', 'mgba'), os.path.join(APP, 'mgba'), os.path.join(os.path.dirname(APP), 'tools', 'mgba_nightly')]
 

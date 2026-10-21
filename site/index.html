@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ember Studio</title>
+<meta name="description" content="Ember Studio: a free editor for making your own game on top of Pokémon FireRed. Maps, story, Pokémon, trainers, items, text, graphics and music, with a built-in emulator.">
+<meta property="og:title" content="Ember Studio">
+<meta property="og:description" content="A free editor for making your own game on top of Pokémon FireRed.">
+<meta property="og:image" content="img/world.jpg">
+<link rel="icon" href="img/icon.png">
+<style>
+/* the editor's own colours (css/app.css), dark first like the screenshots */
+:root {
+  --bg: #14161c; --panel: #1d2029; --ink: #e6e8ef; --muted: #9aa1b1; --line: #2f3443;
+  --accent: #6d8bff; --accent-ink: #fff; --sel: #283255; --ember: #f08c3a; --ok: #40c057;
+}
+@media (prefers-color-scheme: light) {
+  :root { --bg: #f3f4f8; --panel: #ffffff; --ink: #1d2230; --muted: #6b7280; --line: #dde1ea; --accent: #3b5bdb; --sel: #e7ecff; --ember: #d9480f; --ok: #198754; }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+body { margin: 0; font: 15px/1.55 system-ui, "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+img { max-width: 100%; display: block; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 16px; }
+
+/* header: like the editor's */
+header { position: sticky; top: 0; z-index: 10; background: var(--panel); border-bottom: 1px solid var(--line); }
+header .wrap { display: flex; align-items: center; gap: 14px; height: 56px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; color: var(--ink); white-space: nowrap; }
+.brand img { width: 26px; height: 26px; }
+header nav { display: flex; gap: 2px; margin-left: auto; }
+header nav a { color: var(--ink); padding: 6px 11px; border-radius: 8px; font-size: 14px; }
+header nav a:hover { background: var(--bg); text-decoration: none; }
+.btn { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 600; padding: 8px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.btn:hover { border-color: var(--accent); text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.big { font-size: 17px; padding: 13px 24px; border-radius: 10px; }
+header .btn { padding: 6px 14px; }
+
+/* hero */
+.hero { padding: 64px 0 40px; text-align: center; }
+.hero h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.02em; }
+.hero h1 .fire { color: var(--ember); }
+.hero p.lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 680px; margin: 0 auto 28px; }
+.cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.meta { margin-top: 14px; color: var(--muted); font-size: 13px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.meta b { color: var(--ink); font-weight: 600; }
+.window { margin: 44px auto 0; max-width: 1080px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+.window .bar { display: flex; gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.window .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); }
+
+/* sections */
+section { padding: 56px 0; }
+.kicker { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+h2 { font-size: clamp(26px, 3.6vw, 34px); margin: 0 0 10px; letter-spacing: -.01em; }
+.sub { color: var(--muted); margin: 0 0 28px; max-width: 700px; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+.grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.feature .ic { font-size: 24px; width: 42px; height: 42px; border-radius: 10px; background: var(--sel); display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+.feature h3 { margin: 0 0 4px; font-size: 16px; }
+.feature p { margin: 0; color: var(--muted); font-size: 14px; }
+
+.gifs { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.gifs figure { margin: 0; }
+.gifs img { border-radius: 10px; border: 1px solid var(--line); width: 100%; }
+.gifs figcaption { margin-top: 10px; } .gifs figcaption b { display: block; } .gifs figcaption span { color: var(--muted); font-size: 14px; }
+
+.gallery { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.shot { margin: 0; cursor: zoom-in; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; transition: transform .15s, border-color .15s; }
+.shot:hover { transform: translateY(-2px); border-color: var(--accent); }
+.shot img { aspect-ratio: 16 / 10; object-fit: cover; object-position: top; width: 100%; }
+.shot figcaption { padding: 8px 12px; font-size: 13px; font-weight: 600; }
+#lightbox { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.85); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
+#lightbox img { max-height: calc(100vh - 90px); border-radius: 8px; }
+#lightbox p { color: #fff; margin: 12px 0 0; font-weight: 600; }
+
+.two { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+.guide { display: flex; align-items: center; gap: 14px; }
+.guide .ic { font-size: 28px; }
+.guide b { display: block; } .guide span { color: var(--muted); font-size: 13px; }
+.notes { max-height: 460px; overflow-y: auto; }
+.notes h3 { margin: 4px 0 4px; font-size: 17px; } .notes h3 small { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 6px; }
+.notes h4 { margin: 12px 0 4px; font-size: 14px; }
+.notes ul { margin: 4px 0 18px; padding-left: 20px; } .notes li { margin: 3px 0; font-size: 14px; }
+.notes p { font-size: 14px; color: var(--muted); }
+.notes code { font: 12px ui-monospace, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.req li { margin: 6px 0; }
+.counter { font-size: 40px; font-weight: 800; color: var(--ember); line-height: 1; }
+
+footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 13px; }
+footer .wrap { display: flex; gap: 20px; justify-content: space-between; flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  header nav { display: none; }
+  header .btn { margin-left: auto; }
+  .two { grid-template-columns: 1fr; }
+  .gifs { grid-template-columns: 1fr; }
+  section { padding: 40px 0; } .hero { padding: 40px 0 24px; }
+}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="brand" href="#"><img src="img/icon.png" alt="">Ember Studio</a>
+  <nav><a href="#features">Features</a><a href="#see">See it work</a><a href="#gallery">Gallery</a><a href="#guides">Guides</a><a href="#changes">What's new</a></nav>
+  <a class="btn primary dl" href="https://github.com/tallavie/Ember-Studio/releases/latest/download/EmberStudio.exe">⬇ Download</a>
+</div></header>
+
+<div class="hero"><div class="wrap">
+  <h1>Make your own <span class="fire">Pokémon</span> game</h1>
+  <p class="lead">Ember Studio is a free editor for building your own game on top of Pokémon FireRed: maps, story, Pokémon, trainers, items, text, graphics and music, with the game running right inside it.</p>
+  <div class="cta">
+    <a class="btn primary big dl" href="https://github.com/tallavie/Ember-Studio/releases/latest/download/EmberStudio.exe">⬇ Download for Windows</a>
+    <a class="btn big" href="https://github.com/tallavie/Ember-Studio">View the source</a>
+  </div>
+  <div class="meta"><span>Version <b id="ver">0.3.0</b></span><span>One file · nothing to install</span><span>Windows 10 / 11</span><span id="dlcount-line" hidden><b id="dlcount-small"></b> <span id="dlword">downloads</span></span></div>
+  <div class="window"><div class="bar"><i></i><i></i><i></i></div><img src="img/world.jpg" alt="The world view of Ember Studio: all the connected maps of the game together" width="1400" height="875"></div>
+</div></div>
+
+<section id="features"><div class="wrap">
+  <div class="kicker">Features</div>
+  <h2>Everything in one place</h2>
+  <p class="sub">No hex editors, no scripting languages, no ten different tools. You see the game, you click on it and you change it.</p>
+  <div class="grid">
+    <div class="panel feature"><div class="ic">🗺</div><h3>Maps and the world</h3><p>Paint maps and see all the connected maps together. Drag them around, resize them, make new ones, and follow doors into houses.</p></div>
+    <div class="panel feature"><div class="ic">👤</div><h3>People, doors and signs</h3><p>Place characters and edit what they say right on the map. Every conversation can open as a chat, with YES / NO branches side by side.</p></div>
+    <div class="panel feature"><div class="ic">📜</div><h3>Story</h3><p>The original story as a timeline, and your own story written with blocks instead of code. "The journey" shows the whole game on one line.</p></div>
+    <div class="panel feature"><div class="ic">🐾</div><h3>Pokémon and legendaries</h3><p>Stats, types, moves, evolutions and wild Pokémon. Put legendaries anywhere in the world, or turn a battle picture into a sprite.</p></div>
+    <div class="panel feature"><div class="ic">⚔</div><h3>Trainers and moves</h3><p>Teams, levels, items and battle texts for every trainer, plus moves, TMs, HMs and tutors.</p></div>
+    <div class="panel feature"><div class="ic">🎒</div><h3>Items and shops</h3><p>What each item does in plain words, with fields to change it. Draw item icons pixel by pixel, add new items and stock every shop.</p></div>
+    <div class="panel feature"><div class="ic">💬</div><h3>Text and languages</h3><p>Every line of the game in one place, with a full Hebrew translation, right-to-left text and Hebrew letters in the game fonts.</p></div>
+    <div class="panel feature"><div class="ic">🎨</div><h3>Graphics and music</h3><p>Sprites, characters made from a picture, the title screen, and songs imported from MIDI.</p></div>
+    <div class="panel feature"><div class="ic">🎮</div><h3>Play inside the editor</h3><p>Start the game from any spot on the map with the built-in mGBA emulator, without leaving the editor.</p></div>
+    <div class="panel feature"><div class="ic">🧭</div><h3>Can the game be finished?</h3><p>The game check walks the whole world like a player would. It tells you whether the league can be reached and where a player would get stuck.</p></div>
+    <div class="panel feature"><div class="ic">🔍</div><h3>Search everything</h3><p>Press Ctrl+K to find any map, Pokémon, trainer, item, move or line of dialogue.</p></div>
+    <div class="panel feature"><div class="ic">📁</div><h3>Projects that fit in Git</h3><p>A project keeps only your changes, never the ROM, so you can share it and work on it with others.</p></div>
+  </div>
+</div></section>
+
+<section id="see"><div class="wrap">
+  <div class="kicker">See it work</div>
+  <h2>The world view, in two moves</h2>
+  <p class="sub">The whole game world on one screen. Maps connect and disconnect by themselves as you move them.</p>
+  <div class="gifs">
+    <figure><img src="img/world-new-map.gif" alt="Making a new map in the world view" loading="lazy" width="960" height="690">
+      <figcaption><b>Make a new map</b><span>Drag a rectangle on the empty area, give it a name and press Create. It connects to the map it touches.</span></figcaption></figure>
+    <figure><img src="img/world-connect.gif" alt="Disconnecting and connecting maps in the world view" loading="lazy" width="960" height="690">
+      <figcaption><b>Disconnect and connect</b><span>Grab a map by its name and drag it away to cut the connection. Drag it back until it touches to join it again.</span></figcaption></figure>
+  </div>
+</div></section>
+
+<section id="gallery"><div class="wrap">
+  <div class="kicker">Gallery</div>
+  <h2>Every part of the editor</h2>
+  <p class="sub">Click a picture to see it bigger.</p>
+  <div class="gallery" id="shots"></div>
+</div></section>
+
+<section id="guides"><div class="wrap">
+  <div class="kicker">Guides</div>
+  <h2>Learn it in an evening</h2>
+  <p class="sub">Full guides with a picture for every screen. They also open from the ❓ Guide button inside the editor.</p>
+  <div class="two">
+    <a class="panel guide" href="https://github.com/tallavie/Ember-Studio/raw/main/docs/Ember-Studio-Guide-en.pdf"><span class="ic">📘</span><div><b>User guide (English)</b><span>PDF</span></div></a>
+    <a class="panel guide" href="https://github.com/tallavie/Ember-Studio/raw/main/docs/Ember-Studio-Guide-he.pdf"><span class="ic">📗</span><div><b>User guide (Hebrew)</b><span>PDF</span></div></a>
+  </div>
+</div></section>
+
+<section id="changes"><div class="wrap">
+  <div class="kicker">What's new</div>
+  <h2>Versions</h2>
+  <div class="two">
+    <div class="panel notes" id="notes"><p>Loading the version history…</p></div>
+    <div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="kicker">Downloads so far</div>
+        <div class="counter" id="dlcount">–</div>
+        <p style="color:var(--muted);font-size:13px;margin:8px 0 0">Every version together, counted live by GitHub.</p>
+      </div>
+      <div class="panel req">
+        <h3 style="margin-top:0">What you need</h3>
+        <ul>
+          <li>Windows 10 or 11.</li>
+          <li>Your own copy of <b>Pokémon FireRed (US) v1.1</b> (CRC <code>84EE4776</code>). No ROM is included, and none will be.</li>
+          <li>The first time, Windows may warn because the file is not signed: choose <i>More info → Run anyway</i>.</li>
+        </ul>
+        <a class="btn primary dl" href="https://github.com/tallavie/Ember-Studio/releases/latest/download/EmberStudio.exe">⬇ Download the latest version</a>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span>Ember Studio is free and open source (GPL-3.0). The built-in emulator is mGBA (MPL-2.0).</span>
+  <span>A fan project, not affiliated with Nintendo, Game Freak or The Pokémon Company.</span>
+</div></footer>
+
+<script>
+const REPO = 'tallavie/Ember-Studio';
+const SHOTS = [['map-editor', 'Map editor'], ['people', 'People and doors'], ['story-blocks', 'Story with blocks'], ['timeline', 'The game story timeline'],
+  ['pokemon', 'Pokémon'], ['legends', 'Legendaries in the world'], ['trainers', 'Trainers'], ['items', 'Items: what each one does'], ['item-icon', 'Item icon editor'],
+  ['character', 'Character from a picture'], ['music', 'Music'], ['play', 'Play from here'], ['wizard', 'New game wizard'], ['check', 'Game check']];
+
+const box = document.getElementById('shots');
+for (const [f, t] of SHOTS) {
+  const fig = document.createElement('figure'); fig.className = 'shot';
+  fig.innerHTML = `<img src="img/${f}.jpg" alt="${t}" loading="lazy" width="1400" height="875"><figcaption>${t}</figcaption>`;
+  fig.onclick = () => {
+    const lb = document.createElement('div'); lb.id = 'lightbox';
+    lb.innerHTML = `<img src="img/${f}.jpg" alt="${t}"><p>${t}</p>`;
+    const close = () => { lb.remove(); removeEventListener('keydown', esc); };
+    const esc = e => { if (e.key === 'Escape') close(); };
+    lb.onclick = close; addEventListener('keydown', esc); document.body.append(lb);
+  };
+  box.append(fig);
+}
+
+// a tiny Markdown reader for the release notes (headings, lists, bold, italics, code)
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>').replace(/`(.+?)`/g, '<code>$1</code>');
+function md(src) {
+  let out = '', list = false;
+  for (const line of src.split(/\r?\n/)) {
+    const li = line.match(/^\s*[-*] (.*)/), hd = line.match(/^#{2,4} (.*)/);
+    if (!li && list) { out += '</ul>'; list = false; }
+    if (li) { if (!list) { out += '<ul>'; list = true; } out += '<li>' + inline(li[1]) + '</li>'; }
+    else if (hd) { if (!/^Ember Studio/.test(hd[1])) out += '<h4>' + inline(hd[1]) + '</h4>'; }
+    else if (line.trim()) out += '<p>' + inline(line) + '</p>';
+  }
+  return out + (list ? '</ul>' : '');
+}
+
+fetch(`https://api.github.com/repos/${REPO}/releases`).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(rels => {
+  let total = 0;
+  for (const r of rels) for (const a of r.assets) if (/\.exe$/i.test(a.name)) total += a.download_count;
+  document.getElementById('dlcount').textContent = total.toLocaleString('en');
+  document.getElementById('dlcount-small').textContent = total.toLocaleString('en');
+  document.getElementById('dlword').textContent = total === 1 ? 'download' : 'downloads';
+  document.getElementById('dlcount-line').hidden = false;
+  if (rels[0]) document.getElementById('ver').textContent = rels[0].tag_name.replace(/^v/, '');
+  document.getElementById('notes').innerHTML = rels.map(r =>
+    `<h3>${esc(r.name || r.tag_name)}<small>${new Date(r.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</small></h3>` +
+    md((r.body || '').replace(/^[\s\S]*?(?=^### )/m, '').split(/^### Guides/m)[0])).join('');
+}).catch(() => {
+  document.getElementById('notes').innerHTML = `<p>The version history is on <a href="https://github.com/${REPO}/releases">the Releases page</a>.</p>`;
+});
+</script>
+</body>
+</html>

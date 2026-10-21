@@ -158,6 +158,12 @@ const Game = (() => {
       classRef: [0xD80B4, 0x183B4, v => rom.ptr(v) >= 0],                                            // a pointer to the trainer class names
     };
     for (const [k, [f, e, ok]] of Object.entries(TABLES)) { const v = fr11 ? f : g.isEmerald ? e : -1; o[k] = v >= 0 && ok(v) ? v : -1; }
+    // Emerald: how Pokémon move in battle (pointers in the code that uses each table)
+    const viaCode = (lit, ok) => { const v = g.isEmerald ? rom.ptr(lit) : -1; return v >= 0 && ok(v) ? v : -1; };
+    o.frontAnims = viaCode(0x5E7BC, v => rom.ptr(rom.ptr(v + 4)) >= 0);                // gMonFrontAnimsPtrTable: per species {stand still, the animation}
+    o.frontAnimIds = viaCode(0x6EDE8, v => rom.u8[v] < 0x57);                          // sMonFrontAnimIdsTable: the motion (species - 1)
+    o.animDelays = viaCode(0x6EDDC, () => true);                                       // sMonAnimationDelayTable (species - 1)
+    o.backAnimSets = viaCode(0x17F488, v => rom.u8[v + 1] < 26);                       // sSpeciesToBackAnimSet
     g.tutorCount = g.isEmerald ? 30 : 15;
     g.trainerPicCount = g.isEmerald ? 93 : 148;
     g.classCount = g.isEmerald ? 66 : 107;

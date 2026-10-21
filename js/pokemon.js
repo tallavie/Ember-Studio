@@ -91,7 +91,14 @@ const PokemonTab = (() => {
     let shared = false; for (let i = 0; i < N(); i++) { const e = tableBase + i * 8; if (e !== entry && r.ptr(e) === old) { shared = true; break; } }
     if (shared || !d) r.wptr(entry, r.writeNew(data)); else r.replaceData(old, d.srcLen, data, [entry]);
   }
-  function savePicture(sp, kind, px) { const t = kind === 'front' ? O().frontPics : O().backPics; saveLZ(t + sp * 8, Gfx.pixelsToTiles(px, 64, 64), t); }
+  // Emerald: a front picture holds both animation frames (64x128). frame2: pixels, 'copy' (= the new frame 1) or 'keep' (default)
+  function savePicture(sp, kind, px, frame2 = 'keep') {
+    const t = kind === 'front' ? O().frontPics : O().backPics, tiles = Gfx.pixelsToTiles(px, 64, 64);
+    if (kind !== 'front' || !App.game.isEmerald) { saveLZ(t + sp * 8, tiles, t); return; }
+    const old = picture(sp, 'front', false), raw = new Uint8Array(tiles.length * 2);
+    const f2 = frame2 === 'copy' ? tiles : frame2 === 'keep' ? (old && old.h >= 128 ? Gfx.pixelsToTiles(old.px.slice(4096, 8192), 64, 64) : tiles) : Gfx.pixelsToTiles(frame2, 64, 64);
+    raw.set(tiles); raw.set(f2, tiles.length); saveLZ(t + sp * 8, raw, t);
+  }
   function savePalette(sp, shiny, pal) { const t = shiny ? O().shinyPals : O().pals; saveLZ(t + sp * 8, Gfx.palBytes(pal), t); }
   function icon(sp) {
     const o = O(), r = rom(); if (o.iconTable < 0) return null;
@@ -255,9 +262,11 @@ const PokemonTab = (() => {
           h('label', {}, h('input', { type: 'checkbox', checked: advanced, onchange: e => { advanced = e.target.checked; rerender(); } }), ' Advanced fields'))));
     const ws = warnings(sp);
     const warnBox = ws.length ? h('div', { class: 'panel warn' }, h('b', {}, '⚠ Worth checking'), h('ul', {}, ...ws.map(x => h('li', {}, x)))) : '';
-    const TABS = [['basics', 'Basics'], ['moves', 'Moves'], ['evo', 'Evolutions'], ['dex', 'Pokédex'], ['pics', 'Pictures'], ['where', 'Where it\'s found'], ['usage', 'Used in the game']];
+    const TABS = [['basics', 'Basics'], ['moves', 'Moves'], ['evo', 'Evolutions'], ['dex', 'Pokédex'], ['pics', 'Pictures'], ...(MonAnim.supported() ? [['anim', 'Animation']] : []), ['where', 'Where it\'s found'], ['usage', 'Used in the game']];
+    if (tab === 'anim' && !MonAnim.supported()) tab = 'basics';
     const tabs = h('div', { class: 'tabs' }, ...TABS.map(([k, l]) => h('button', { class: tab === k ? 'sel' : '', onclick: () => { tab = k; rerender(); } }, l)));
-    const body = { basics: basicsTab, moves: movesTab, evo: evoTab, dex: dexTab, pics: picsTab, where: whereTab, usage: usageTab }[tab](sp, rerender);
+    const anim = (s, re) => MonAnim.tab(s, re, { PixelEditor, convertImage, savePicture });
+    const body = { basics: basicsTab, moves: movesTab, evo: evoTab, dex: dexTab, pics: picsTab, anim, where: whereTab, usage: usageTab }[tab](sp, rerender);
     return h('div', { style: { flex: 1, minWidth: 0 } }, head, warnBox, h('div', { class: 'panel' }, tabs, body));
   }
 
@@ -380,11 +389,11 @@ const PokemonTab = (() => {
       try {
         if (picKind === 'front' && !picShiny) {                         // a new front: its own palette; the back is recoloured to it; shiny = shifted colours
           const c = await convertImage(file, 64, null), back = picture(sp, 'back', false);
-          savePicture(sp, 'front', c.px);
+          savePicture(sp, 'front', c.px, 'copy');                       // Emerald: a new picture, so its second frame starts the same
           savePicture(sp, 'back', remap(back.px.slice(0, 4096), back.pal, c.pal));
           savePalette(sp, false, c.pal); savePalette(sp, true, hueShift(c.pal, 40));
           toast('New front picture (15 colours). The back was recoloured to its palette and a shiny palette was made (adjust it under "Shiny front").');
-        } else { const c = await convertImage(file, 64, m.pal); savePicture(sp, picKind, c.px); toast('Imported with the Pokémon\'s current colours'); }
+        } else { const c = await convertImage(file, 64, m.pal); savePicture(sp, picKind, c.px, 'copy'); toast('Imported with the Pokémon\'s current colours'); }
         rerender();
       } catch (x) { toast(x.message, 'err'); }
     };

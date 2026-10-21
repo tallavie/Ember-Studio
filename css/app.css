@@ -448,3 +448,10 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 /* world view: the square under the mouse, over the map (it used to wrap the toolbar and push the map down) */
 .wv-pos { position: absolute; top: 6px; inset-inline-start: 8px; max-width: calc(100% - 16px); padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
 .wv-pos:empty { display: none; }
+
+/* Emerald: how a Pokémon moves in battle */
+.ma-stage { position: relative; width: 240px; height: 170px; border-radius: 10px; overflow: hidden; background: linear-gradient(#f8f8d8, #d8f0b0 60%, #a8d880); }
+.ma-ground { position: absolute; left: 50px; right: 50px; bottom: 22px; height: 26px; border-radius: 50%; background: #88c070; }
+.ma-sprite { position: absolute; left: 56px; bottom: 30px; width: 128px; height: 128px; transform-origin: 50% 100%; }
+.ma-steps { display: flex; flex-direction: column; gap: 4px; }
+.ma-step { gap: 8px; }

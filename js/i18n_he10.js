@@ -41,4 +41,13 @@ Object.assign(I18N.dicts.he, {
   // test in battle
   "The player's room was not found": 'החדר של השחקן לא נמצא', "There is no free spot in the player's room": 'אין מקום פנוי בחדר של השחקן',
   'Talk to the person below you (X) to battle {who}': 'דברו עם הדמות שמתחתיכם (X) כדי להילחם ב-{who}',
+  // Emerald: Pokémon animation
+  'Animation': 'אנימציה', 'Animations can be edited in Emerald.': 'אפשר לערוך אנימציות באמרלד.', 'Frame 1': 'פריים 1', 'Frame 2': 'פריים 2',
+  'frames (60 = 1 second)': 'פריימים (60 = שנייה)', 'Add a step': 'הוספת שלב', 'Blink twice': 'הבהוב פעמיים', 'Hold frame 2': 'החזקת פריים 2',
+  'Add at least one step': 'צריך לפחות שלב אחד', 'Save the sequence': 'שמירת הרצף', 'Frame 2 saved': 'פריים 2 נשמר', 'In battle': 'בקרב', 'Play again': 'הפעלה שוב',
+  'The preview is close to the game. "Test in battle" shows exactly how it moves.': 'התצוגה קרובה למשחק. "בדיקה בקרב" מראה בדיוק איך הוא זז.',
+  'How it moves': 'איך הוא זז', 'Motion when it appears': 'תנועה כשהוא מופיע', 'Wait before the motion (frames)': 'המתנה לפני התנועה (פריימים)',
+  'Motion when it is your Pokémon (from behind)': 'תנועה כשהוא הפוקימון שלך (מאחור)', 'The picture changes (frame 1 / frame 2)': 'החלפת התמונה (פריים 1 / פריים 2)',
+  'The front picture has two frames. These steps show them one after the other when the Pokémon appears.': 'לתמונה מלפנים יש שני פריימים. השלבים האלה מציגים אותם בזה אחר זה כשהפוקימון מופיע.',
+  'Import PNG (frame 2)': 'ייבוא PNG (פריים 2)', 'Same as frame 1': 'כמו פריים 1', 'Save frame 2': 'שמירת פריים 2', 'Test in battle': 'בדיקה בקרב',
 });

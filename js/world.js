@@ -1443,10 +1443,10 @@ const WorldTab = (() => {
       h('button', { title: T('The Pokémon the player gets in the test'), onclick: () => Emu.teamDialog() }, '🎒'),
       S.highlight ? h('span', { class: 'hl-chip' }, '🌿 ' + (App.getLists().species[S.highlight.sp] || '') + ' (' + S.highlight.areas.size + ' areas) ',
         h('button', { class: 'mu-x', onclick: () => { S.highlight = null; render(root); } }, '✕')) : '',
-      h('span', { id: 'wv-pos', class: 'muted' }));
+      '');
     root.append(h('div', { class: 'cols wv-cols' },
       h('div', { class: 'panel wv-main' }, tb, h('div', { id: 'wv-warn', class: 'warn', style: { minHeight: '18px', fontSize: '12px' } }),
-        h('div', { class: 'wv-box' }, cv, mini),
+        h('div', { class: 'wv-box' }, cv, mini, h('div', { id: 'wv-pos', class: 'wv-pos' })),     // the square under the mouse: over the map, so nothing moves
         h('div', { class: 'muted', style: { fontSize: '12px' } }, 'Wheel = zoom · Space + drag or middle button = pan · drag a name tag = move the map · drag on the black area = new map · right-drag on a map = copy blocks · right click = the map menu · Esc = deselect · Ctrl+Z = undo')),
       h('div', { class: 'panel wv-side', id: 'wv-side' })));
     bind(cv);

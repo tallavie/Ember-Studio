@@ -444,3 +444,7 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .pc-ok { background: color-mix(in srgb, #40c057 14%, transparent); border-color: #40c057; } .pc-bad { background: color-mix(in srgb, #fa5252 14%, transparent); border-color: #fa5252; }
 .pc-big { font-size: 30px; font-weight: 800; }
 .pc-steps { margin: 4px 0 8px; padding-inline-start: 24px; line-height: 1.8; }
+
+/* world view: the square under the mouse, over the map (it used to wrap the toolbar and push the map down) */
+.wv-pos { position: absolute; top: 6px; inset-inline-start: 8px; max-width: calc(100% - 16px); padding: 2px 8px; border-radius: 6px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.wv-pos:empty { display: none; }

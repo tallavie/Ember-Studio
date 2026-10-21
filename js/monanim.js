@@ -6,6 +6,7 @@
 
 const MonAnim = (() => {
   const R = () => App.rom, O = () => App.game.offsets;
+  let editing = 1;                                      // which frame the pixel editor shows: 0 = frame 1, 1 = frame 2
   const supported = () => !!App.game && App.game.isEmerald && O().frontAnims >= 0 && O().frontAnimIds >= 0;
 
   // motions, in the game's order: [name, Hebrew]
@@ -130,10 +131,12 @@ const MonAnim = (() => {
     const motionSel = h('select', { onchange: e => { r.w8(O().frontAnimIds + sp - 1, +e.target.value); pv.play(); } }, ...MOTIONS.map((x, i) => h('option', { value: i, selected: i === motion(sp) }, nameOf(MOTIONS, i))));
     const delayIn = h('input', { type: 'number', min: 0, max: 255, value: delay(sp), style: { width: '70px' }, onchange: e => { if (O().animDelays >= 0) { r.w8(O().animDelays + sp - 1, Math.max(0, Math.min(255, +e.target.value || 0))); pv.play(); } } });
     const backSel = O().backAnimSets >= 0 ? h('select', { onchange: e => r.w8(O().backAnimSets + sp, +e.target.value) }, ...BACK.map((x, i) => h('option', { value: i, selected: i === back(sp) }, nameOf(BACK, i)))) : '';
-    // the second frame
-    const f2 = m.h >= 128 ? m.px.slice(4096, 8192) : m.px.slice(0, 4096);
-    const ed = tools.PixelEditor({ px: f2, w: 64, h: 64, pal: m.pal, transparent: true, name: (App.getLists().species[sp] || sp) + '_frame2' });
-    const saveF2 = px => { tools.savePicture(sp, 'front', m.px.slice(0, 4096), px); toast(T('Frame 2 saved')); rerender(); };
+    // the two frames: pick the one to edit, or swap them
+    const px1 = m.px.slice(0, 4096), px2 = m.h >= 128 ? m.px.slice(4096, 8192) : m.px.slice(0, 4096);
+    const ed = tools.PixelEditor({ px: editing === 1 ? px2 : px1, w: 64, h: 64, pal: m.pal, transparent: true, name: (App.getLists().species[sp] || sp) + '_frame' + (editing + 1) });
+    const saveFrame = px => { if (editing === 1) tools.savePicture(sp, 'front', px1, px); else tools.savePicture(sp, 'front', px, px2); toast(Tf('Frame {n} saved', { n: editing + 1 })); rerender(); };
+    const thumb = f => { const c = h('canvas', { class: 'pixel', width: 64, height: 64 }); c.getContext('2d').putImageData(Gfx.toImageData(f ? px2 : px1, 64, 64, m.pal, true), 0, 0); return c; };
+    const pick = f => h('div', { class: 'piccell' + (editing === f ? ' sel' : ''), onclick: () => { editing = f; rerender(); } }, thumb(f), h('div', {}, T(f ? 'Frame 2' : 'Frame 1')));
     return h('div', {},
       h('div', { class: 'row wrap', style: { alignItems: 'flex-start', gap: '20px' } },
         h('div', {}, h('h4', {}, T('In battle')), pv.el,
@@ -148,12 +151,16 @@ const MonAnim = (() => {
           h('h4', {}, T('The picture changes (frame 1 / frame 2)')),
           h('p', { class: 'muted', style: { fontSize: '12px' } }, T('The front picture has two frames. These steps show them one after the other when the Pokémon appears.')),
           rows)),
-      h('h4', {}, T('Frame 2')),
+      h('h4', {}, T('The two frames (click one to edit it)')),
+      h('div', { class: 'row wrap', style: { alignItems: 'center' } }, pick(0),
+        h('button', { title: T('Frame 1 becomes frame 2 and frame 2 becomes frame 1'), onclick: () => { tools.savePicture(sp, 'front', px2, px1); toast(T('The frames were swapped')); rerender(); } }, '⇄ ' + T('Swap the frames')),
+        pick(1)),
+      h('h4', {}, Tf('Edit: frame {n}', { n: editing + 1 })),
       h('div', { class: 'row wrap' },
-        h('label', { class: 'btn primary' }, '🖼 ' + T('Import PNG (frame 2)'), h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async e => {
-          const f = e.target.files[0]; if (!f) return; try { saveF2((await tools.convertImage(f, 64, m.pal)).px); } catch (x) { toast(x.message, 'err'); } } })),
-        h('button', { onclick: () => saveF2(m.px.slice(0, 4096)) }, T('Same as frame 1')),
-        h('button', { class: 'primary', onclick: () => saveF2(ed.px) }, '💾 ' + T('Save frame 2'))),
+        h('label', { class: 'btn primary' }, '🖼 ' + Tf('Import PNG (frame {n})', { n: editing + 1 }), h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async e => {
+          const f = e.target.files[0]; if (!f) return; try { saveFrame((await tools.convertImage(f, 64, m.pal)).px); } catch (x) { toast(x.message, 'err'); } } })),
+        h('button', { onclick: () => saveFrame(editing ? px1 : px2) }, Tf('Same as frame {n}', { n: editing ? 1 : 2 })),
+        h('button', { class: 'primary', onclick: () => saveFrame(ed.px) }, '💾 ' + Tf('Save frame {n}', { n: editing + 1 }))),
       ed.el);
   }
   return { supported, tab, steps, writeSteps, motion, delay, back, MOTIONS, BACK };

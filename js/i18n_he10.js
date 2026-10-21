@@ -50,4 +50,8 @@ Object.assign(I18N.dicts.he, {
   'Motion when it is your Pokémon (from behind)': 'תנועה כשהוא הפוקימון שלך (מאחור)', 'The picture changes (frame 1 / frame 2)': 'החלפת התמונה (פריים 1 / פריים 2)',
   'The front picture has two frames. These steps show them one after the other when the Pokémon appears.': 'לתמונה מלפנים יש שני פריימים. השלבים האלה מציגים אותם בזה אחר זה כשהפוקימון מופיע.',
   'Import PNG (frame 2)': 'ייבוא PNG (פריים 2)', 'Same as frame 1': 'כמו פריים 1', 'Save frame 2': 'שמירת פריים 2', 'Test in battle': 'בדיקה בקרב',
+  'Frame {n} saved': 'פריים {n} נשמר', 'The two frames (click one to edit it)': 'שני הפריימים (לחיצה על אחד פותחת אותו לעריכה)',
+  'Frame 1 becomes frame 2 and frame 2 becomes frame 1': 'פריים 1 הופך לפריים 2, ופריים 2 הופך לפריים 1', 'The frames were swapped': 'הפריימים הוחלפו',
+  'Swap the frames': 'החלפת הפריימים', 'Edit: frame {n}': 'עריכה: פריים {n}', 'Import PNG (frame {n})': 'ייבוא PNG (פריים {n})',
+  'Same as frame {n}': 'כמו פריים {n}', 'Save frame {n}': 'שמירת פריים {n}',
 });

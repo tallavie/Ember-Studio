@@ -27,4 +27,15 @@ Object.assign(I18N.dicts.he, {
   'From the first town to the league, left to right. Click a moment to open it in the story.': 'מהעיר הראשונה ועד הליגה, לפי הסדר. לחיצה על רגע פותחת אותו בעלילה.',
   "The level of each gym leader's strongest Pokémon, in order. A red dot is weaker than the one before.": 'הרמה של הפוקימון החזק של כל מנהיג מכון, לפי הסדר. נקודה אדומה חלשה מזו שלפניה.',
   'Open the trainer': 'פתיחת המאמן', 'You get this Pokémon here': 'כאן מקבלים את הפוקימון הזה', 'and {n} more': 'ועוד {n}',
+  // can the game be finished?
+  'Can the game be finished?': 'אפשר לסיים את המשחק?', 'Check the path': 'בדיקת הדרך', 'Walking through the whole game…': 'עוברים על כל המשחק…',
+  "Walks the whole world from the player's room like a player: it opens each HM when its place is reached and the right badge is won, and checks that the league can be reached.":
+    'הולכים בכל העולם מהחדר של השחקן, כמו שחקן: כל HM נפתח כשמגיעים למקום שלו ומנצחים את התג המתאים, ובסוף נבדק שאפשר להגיע לליגה.',
+  'The game can be finished: the league can be reached.': 'אפשר לסיים את המשחק: אפשר להגיע לליגה.', 'The end of the game was not found in the scripts.': 'סוף המשחק לא נמצא בסקריפטים.',
+  'The league cannot be reached with what the game gives.': 'אי אפשר להגיע לליגה עם מה שהמשחק נותן.', '{n} maps can be reached.': 'אפשר להגיע ל-{n} מפות.', 'In this order': 'לפי הסדר הזה',
+  'works after badge {n}': 'עובד אחרי תג {n}', 'Badges that can never be won: {list}': 'תגים שאי אפשר לזכות בהם: {list}', 'HMs that can never be got: {list}': 'HM שאי אפשר לקבל: {list}',
+  'Places of the main story that cannot be reached': 'מקומות בעלילה הראשית שאי אפשר להגיע אליהם',
+  'Checked: walls, ledges, one-way tiles, heights, doors, map edges, water, waterfalls, Cut trees, Rock Smash rocks and Strength boulders, and which badge each HM needs. Not checked: people standing in the way and story roadblocks (guards, a sleeping Snorlax…).':
+    'נבדקים: קירות, מדרגות קפיצה, משבצות חד-כיווניות, גבהים, דלתות, קצוות מפה, מים, מפלים, עצי חיתוך, סלעי ניפוץ וסלעי כוח, ואיזה תג כל HM צריך. לא נבדקים: אנשים שעומדים בדרך ומחסומי עלילה (שומרים, סנורלקס ישן…).',
+  'Only after the game: {list}': 'רק אחרי סוף המשחק: {list}', 'Cut': 'חיתוך', 'Fly': 'תעופה', 'Surf': 'גלישה', 'Strength': 'כוח', 'Flash': 'הבזק', 'Rock Smash': 'ניפוץ סלעים', 'Waterfall': 'מפל', 'Dive': 'צלילה',
 });

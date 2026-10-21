@@ -438,3 +438,9 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .jr-mon, .jr-leg { cursor: pointer; padding: 0 4px; } .jr-leg { border-color: #be4bdb; }
 .jr-beats { display: flex; flex-direction: column; gap: 2px; }
 .jr-beat { font-size: 12px; padding: 2px 6px; border-radius: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .jr-beat:hover { background: var(--sel); }
+
+/* can the game be finished? */
+.pc-head { display: flex; gap: 14px; align-items: center; border-radius: 12px; padding: 10px 14px; margin: 8px 0; border: 1px solid var(--line); }
+.pc-ok { background: color-mix(in srgb, #40c057 14%, transparent); border-color: #40c057; } .pc-bad { background: color-mix(in srgb, #fa5252 14%, transparent); border-color: #fa5252; }
+.pc-big { font-size: 30px; font-weight: 800; }
+.pc-steps { margin: 4px 0 8px; padding-inline-start: 24px; line-height: 1.8; }

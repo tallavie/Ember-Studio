@@ -95,7 +95,7 @@ const Doctor = (() => {
     const body = h('div');
     const go = () => { body.innerHTML = ''; body.append(h('p', { class: 'muted' }, T('Checking the whole game…'))); setTimeout(() => { const res = run(); show(body, res); }, 30); };
     root.append(h('div', { class: 'panel' }, h('div', { class: 'row' }, h('h2', {}, '🩺 ' + T('Game check')), h('button', { class: 'primary', onclick: go }, T('Check again'))),
-      h('p', { class: 'muted' }, 'Finds problems before you build: doors that lead nowhere, item balls that share a flag, lines too wide for the message box, untranslated lines and more.'), body));
+      h('p', { class: 'muted' }, 'Finds problems before you build: doors that lead nowhere, item balls that share a flag, lines too wide for the message box, untranslated lines and more.'), body), PathCheck.panel());
     if (last) show(body, last.out); else go();
   }
   function show(body, res) {

@@ -249,7 +249,7 @@ const ItemsTab = (() => {
     const sold = shops().filter(s => s.items.includes(i)), found = foundAt(i), eff = ItemFx.readEffect(i);
     const card = h('div', { class: 'panel tr-card' },
       h('div', { class: 'tr-head' }, h('div', { class: 'tr-pic' }, icon(i, 3)),
-        h('div', { class: 'tr-fields' }, h('div', { class: 'tr-title', dir: 'auto' }, it.name, h('span', { class: 'muted' }, ' #' + i + ' · ' + T(POCKETS[it.pocket] || ''))),
+        h('div', { class: 'tr-fields' }, h('div', { class: 'card-chip' }, '🎒 ' + T('Item') + ' · #' + i + (POCKETS[it.pocket] ? ' · ' + T(POCKETS[it.pocket]) : '')), h('div', { class: 'tr-title', dir: 'auto' }, it.name),
           h('label', { class: 'field' }, T('Name'), nameIn),
           h('label', { class: 'field' }, T('Price in shops'), h('input', { type: 'number', min: 0, max: 65535, value: it.price, style: { width: '90px' }, onchange: e => { r.w16(it.b + 16, Math.max(0, Math.min(65535, +e.target.value))); rer(); } })),
           h('div', { class: 'muted' }, T('Players sell it back for half the price.')))),

@@ -210,7 +210,7 @@ button.big { font-size: 17px; padding: 9px 20px; align-self: flex-start; }
 button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 /* trainers tab */
 .tr-cols { display: grid; grid-template-columns: 260px minmax(380px, 1fr) 560px; gap: 10px; align-items: start; }
-@media (max-width: 1400px) { .tr-cols { grid-template-columns: 240px 1fr; } .tr-curvep { grid-column: 1 / -1; } }
+@media (max-width: 1640px) { .tr-cols { grid-template-columns: 240px minmax(0, 1fr); } .tr-curvep { grid-column: 1 / -1; } }
 .tr-left { display: flex; flex-direction: column; gap: 6px; max-height: calc(100vh - 110px); }
 .tr-list { overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
 .tr-item { display: flex; gap: 6px; align-items: baseline; text-align: start; padding: 4px 6px; }
@@ -383,3 +383,14 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .ob-inline { position: fixed; z-index: 300; background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; padding: 10px; box-shadow: 0 12px 34px rgba(0,0,0,.4); display: flex; flex-direction: column; gap: 6px; }
 .ob-inline::after { content: ""; position: absolute; bottom: -9px; left: calc(var(--tail, 50%) - 9px); border: 9px solid transparent; border-bottom: 0; border-top-color: var(--accent); }
 .ob-inline-who { font-weight: 600; font-size: 13px; }
+
+/* one card language: Pokémon, trainers, items, legendaries */
+.tr-card { border-radius: 14px; }
+.tr-head { gap: 18px; }
+.tr-pic { background: repeating-conic-gradient(color-mix(in srgb, var(--sel) 70%, transparent) 0 25%, transparent 0 50%) 0 0/16px 16px, var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px; min-width: 150px; min-height: 150px; justify-content: center; line-height: normal; }
+.moncard .monpic { background: repeating-conic-gradient(color-mix(in srgb, var(--sel) 70%, transparent) 0 25%, transparent 0 50%) 0 0/16px 16px, var(--bg); border-radius: 14px; padding: 10px; }
+.tr-title { font-size: 22px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; margin-bottom: 4px; }
+.card-chip { align-self: flex-start; font-size: 12px; font-weight: 600; color: var(--accent); background: var(--sel); border-radius: 999px; padding: 2px 10px; margin-bottom: 2px; }
+.tr-sec { margin-top: 16px; padding-top: 12px; }
+.tr-sec > h4, .tr-sec > summary, details.tr-sec > summary { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.it-says { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; font-size: 15px; line-height: 1.6; }

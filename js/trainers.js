@@ -176,7 +176,8 @@ const TrainersTab = (() => {
     const nameIn = h('input', { value: t.name, dir: 'auto', style: { width: '130px' }, onchange: e => { try { Objects.setTrainerName(id, e.target.value); rer(); } catch (x) { toast(x.message, 'err'); } } });
     const head = h('div', { class: 'tr-head' }, h('div', { class: 'tr-pic' }, big(picCanvas(t.pic), 2), picSel),
       h('div', { class: 'tr-fields' },
-        h('div', { class: 'tr-title', dir: 'auto' }, (classes[t.cls] || '') + ' ' + t.name, h('span', { class: 'muted' }, ' #' + id)),
+        h('div', { class: 'card-chip' }, '🧢 ' + T('Trainer') + ' · #' + id),
+        h('div', { class: 'tr-title', dir: 'auto' }, (classes[t.cls] || '') + ' ' + t.name),
         h('label', { class: 'field' }, T('Name'), nameIn),
         h('label', { class: 'field' }, T('Class'), makeSelect(classes, t.cls, v => { Objects.setClass(id, v); rer(); })),
         h('label', { class: 'field' }, T('Music when they see you'), makeSelect(MUSIC, t.music, v => set8(b + 2, (r.u8[b + 2] & 0x80) | v))),

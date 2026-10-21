@@ -242,11 +242,12 @@ const PokemonTab = (() => {
     }), h('div', { class: 'statbar' }, h('span', {}, 'Total'), h('b', {}, String(t)), h('span', { class: avg && Math.abs(t - avg) > 130 ? 'warn' : 'muted', style: { fontSize: '12px' } },
       avg ? '≈' + avg + ' is usual for ' + ['a first stage', 'a second stage', 'a third stage'][st.stage] + (st.final ? ' that does not evolve' : '') : '')));
     const front = picture(sp, 'front', false);
-    const head = h('div', { class: 'panel moncard' },
-      h('div', { class: 'row', style: { alignItems: 'flex-start', gap: '16px' } },
-        h('div', { class: 'monpic' }, front ? spriteCanvas(front.px, front.pal, 64, 64, 2) : ''),
-        h('div', { style: { flex: 1 } },
-          h('div', { class: 'row wrap' }, h('span', { class: 'muted', style: { fontSize: '18px' } }, '#' + sp + (dexNum(sp) ? ' · Pokédex ' + dexNum(sp) : '')), nameIn, count, pv),
+    const head = h('div', { class: 'panel moncard tr-card' },
+      h('div', { class: 'tr-head' },
+        h('div', { class: 'tr-pic monpic' }, front ? spriteCanvas(front.px, front.pal, 64, 64, 2) : ''),
+        h('div', { class: 'tr-fields' },
+          h('div', { class: 'card-chip' }, '🐾 ' + T('A Pokémon') + ' · #' + sp + (dexNum(sp) ? ' · Pokédex ' + dexNum(sp) : '')),
+          h('div', { class: 'row wrap' }, nameIn, count, pv),
           types, bars),
         h('div', { style: { gap: '6px', display: 'flex', flexDirection: 'column' } },
           h('button', { onclick: () => templateDialog(sp, rerender) }, '📋 Start from template…'),

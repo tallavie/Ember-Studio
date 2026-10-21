@@ -147,7 +147,8 @@ const Legends = (() => {
     const itSel = makeSelect([T('nothing'), ...Lst.items.slice(1)], item(x), v => { r.w16(x.at + ITEM[x.how], v); back(); });
     const box = h('div', { class: 'tr-card' },
       h('div', { class: 'tr-head' }, h('div', { class: 'tr-pic' }, pic), h('div', { class: 'tr-fields' },
-        h('div', { class: 'tr-title' }, Lst.species[sp] || sp, h('span', { class: 'muted' }, ' · ' + mapName(x.g, x.n))),
+        h('div', { class: 'card-chip' }, '🐉 ' + T('Legendary') + ' · ' + mapName(x.g, x.n)),
+        h('div', { class: 'tr-title' }, Lst.species[sp] || sp),
         h('label', { class: 'field' }, T('Which Pokémon'), spSel), h('label', { class: 'field' }, T('Level'), lvIn), h('label', { class: 'field' }, T('Holds'), itSel))));
     // how it looks on the map
     const look = h('div', { class: 'tr-sec' }, h('h4', {}, '👁 ' + T('How it looks on the map')));

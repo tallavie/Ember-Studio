@@ -368,6 +368,43 @@ const WorldTab = (() => {
       ctx.strokeRect(sx - g, sy - g, p.w * 16 * z + 2 * g, p.h * 16 * z + 2 * g); ctx.restore();
     }
   }
+  function dropOnMap(d, p, x, y) {
+    const [g, n] = parse(p.k), r = rom(), L = App.getLists(); let what = '';
+    const ok = op('add ' + d.kind, () => {
+      if (d.kind === 'pokemon') { Legends.create(d.id, d.level || 30, g, n, x, y); what = Tf('{name} stands here now (a legendary: talk to it to battle)', { name: L.species[d.id] }); }
+      else if (d.kind === 'item') { const e = Objects.add(g, n, 'item', x, y); r.w16(r.ptr(e.off + 16) + 3, d.id); what = Tf('An item ball with {name}', { name: L.items[d.id] }); }
+      else if (d.kind === 'trainer') { const e = Objects.add(g, n, 'trainer', x, y); r.w16(r.ptr(e.off + 16) + 2, d.id); const t = Objects.trainer(d.id); what = Tf('{name} stands here now', { name: t ? (Objects.classNames()[t.cls] || '') + ' ' + t.name : '#' + d.id }); }
+      S.touched.add(p.k);
+    }, { t: 'raw', label: 'add ' + d.kind });
+    if (!ok) return;
+    activate(p.k); S.mode = 'events'; S.tab = 'objects';
+    S.selEv = Object.values(events(p.k)).flat().find(q => { const [ex, ey] = MapsTab.api.evXY(q); return ex === x && ey === y && q.kind === 'obj'; }) || null;
+    toast(what); cache.clear(); render(S.root_el);
+  }
+  // the library: things to drag onto the map
+  function libraryBox() {
+    const L = App.getLists(), G0 = game(); let kind = S.libKind || 'pokemon', q = '';
+    const list = h('div', { class: 'lib-list' }), tabs = h('div', { class: 'tabs small' });
+    const unused = name => !name || /^\?+$/.test(name);
+    const fill = () => {
+      list.innerHTML = ''; const qq = q.toLowerCase(); let n = 0;
+      const row = (id, name, icon, extra) => {
+        if (qq && !name.toLowerCase().includes(qq) && String(id) !== qq) return; if (n++ > 150) return;
+        const el = h('div', { class: 'lib-row', draggable: 'true', title: T('Drag onto the map') }, icon || '', h('span', { dir: 'auto' }, name), extra ? h('span', { class: 'muted' }, extra) : '');
+        el.ondragstart = e => { e.dataTransfer.setData('application/x-ember', JSON.stringify({ kind, id })); e.dataTransfer.effectAllowed = 'copy'; };
+        list.append(el);
+      };
+      if (kind === 'pokemon') { for (let s = 1; s < G0.speciesCount; s++) if (!unused(L.species[s])) row(s, L.species[s], PokemonTab.iconCanvas(s, 24)); }
+      else if (kind === 'item') { for (let i = 1; i < G0.itemsCount; i++) if (!unused(L.items[i])) row(i, L.items[i], ItemsTab.icon(i)); }
+      else for (let id = 1; id < (TrainersTab.COUNT || 743); id++) { const t = Objects.trainer(id); if (t && t.name) row(id, (Objects.classNames()[t.cls] || '') + ' ' + t.name, '🧢', '#' + id); }
+    };
+    const setKind = k => { kind = S.libKind = k; [...tabs.children].forEach(b => b.classList.toggle('sel', b.dataset.k === k)); fill(); };
+    for (const [k, l] of [['pokemon', '🐾 ' + T('A Pokémon')], ['item', '🎒 ' + T('Item')], ['trainer', '🧢 ' + T('Trainer')]]) tabs.append(h('button', { 'data-k': k, class: k === kind ? 'sel' : '', onclick: () => setKind(k) }, l));
+    fill();
+    return h('details', { class: 'hdr lib', open: S.libOpen !== false, ontoggle: e => { S.libOpen = e.target.open; } }, h('summary', {}, '📚 ' + T('Drag onto the map')),
+      h('p', { class: 'muted', style: { fontSize: '12px', margin: '4px 0' } }, T('Drag a Pokémon (a legendary that stands there), an item (an item ball) or a trainer onto any map. Double-click a person or a sign to edit what they say.')),
+      tabs, h('input', { type: 'search', placeholder: T('Search…'), oninput: e => { q = e.target.value; fill(); } }), list);
+  }
   function labelAt(sx, sy) { for (const l of (S.labels || []).slice().reverse()) if (sx >= l.x && sy >= l.y && sx < l.x + l.w && sy < l.y + l.h) return l.k; return null; }
   function deselect() { S.active = null; S.selEv = null; S.blocking = null; S.pickPlay = false; closeMenu(); playBtn(); draw(); side(); }
 
@@ -584,10 +621,23 @@ const WorldTab = (() => {
   function bind(cv) {
     cv.oncontextmenu = e => e.preventDefault();
     cv.ondblclick = e => {
-      if (S.mode !== 'events') return;
+      if (S.mode !== 'events' && S.mode !== 'manage') return;
       const r = cv.getBoundingClientRect(), [wx, wy] = S2W(e.clientX - r.left, e.clientY - r.top), p = mapAt(Math.floor(wx), Math.floor(wy)); if (!p) return;
       const ev = eventAt(p, Math.floor(wx) - p.x, Math.floor(wy) - p.y);
       if (ev && ev.kind === 'warp') goThroughDoor(p.k, ev);
+      else if (ev) {
+        const [g, n] = parse(p.k), [ex, ey] = MapsTab.api.evXY(ev), [sx, sy] = W2S(p.x + ex + 0.5, p.y + ey);
+        Objects.inlineText(g, n, ev, r.left + sx, r.top + sy, (label, fn) => op(label, () => { fn(); S.touched.add(p.k); }, { t: 'raw', label }), () => { draw(); side(); });
+      }
+    };
+    // drop from the library: a Pokémon becomes a legendary, an item an item ball, a trainer a trainer on the map
+    cv.ondragover = e => { if ([...e.dataTransfer.types].includes('application/x-ember')) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'copy'; } };
+    cv.ondrop = e => {
+      const raw = e.dataTransfer.getData('application/x-ember'); if (!raw) return;
+      e.preventDefault(); e.stopPropagation();
+      const d = JSON.parse(raw), r = cv.getBoundingClientRect(), [wx, wy] = S2W(e.clientX - r.left, e.clientY - r.top), p = mapAt(Math.floor(wx), Math.floor(wy));
+      if (!p || p.floating) { toast(T('Drop it on a map'), 'err'); return; }
+      dropOnMap(d, p, Math.floor(wx) - p.x, Math.floor(wy) - p.y);
     };
     cv.onwheel = e => {
       e.preventDefault();
@@ -1248,6 +1298,7 @@ const WorldTab = (() => {
     el.append(h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', marginBottom: '8px' } },
       h('button', { class: S.mode === 'manage' ? 'sel' : '', style: { whiteSpace: 'nowrap' }, onclick: () => { S.mode = 'manage'; S.addKind = null; render(S.root_el); } }, '🧭 General map management'),
       h('span', { class: 'muted', style: { fontSize: '12px' } }, 'Change the world on the big map: click a map to select it, drag it to move it (connections to maps it leaves are removed, maps it touches are connected). In every mode the name tag drags the map. Right click a map for everything you can do with it. Esc or a click on the empty area deselects.')));
+    if ((S.mode === 'events' || S.mode === 'manage') && !S.pending) el.append(libraryBox());
     if (S.pending) { newMapForm(el); if (S.active) el.append(paletteSection(S.active)); if (TownMap.supported()) el.append(townPanel()); return; }
     const k = S.active;
     if (!k) { el.append(h('p', { class: 'muted' }, 'Click a map to select it, or drag on the black area to add a new map.')); addMapBox(el); if (TownMap.supported()) el.append(townPanel()); return; }

@@ -295,13 +295,13 @@ const Objects = (() => {
       else {
         const tree = sp >= 0 ? analyze(sp) : [], tr = findNode(tree, 'trainer');
         d.tree = tree;
-        if (tr) { const t = trainer(tr.id); d.type = 'trainer'; d.trainer = tr; d.who = t ? ((classNames()[t.cls] || '') + ' ' + t.name).trim() : 'trainer #' + tr.id; const p = tr.texts[0] && tr.texts[0][1]; if (p >= 0) d.says = firstLine(p); }
-        else { d.type = 'person'; d.who = gfxName(d.gfx); const t = allTexts(tree)[0]; if (t >= 0) d.says = firstLine(t); }
+        if (tr) { const t = trainer(tr.id); d.type = 'trainer'; d.trainer = tr; d.who = t ? ((classNames()[t.cls] || '') + ' ' + t.name).trim() : 'trainer #' + tr.id; const p = tr.texts[0] && tr.texts[0][1]; if (p >= 0) { d.says = firstLine(p); d.textPtr = p; } }
+        else { d.type = 'person'; d.who = gfxName(d.gfx); const t = allTexts(tree)[0]; if (t >= 0) { d.says = firstLine(t); d.textPtr = t; } }
       }
     } else if (e.kind === 'warp') { d.icon = '🚪'; d.who = '→ ' + mapLabel(r.u8[o + 7], r.u8[o + 6]); }
     else if (e.kind === 'coord') { d.icon = '⚡'; d.who = 'runs when var ' + flagHex(r.r16(o + 6)) + ' = ' + r.r16(o + 8); const t = sp >= 0 ? allTexts(analyze(sp))[0] : -1; if (t >= 0) d.says = firstLine(t); }
     else if (r.u8[o + 5] === 7) { d.type = 'hidden item'; d.icon = '✨'; d.who = itemName(r.r16(o + 8)) + (((r.u8[o + 11] & 0x7F) > 1) ? ' ×' + (r.u8[o + 11] & 0x7F) : ''); }
-    else { d.type = 'sign'; d.icon = '📋'; const t = sp >= 0 ? allTexts(analyze(sp))[0] : -1; if (t >= 0) d.says = firstLine(t); }
+    else { d.type = 'sign'; d.icon = '📋'; const t = sp >= 0 ? allTexts(analyze(sp))[0] : -1; if (t >= 0) { d.says = firstLine(t); d.textPtr = t; } }
     if (own) d.who = own + (d.who && e.kind === 'obj' && d.type === 'person' ? '' : ' · ' + d.who);
     const tt = T(d.type); d.title = (I18N.lang === 'en' ? tt[0].toUpperCase() + tt.slice(1) : tt) + (d.who ? ': ' + d.who : '') + (d.says ? ' — “' + d.says + '”' : '');
     return d;
@@ -408,6 +408,25 @@ const Objects = (() => {
       ta.focus();
     };
     show(); return box;
+  }
+  // edit what a person / sign says right on the map: a speech bubble at (cx, cy) on the screen
+  function inlineText(g, n, e, cx, cy, commit, done) {
+    const d = info(g, n, e); if (!(d.textPtr >= 0)) { toast(T('This one says nothing that can be edited here'), 'err'); return; }
+    document.querySelectorAll('.ob-inline').forEach(x => x.remove());
+    const p = d.textPtr, ta = h('textarea', { dir: 'auto', rows: 3 }); ta.value = textOf(p);
+    const pv = h('div', { class: 'ob-preview' });
+    const upd = () => { pv.innerHTML = ''; try { pv.append(TextTab.preview(enc(ta.value), G().dialogueFont, 1)); } catch (x) { pv.textContent = x.message; } };
+    const close = () => { box.remove(); window.removeEventListener('keydown', key, true); };
+    const save = () => { let np = p; if (commit('edit text', () => { np = TextTab.saveAt(p, ta.value); })) { toast(T('Text saved')); close(); done && done(); } };
+    const key = ev => { if (ev.key === 'Escape') { close(); ev.stopPropagation(); } else if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { save(); ev.preventDefault(); } };
+    ta.oninput = upd; upd();
+    const box = h('div', { class: 'ob-inline' }, h('div', { class: 'ob-inline-who' }, (d.icon || '💬') + ' ' + (d.who || T(d.type))), ta, pv,
+      h('div', { class: 'row' }, h('button', { class: 'primary', onclick: save }, T('Save')), h('button', { onclick: close }, T('Cancel')), h('span', { class: 'muted', style: { fontSize: '11px' } }, 'Ctrl+Enter · Esc')));
+    document.body.append(box);
+    const W = 340, left = Math.max(8, Math.min(innerWidth - W - 8, cx - W / 2)); box.style.left = left + 'px';
+    box.style.width = W + 'px'; const hh = box.offsetHeight; box.style.top = Math.max(8, cy - hh - 18) + 'px';
+    box.style.setProperty('--tail', (cx - left) + 'px');
+    window.addEventListener('keydown', key, true); ta.focus(); ta.select();
   }
   function tree(nodes, ctx) {
     const wrap = h('div', { class: 'ob-tree' });
@@ -582,7 +601,7 @@ const Objects = (() => {
   }
 
   return { sprite, count, gfxName, info, tooltip, draw, drawArea, panel, gallery, analyze, trainer, classNames, usage, TEMPLATES, KIND_OF, add, customName,
-    setClass, setTrainerName, setTeam, textBubble, tree, itemPicker, forEach, _freeFlag: freeFlag, _freeTrainer: freeTrainer,
+    setClass, setTrainerName, setTeam, textBubble, inlineText, tree, itemPicker, forEach, _freeFlag: freeFlag, _freeTrainer: freeTrainer,
     spriteInfo: gfx => { if (gfx >= count()) return null; const r = R(), info = r.ptr(GFX_TABLE + gfx * 4); return { info, w: r.s16(info + 8), h: r.s16(info + 10), tag: r.r16(info + 2), pal: palette(r.r16(info + 2)), images: r.ptr(info + 28) }; },
     GFX_TABLE, refresh: () => { ver = -1; } };
 })();

@@ -290,6 +290,11 @@ const MapsTab = (() => {
     renderSide();
 
     cv.onmouseleave = () => { pv.hidden = true; };
+    cv.ondblclick = e => {                                   // edit what a person / sign says, right on the map
+      const [x, y] = cell(e), ev = eventAt(x, y); if (!ev || ev.kind === 'warp' || ev.kind === 'coord') return;
+      const r = cv.getBoundingClientRect(), s2 = 16 * zoom;
+      Objects.inlineText(cur.gi, cur.mi, ev, r.left + x * s2 + s2 / 2, r.top + y * s2, (l, fn) => { try { fn(); return true; } catch (x2) { toast(x2.message, 'err'); return false; } }, () => { redraw(); renderSide(); });
+    };
     root.append(h('div', { class: 'cols maps' }, left, h('div', { class: 'panel mapmain' }, tb, h('div', { class: 'mapscroll' }, h('div', { class: 'pv-wrap' }, cv, pv))), side));
   }
 

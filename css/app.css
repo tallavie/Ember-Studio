@@ -418,3 +418,23 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .dl-cond { border-inline-start: 3px solid var(--accent); padding-inline-start: 10px; display: flex; flex-direction: column; gap: 8px; }
 .dl-cond-label { font-size: 12px; font-weight: 600; color: var(--accent); }
 .dl-editing textarea { min-width: 320px; }
+
+/* the journey: the whole game on one line */
+.jr-sum { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; font-weight: 600; }
+.jr-curvebox { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; color: var(--muted); font-size: 12px; }
+.jr-curve { background: var(--bg); border-radius: 8px; }
+.jr-line { display: flex; gap: 0; overflow-x: auto; padding: 8px 4px 16px; align-items: flex-start; }
+.jr-stop { position: relative; flex: none; width: 250px; padding: 0 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.jr-stop::before { content: ""; position: absolute; top: 15px; inset-inline-start: 0; inset-inline-end: 0; height: 3px; background: var(--line); z-index: 0; }
+.jr-stop:first-child::before { inset-inline-start: 50%; } .jr-stop:last-child::before { inset-inline-end: 50%; }
+.jr-dot { position: relative; z-index: 1; width: 32px; height: 32px; border-radius: 50%; background: var(--panel); border: 3px solid var(--line); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--muted); }
+.jr-dot.jr-badge { background: linear-gradient(135deg, #ffe066, #f59f00); border-color: #f59f00; color: #3b2a00; box-shadow: 0 0 0 4px color-mix(in srgb, #f59f00 25%, transparent); }
+.jr-card { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.jr-place { font-weight: 700; font-size: 15px; } .jr-sub { font-size: 12px; margin-top: -6px; }
+.jr-leader { display: flex; gap: 8px; align-items: center; background: var(--panel); border-radius: 10px; padding: 4px; cursor: pointer; } .jr-leader:hover { outline: 1px solid var(--accent); }
+.jr-leader canvas { width: 48px; height: 48px; image-rendering: pixelated; }
+.jr-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.jr-chip { display: inline-flex; align-items: center; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; font-size: 12px; cursor: default; }
+.jr-mon, .jr-leg { cursor: pointer; padding: 0 4px; } .jr-leg { border-color: #be4bdb; }
+.jr-beats { display: flex; flex-direction: column; gap: 2px; }
+.jr-beat { font-size: 12px; padding: 2px 6px; border-radius: 6px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .jr-beat:hover { background: var(--sel); }

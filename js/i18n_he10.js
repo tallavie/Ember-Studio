@@ -22,4 +22,9 @@ Object.assign(I18N.dicts.he, {
   'YES': 'כן', 'NO': 'לא', 'A trainer battle': 'קרב מאמנים', 'Nothing is said here.': 'לא נאמר כאן כלום.',
   'Before the battle': 'לפני הקרב', 'When you beat them': 'כשמנצחים אותו', 'Defeat line': 'משפט ההפסד', 'Line when you win': 'כשאתם מנצחים', 'Line when you lose': 'כשאתם מפסידים', 'If you have only one Pokémon': 'אם יש לכם רק פוקימון אחד',
   'Otherwise:': 'אחרת:', 'Right after the battle:': 'מיד אחרי הקרב:', 'If you already beat this trainer:': 'אם כבר ניצחתם את המאמן הזה:', 'If you did not beat this trainer yet:': 'אם עוד לא ניצחתם את המאמן הזה:',
+  // the journey
+  'The journey': 'המסע', '{n} badges': '{n} תגים', '{n} HMs': '{n} HM', '{n} legendaries': '{n} אגדיים', 'Leaders': 'מנהיגים', 'Badge {n}': 'תג {n}',
+  'From the first town to the league, left to right. Click a moment to open it in the story.': 'מהעיר הראשונה ועד הליגה, לפי הסדר. לחיצה על רגע פותחת אותו בעלילה.',
+  "The level of each gym leader's strongest Pokémon, in order. A red dot is weaker than the one before.": 'הרמה של הפוקימון החזק של כל מנהיג מכון, לפי הסדר. נקודה אדומה חלשה מזו שלפניה.',
+  'Open the trainer': 'פתיחת המאמן', 'You get this Pokémon here': 'כאן מקבלים את הפוקימון הזה', 'and {n} more': 'ועוד {n}',
 });

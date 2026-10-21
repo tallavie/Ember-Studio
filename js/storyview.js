@@ -28,7 +28,7 @@ const StoryView = (() => {
   function bar(rer) {
     const tab = (k, label) => h('button', { class: view === k ? 'sel' : '', onclick: () => { view = k; rer(); } }, label);
     return h('div', { class: 'row wrap sm-bar' },
-      h('div', { class: 'tabs small' }, tab('timeline', '📜 ' + T('Timeline')), tab('place', '📍 ' + T('By place')), tab('flow', '🔀 ' + T('Flowchart'))),
+      h('div', { class: 'tabs small' }, tab('journey', '🧭 ' + T('The journey')), tab('timeline', '📜 ' + T('Timeline')), tab('place', '📍 ' + T('By place')), tab('flow', '🔀 ' + T('Flowchart'))),
       h('select', { onchange: e => { filter = e.target.value; rer(); } },
         h('option', { value: 'main', selected: filter === 'main' }, T('The main story')), h('option', { value: 'all', selected: filter === 'all' }, T('Everything that happens'))),
       h('input', { type: 'search', placeholder: T('Search the story…'), value: query, oninput: e => { query = e.target.value; clearTimeout(bar.t); bar.t = setTimeout(rer, 250); } }));
@@ -195,5 +195,5 @@ const StoryView = (() => {
     return box;
   }
 
-  return { bar, timeline, byPlace, flowchart, editor, get view() { return view; }, setPlace, icon, mapLabel };
+  return { bar, timeline, byPlace, flowchart, editor, get view() { return view; }, setView: v => { view = v; }, setPlace, icon, mapLabel };
 })();

@@ -384,6 +384,7 @@ const StoryTab = (() => {
       test: b => testBeat(b, m, s),
     };
     const tl = h('div', { class: 'panel st-tl' });
+    if (m && StoryView.view === 'journey') { el.append(head, Journey.view(m, o)); return; }
     if (m && StoryView.view === 'flow') {
       const beat = selBeat && m.beats.find(b => b.id === selBeat);
       el.append(head, StoryView.flowchart(m, s, o), beat ? h('div', { class: 'panel st-ed' }, StoryView.editor(beat, m, s, o)) : '');

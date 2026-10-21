@@ -11,8 +11,10 @@ function PixelEditor(opts) {
   const wrap = h('div', { class: 'pe-canvas' }, canvas, gridCv);
   const swatches = h('div', { class: 'swatches' });
   const info = h('span', { class: 'muted' });
+  let ghost = null;                                    // another picture shown faintly over this one (onion skin), or null
   const draw = () => {
     canvas.getContext('2d').putImageData(Gfx.toImageData(px, w, H, pal), 0, 0);
+    if (ghost) { const t = h('canvas', { width: w, height: H }); t.getContext('2d').putImageData(Gfx.toImageData(ghost, w, H, pal, true), 0, 0); const c2 = canvas.getContext('2d'); c2.globalAlpha = 0.35; c2.drawImage(t, 0, 0); c2.globalAlpha = 1; }
     canvas.style.width = w * zoom + 'px'; canvas.style.height = H * zoom + 'px';
     gridCv.width = w * zoom; gridCv.height = H * zoom;
     const g = gridCv.getContext('2d'); g.clearRect(0, 0, gridCv.width, gridCv.height);
@@ -110,7 +112,8 @@ function PixelEditor(opts) {
     draw(); drawSw();
   }
   draw(); drawSw();
-  return { el, get px() { return px; }, get pal() { return pal; }, setPal(p) { pal = p.slice(); draw(); drawSw(); }, importPNG, redraw: draw };
+  return { el, get px() { return px; }, get pal() { return pal; }, setPal(p) { pal = p.slice(); draw(); drawSw(); }, importPNG, redraw: draw,
+    setPx(p) { px = p; undo.length = 0; draw(); }, setGhost(g) { ghost = g; draw(); }, onDraw(fn) { canvas.addEventListener('mouseup', fn); } };
 }
 
 const Graphics = (() => {

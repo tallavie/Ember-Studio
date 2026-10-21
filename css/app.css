@@ -455,3 +455,8 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .ma-sprite { position: absolute; left: 56px; bottom: 30px; width: 128px; height: 128px; transform-origin: 50% 100%; }
 .ma-steps { display: flex; flex-direction: column; gap: 4px; }
 .ma-step { gap: 8px; }
+.ma-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.ma-thumb { width: 64px; height: 64px; border-radius: 8px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; }
+.ma-thumb.sel { border-color: var(--accent); }
+.ma-slide { display: flex; flex-direction: column; min-width: 200px; font-size: 12px; }
+.ma-slider { width: 100%; }

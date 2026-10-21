@@ -83,16 +83,17 @@ const MonAnim = (() => {
   }
   function preview(sp, opts) {
     const m = Graphics.monInfo(sp, 'front', false); if (!m) return h('div');
-    const frames = [0, 1].map(f => {
-      const c = h('canvas', { width: 64, height: 64 }), px = f && m.h >= 128 ? m.px.subarray(4096, 8192) : m.px.subarray(0, 4096);
-      c.getContext('2d').putImageData(Gfx.toImageData(px, 64, 64, m.pal, true), 0, 0); return c;
-    });
+    const load = () => { const mm = Graphics.monInfo(sp, 'front', false) || m; return [0, 1].map(f => {
+      const c = h('canvas', { width: 64, height: 64 }), px = f && mm.h >= 128 ? mm.px.subarray(4096, 8192) : mm.px.subarray(0, 4096);
+      c.getContext('2d').putImageData(Gfx.toImageData(px, 64, 64, mm.pal, true), 0, 0); return c;
+    }); };
+    let frames = load();
     const cv = h('canvas', { class: 'pixel ma-sprite', width: 64, height: 64 }), x = cv.getContext('2d');
     const stage = h('div', { class: 'ma-stage' }, h('div', { class: 'ma-ground' }), cv);
     let timer = null, anim = null;
     const show = f => { x.clearRect(0, 0, 64, 64); x.drawImage(frames[f], 0, 0); };
     const play = () => {
-      clearTimeout(timer); if (anim) anim.cancel(); show(0);
+      clearTimeout(timer); if (anim) anim.cancel(); frames = load(); show(0);
       const st = opts.steps(), mo = MOTIONS[opts.motion()] ? MOTIONS[opts.motion()][0] : '', slow = /slow/.test(mo.toLowerCase()) ? 1.6 : /fast/.test(mo.toLowerCase()) ? 0.6 : 1;
       let t = 0; for (const s of st) { const f = s.frame; setTimeout(() => show(f), t * 1000 / 60); t += s.time; }
       setTimeout(() => show(0), t * 1000 / 60);
@@ -131,12 +132,30 @@ const MonAnim = (() => {
     const motionSel = h('select', { onchange: e => { r.w8(O().frontAnimIds + sp - 1, +e.target.value); pv.play(); } }, ...MOTIONS.map((x, i) => h('option', { value: i, selected: i === motion(sp) }, nameOf(MOTIONS, i))));
     const delayIn = h('input', { type: 'number', min: 0, max: 255, value: delay(sp), style: { width: '70px' }, onchange: e => { if (O().animDelays >= 0) { r.w8(O().animDelays + sp - 1, Math.max(0, Math.min(255, +e.target.value || 0))); pv.play(); } } });
     const backSel = O().backAnimSets >= 0 ? h('select', { onchange: e => r.w8(O().backAnimSets + sp, +e.target.value) }, ...BACK.map((x, i) => h('option', { value: i, selected: i === back(sp) }, nameOf(BACK, i)))) : '';
-    // the two frames: pick the one to edit, or swap them
-    const px1 = m.px.slice(0, 4096), px2 = m.h >= 128 ? m.px.slice(4096, 8192) : m.px.slice(0, 4096);
-    const ed = tools.PixelEditor({ px: editing === 1 ? px2 : px1, w: 64, h: 64, pal: m.pal, transparent: true, name: (App.getLists().species[sp] || sp) + '_frame' + (editing + 1) });
-    const saveFrame = px => { if (editing === 1) tools.savePicture(sp, 'front', px1, px); else tools.savePicture(sp, 'front', px, px2); toast(Tf('Frame {n} saved', { n: editing + 1 })); rerender(); };
-    const thumb = f => { const c = h('canvas', { class: 'pixel', width: 64, height: 64 }); c.getContext('2d').putImageData(Gfx.toImageData(f ? px2 : px1, 64, 64, m.pal, true), 0, 0); return c; };
-    const pick = f => h('div', { class: 'piccell' + (editing === f ? ' sel' : ''), onclick: () => { editing = f; rerender(); } }, thumb(f), h('div', {}, T(f ? 'Frame 2' : 'Frame 1')));
+    // the two frames: a slider moves between them in the same editor (the page stays where it is); both are kept until "Save"
+    const buf = [m.px.slice(0, 4096), m.h >= 128 ? m.px.slice(4096, 8192) : m.px.slice(0, 4096)];
+    const ed = tools.PixelEditor({ px: buf[editing], w: 64, h: 64, pal: m.pal, transparent: true, name: (App.getLists().species[sp] || sp) + '_frame' });
+    let ghostOn = false, flip = null, dirty = false;
+    const thumbs = [0, 1].map(() => h('canvas', { class: 'pixel ma-thumb', width: 64, height: 64 }));
+    const label = h('b', { class: 'ma-which' }), state = h('span', { class: 'muted' });
+    const slider = h('input', { type: 'range', min: 1, max: 2, step: 1, value: editing + 1, class: 'ma-slider', oninput: e => show(+e.target.value - 1) });
+    const drawThumbs = () => thumbs.forEach((c, f) => { c.getContext('2d').putImageData(Gfx.toImageData(buf[f], 64, 64, ed.pal, true), 0, 0); c.classList.toggle('sel', f === editing); });
+    const mark = d => { dirty = d; state.textContent = d ? T('Not saved yet') : ''; };
+    function show(f) {                                   // the editor shows frame f, in place
+      editing = f; slider.value = f + 1; label.textContent = Tf('Frame {n}', { n: f + 1 });
+      ed.setPx(buf[f]); ed.setGhost(ghostOn ? buf[1 - f] : null); drawThumbs();
+    }
+    ed.onDraw(() => { mark(true); drawThumbs(); });
+    thumbs.forEach((c, f) => { c.onclick = () => show(f); });
+    const save = () => { tools.savePicture(sp, 'front', buf[0], buf[1]); mark(false); toast(T('Both frames saved')); pv.play(); };
+    // keys while the editor has focus: [ and ] (or , and .) move between the frames
+    ed.el.addEventListener('keydown', e => { if (['[', ']', ',', '.'].includes(e.key)) { show(e.key === '[' || e.key === ',' ? 0 : 1); e.preventDefault(); } });
+    const toggleFlip = btn => {
+      if (flip) { clearInterval(flip); flip = null; btn.textContent = '▶ ' + T('Flip between them'); return; }
+      flip = setInterval(() => { if (!document.body.contains(slider)) { clearInterval(flip); flip = null; return; } show(1 - editing); }, 350);
+      btn.textContent = '⏸ ' + T('Stop');
+    };
+    setTimeout(() => show(editing));
     return h('div', {},
       h('div', { class: 'row wrap', style: { alignItems: 'flex-start', gap: '20px' } },
         h('div', {}, h('h4', {}, T('In battle')), pv.el,
@@ -151,16 +170,18 @@ const MonAnim = (() => {
           h('h4', {}, T('The picture changes (frame 1 / frame 2)')),
           h('p', { class: 'muted', style: { fontSize: '12px' } }, T('The front picture has two frames. These steps show them one after the other when the Pokémon appears.')),
           rows)),
-      h('h4', {}, T('The two frames (click one to edit it)')),
-      h('div', { class: 'row wrap', style: { alignItems: 'center' } }, pick(0),
-        h('button', { title: T('Frame 1 becomes frame 2 and frame 2 becomes frame 1'), onclick: () => { tools.savePicture(sp, 'front', px2, px1); toast(T('The frames were swapped')); rerender(); } }, '⇄ ' + T('Swap the frames')),
-        pick(1)),
-      h('h4', {}, Tf('Edit: frame {n}', { n: editing + 1 })),
+      h('h4', {}, T('Edit the frames')),
+      h('div', { class: 'ma-bar' },
+        thumbs[0], h('div', { class: 'ma-slide' }, h('div', { class: 'row', style: { justifyContent: 'space-between' } }, h('span', {}, T('Frame 1')), label, h('span', {}, T('Frame 2'))), slider), thumbs[1],
+        h('button', { onclick: e => toggleFlip(e.target) }, '▶ ' + T('Flip between them')),
+        h('label', {}, h('input', { type: 'checkbox', onchange: e => { ghostOn = e.target.checked; show(editing); } }), ' ' + T('Show the other frame faintly'))),
       h('div', { class: 'row wrap' },
-        h('label', { class: 'btn primary' }, '🖼 ' + Tf('Import PNG (frame {n})', { n: editing + 1 }), h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async e => {
-          const f = e.target.files[0]; if (!f) return; try { saveFrame((await tools.convertImage(f, 64, m.pal)).px); } catch (x) { toast(x.message, 'err'); } } })),
-        h('button', { onclick: () => saveFrame(editing ? px1 : px2) }, Tf('Same as frame {n}', { n: editing ? 1 : 2 })),
-        h('button', { class: 'primary', onclick: () => saveFrame(ed.px) }, '💾 ' + Tf('Save frame {n}', { n: editing + 1 }))),
+        h('label', { class: 'btn' }, '🖼 ' + T('Import PNG into this frame'), h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async e => {
+          const f = e.target.files[0]; if (!f) return; try { buf[editing].set((await tools.convertImage(f, 64, m.pal)).px); show(editing); mark(true); } catch (x) { toast(x.message, 'err'); } } })),
+        h('button', { onclick: () => { buf[editing].set(buf[1 - editing]); show(editing); mark(true); } }, T('Copy the other frame here')),
+        h('button', { title: T('Frame 1 becomes frame 2 and frame 2 becomes frame 1'), onclick: () => { const t = buf[0].slice(); buf[0].set(buf[1]); buf[1].set(t); show(editing); mark(true); } }, '⇄ ' + T('Swap the frames')),
+        h('button', { class: 'primary', onclick: save }, '💾 ' + T('Save both frames')), state),
+      h('p', { class: 'muted', style: { fontSize: '12px' } }, T('Move the slider, click a small picture, or press [ and ] in the editor to go between the frames.')),
       ed.el);
   }
   return { supported, tab, steps, writeSteps, motion, delay, back, MOTIONS, BACK };

@@ -54,4 +54,7 @@ Object.assign(I18N.dicts.he, {
   'Frame 1 becomes frame 2 and frame 2 becomes frame 1': 'פריים 1 הופך לפריים 2, ופריים 2 הופך לפריים 1', 'The frames were swapped': 'הפריימים הוחלפו',
   'Swap the frames': 'החלפת הפריימים', 'Edit: frame {n}': 'עריכה: פריים {n}', 'Import PNG (frame {n})': 'ייבוא PNG (פריים {n})',
   'Same as frame {n}': 'כמו פריים {n}', 'Save frame {n}': 'שמירת פריים {n}',
+  'Frame {n}': 'פריים {n}', 'Not saved yet': 'עוד לא נשמר', 'Both frames saved': 'שני הפריימים נשמרו', 'Flip between them': 'מעבר ביניהם', 'Stop': 'עצירה', 'Edit the frames': 'עריכת הפריימים',
+  'Show the other frame faintly': 'להציג את הפריים השני בשקיפות', 'Import PNG into this frame': 'ייבוא PNG לפריים הזה', 'Copy the other frame here': 'העתקת הפריים השני לכאן',
+  'Save both frames': 'שמירת שני הפריימים', 'Move the slider, click a small picture, or press [ and ] in the editor to go between the frames.': 'מזיזים את הסליידר, לוחצים על תמונה קטנה, או לוחצים [ ו-] בעורך כדי לעבור בין הפריימים.',
 });

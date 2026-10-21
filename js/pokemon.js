@@ -56,7 +56,7 @@ const PokemonTab = (() => {
   const tmMove = i => rom().r16(O().tmMoves + i * 2);
   const moveInfo = m => O().moveData < 0 ? null : { power: rom().u8[O().moveData + m * 12 + 1], type: rom().u8[O().moveData + m * 12 + 2], acc: rom().u8[O().moveData + m * 12 + 3], pp: rom().u8[O().moveData + m * 12 + 4] };
   const dexNum = sp => O().dexNums >= 0 && sp > 0 ? rom().r16(O().dexNums + (sp - 1) * 2) : 0;
-  const dexEntry = sp => { const n = dexNum(sp); return n && O().dexEntries >= 0 ? O().dexEntries + n * 36 : -1; };
+  const dexEntry = sp => { const n = dexNum(sp); return n && O().dexEntries >= 0 ? O().dexEntries + n * G().dexEntrySize : -1; };
   function setName(sp, text) {
     const b = Charmap.encode(text, { rtl: App.settings.rtl });
     if (b.length > 11) throw new Error('The name is too long (max 10 characters)');

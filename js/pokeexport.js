@@ -21,7 +21,7 @@ const PokeExport = (() => {
     s.learnset = lp >= 0 ? hx(r.u8.subarray(lp, lp + n * 2 + 2)) : '';
     const nat = o.dexNums >= 0 && sp > 0 ? r.r16(o.dexNums + (sp - 1) * 2) : 0;
     if (nat && o.dexEntries >= 0) {
-      const e = o.dexEntries + nat * 36, d = r.ptr(e + 16); let len = 0; while (d >= 0 && r.u8[d + len] !== 0xFF && len < 500) len++;
+      const e = o.dexEntries + nat * App.game.dexEntrySize, d = r.ptr(e + 16); let len = 0; while (d >= 0 && r.u8[d + len] !== 0xFF && len < 500) len++;
       s.dex = { nat, head: hx(r.u8.subarray(e, e + 16)), desc: d >= 0 ? hx(r.u8.subarray(d, d + len + 1)) : '' };
     }
     const lz = (t) => { const p = r.ptr(t + sp * 8); const d = p >= 0 ? LZ.decompress(r.u8, p) : null; return d ? hx(r.u8.subarray(p, p + d.srcLen)) : ''; };

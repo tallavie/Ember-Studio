@@ -5,7 +5,6 @@
 
 const TrainersTab = (() => {
   const R = () => App.rom, G = () => App.game, O = () => App.game.offsets, L = () => App.getLists();
-  const PICS = 0x2395EC, PALS = 0x239A8C, PIC_COUNT = 148, COUNT = 743;    // FireRed 1.1
   const LEADER = 0x54, ELITE = 0x57, CHAMPION = 0x5A, RIVALS = [0x51, 0x59];
   const MUSIC = ['Male', 'Female', 'Girl', 'Suspicious', 'Intense', 'Cool', 'Team Rocket', 'Swimmer', 'Twins', 'Elite Four', 'Hiker', 'Interviewer', 'Rich'];
   const AI_BITS = ['Avoids useless moves', 'Goes for the knock-out', 'Picks good moves', 'Sets up on the first turn', 'Takes risks', 'Prefers its strongest move', 'Uses Baton Pass', 'Double battle tactics', 'Watches its HP'];
@@ -51,7 +50,7 @@ const TrainersTab = (() => {
   function picCanvas(pic) {
     if (picVer !== App.romVersion) { picCache.clear(); picVer = App.romVersion; }
     if (picCache.has(pic)) return picCache.get(pic);
-    const r = R(), gp = r.ptr(PICS + pic * 8), pp = r.ptr(PALS + pic * 8);
+    const r = R(); if (O().trainerPics < 0) return null; const gp = r.ptr(O().trainerPics + pic * 8), pp = r.ptr(O().trainerPals + pic * 8);
     let cv = null;
     try {
       const g = LZ.decompress(r.u8, gp), p = LZ.decompress(r.u8, pp);
@@ -68,7 +67,7 @@ const TrainersTab = (() => {
   function curve() {
     const r = R(), pts = [], leaders = [];
     const progOf = (g, n) => { const i = PROG.indexOf(r.u8[G().mapGroups[g][n] + 20]); return i < 0 ? -1 : i; };
-    for (let id = 1; id < COUNT; id++) {
+    for (let id = 1; id < App.game.trainerCount; id++) {
       const at = where(id); if (!at.length) continue;
       const xs = at.map(a => progOf(a.g, a.n)).filter(x => x >= 0); if (!xs.length) continue;
       const t = info(id); if (!t.team.length) continue;
@@ -140,7 +139,7 @@ const TrainersTab = (() => {
     root = el; el.innerHTML = '';
     if (O().trainers < 0) { el.append(h('div', { class: 'panel err' }, T('The trainer table was not found in this ROM.'))); return; }
     const classes = Objects.classNames();
-    const all = []; for (let id = 1; id < COUNT; id++) all.push(id);
+    const all = []; for (let id = 1; id < App.game.trainerCount; id++) all.push(id);
     const listEl = h('div', { class: 'tr-list' });
     const fill = () => {
       listEl.innerHTML = '';
@@ -172,7 +171,7 @@ const TrainersTab = (() => {
     const set8 = (off, v) => { r.w8(off, v); rer(); };
     const team = t.team.map(m => Object.assign({}, m));
     const save = () => { writeTeam(id, team, t.flags); rer(); };
-    const picSel = h('select', { onchange: e => set8(b + 3, +e.target.value) }, ...Array.from({ length: PIC_COUNT }, (_, i) => h('option', { value: i, selected: i === t.pic }, T('Picture') + ' ' + i)));
+    const picSel = h('select', { onchange: e => set8(b + 3, +e.target.value) }, ...Array.from({ length: App.game.trainerPicCount }, (_, i) => h('option', { value: i, selected: i === t.pic }, T('Picture') + ' ' + i)));
     const nameIn = h('input', { value: t.name, dir: 'auto', style: { width: '130px' }, onchange: e => { try { Objects.setTrainerName(id, e.target.value); rer(); } catch (x) { toast(x.message, 'err'); } } });
     const head = h('div', { class: 'tr-head' }, h('div', { class: 'tr-pic' }, big(picCanvas(t.pic), 2), picSel),
       h('div', { class: 'tr-fields' },
@@ -224,5 +223,5 @@ const TrainersTab = (() => {
     return h('div', { class: 'panel tr-card' }, head, teamSec, battleSec, whereSec);
   }
 
-  return { render, info, curve, movesAt, writeTeam, picCanvas, PICS, PALS, PIC_COUNT, select: id => { sel = id; }, COUNT };
+  return { render, info, curve, movesAt, writeTeam, picCanvas, get PICS() { return O().trainerPics; }, get PALS() { return O().trainerPals; }, get PIC_COUNT() { return App.game.trainerPicCount; }, select: id => { sel = id; }, get COUNT() { return App.game.trainerCount; } };
 })();

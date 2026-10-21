@@ -5,8 +5,7 @@
 'use strict';
 
 const Objects = (() => {
-  const R = () => App.rom, G = () => App.game, L = () => App.getLists();
-  const GFX_TABLE = 0x39FE20, PAL_REF = 0x5F5DC, CLASS_REF = 0xD80B4;      // FireRed 1.1
+  const R = () => App.rom, G = () => App.game, O = () => App.game.offsets, L = () => App.getLists();
   const ITEM_BALL_GFX = 92;
   const KIND_NAME = { obj: 'person', warp: 'door / warp', coord: 'trigger', bg: 'sign' };
 
@@ -22,14 +21,14 @@ const Objects = (() => {
     fresh();
     if (gfxCount >= 0) return gfxCount;
     const r = R(); let n = 0;
-    if (G().isEmerald) return gfxCount = 0;
-    while (n < 256 && isInfo(r.ptr(GFX_TABLE + n * 4))) n++;
+    if (O().owGfx < 0) return gfxCount = 0;
+    while (n < 256 && isInfo(r.ptr(O().owGfx + n * 4))) n++;
     return gfxCount = n;
   }
   function palette(tag) {
     fresh();
     if (!palCache) {
-      palCache = new Map(); const r = R(), t = r.ptr(PAL_REF);
+      palCache = new Map(); const r = R(), t = r.ptr(O().owPalRef);
       for (let i = 0; t >= 0 && i < 64; i++) { const p = r.ptr(t + i * 8); if (p < 0) break; palCache.set(r.r16(t + i * 8 + 4), Gfx.readPal(r.u8, p)); }
     }
     return palCache.get(tag);
@@ -39,7 +38,7 @@ const Objects = (() => {
   function sprite(gfx, facing = 'down') {
     if (gfx >= count()) return null;
     const key = gfx + facing; if (sprCache.has(key)) return sprCache.get(key);
-    const r = R(), info = r.ptr(GFX_TABLE + gfx * 4), w = r.s16(info + 8), hh = r.s16(info + 10);
+    const r = R(), info = r.ptr(O().owGfx + gfx * 4), w = r.s16(info + 8), hh = r.s16(info + 10);
     const still = (r.u8[info + 12] & 0x40) || w > 32, images = r.ptr(info + 28);
     const frame = still ? 0 : facing === 'up' ? 1 : facing === 'left' || facing === 'right' ? 2 : 0;
     let data = images >= 0 ? r.ptr(images + frame * 8) : -1;
@@ -105,10 +104,10 @@ const Objects = (() => {
   let classCache = null, classVer = -1;
   function classNames() {
     if (classCache && classVer === App.romVersion) return classCache;
-    const r = R(), p = r.ptr(CLASS_REF), out = [];
+    const r = R(), p = r.ptr(O().classRef), out = [];
     classCache = out; classVer = App.romVersion;
     if (p < 0) return out;
-    for (let i = 0; i < 107; i++) out.push(Charmap.decode(r.u8, p + i * 13, 13).text);
+    for (let i = 0; i < G().classCount; i++) out.push(Charmap.decode(r.u8, p + i * 13, 13).text);
     return out;
   }
   function trainer(id) {
@@ -603,6 +602,6 @@ const Objects = (() => {
 
   return { sprite, count, gfxName, info, tooltip, draw, drawArea, panel, gallery, analyze, trainer, classNames, usage, TEMPLATES, KIND_OF, add, customName,
     setClass, setTrainerName, setTeam, textBubble, inlineText, tree, itemPicker, forEach, _freeFlag: freeFlag, _freeTrainer: freeTrainer,
-    spriteInfo: gfx => { if (gfx >= count()) return null; const r = R(), info = r.ptr(GFX_TABLE + gfx * 4); return { info, w: r.s16(info + 8), h: r.s16(info + 10), tag: r.r16(info + 2), pal: palette(r.r16(info + 2)), images: r.ptr(info + 28) }; },
-    GFX_TABLE, refresh: () => { ver = -1; } };
+    spriteInfo: gfx => { if (gfx >= count()) return null; const r = R(), info = r.ptr(O().owGfx + gfx * 4); return { info, w: r.s16(info + 8), h: r.s16(info + 10), tag: r.r16(info + 2), pal: palette(r.r16(info + 2)), images: r.ptr(info + 28) }; },
+    get GFX_TABLE() { return O().owGfx; }, refresh: () => { ver = -1; } };
 })();

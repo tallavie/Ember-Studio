@@ -11,14 +11,13 @@
 
 const ItemFx = (() => {
   const R = () => App.rom, O = () => App.game.offsets;
-  const EFFECTS = 0x25292C, FIRST = 13, LAST = 176;               // gItemEffectTable: items 13..176
-  const BALL_BONUS = 0x250902;                                    // sBallCatchBonuses: Ultra, Great, Poké, Safari (x10)
-  const FR11 = () => App.game && App.game.patchKey === 'BPRE1';
+  const FIRST = 13, LAST = 176;                                   // gItemEffectTable: items 13..176
+  const FR11 = () => !!App.game && App.game.offsets.itemEffects >= 0;      // the effect table is known (FireRed 1.1, Emerald)
 
   // ---------- medicine effects ----------
   const PARAM_BITS = [[4, 0x01, 'evHp'], [4, 0x02, 'evAtk'], [4, 0x04, 'heal'], [4, 0x08, 'pp'], [5, 0x01, 'evDef'], [5, 0x02, 'evSpe'], [5, 0x04, 'evSpd'], [5, 0x08, 'evSpa'],
     [5, 0x20, 'friend1'], [5, 0x40, 'friend2'], [5, 0x80, 'friend3']];
-  function effectPtr(item) { if (!FR11() || item < FIRST || item > LAST) return -1; return R().ptr(EFFECTS + (item - FIRST) * 4); }
+  function effectPtr(item) { if (!FR11() || item < FIRST || item > LAST) return -1; return R().ptr(O().itemEffects + (item - FIRST) * 4); }
   function readEffect(item) {
     const p = effectPtr(item); if (p < 0) return null;
     const u = R().u8, f = Array.from(u.slice(p, p + 6)), par = {}; let k = 6;
@@ -33,7 +32,7 @@ const ItemFx = (() => {
   // a new copy every time (items may share their effect data)
   function writeEffect(item, e) {
     const r = R(); if (item < FIRST || item > LAST) throw new Error('item ' + item + ' has no slot in the effect table');
-    r.wptr(EFFECTS + (item - FIRST) * 4, r.writeNew(encode(e)));
+    r.wptr(O().itemEffects + (item - FIRST) * 4, r.writeNew(encode(e)));
   }
   const STATUS = [[0x20, 'sleep'], [0x10, 'poison'], [0x08, 'burn'], [0x04, 'freeze'], [0x02, 'paralysis'], [0x01, 'confusion']];
   const EVS = [['evHp', 'HP'], ['evAtk', 'Attack'], ['evDef', 'Defense'], ['evSpe', 'Speed'], ['evSpa', 'Sp. Atk'], ['evSpd', 'Sp. Def']];
@@ -148,7 +147,7 @@ const ItemFx = (() => {
     11: 'Luxury Ball: ×1, and the Pokémon becomes friendly faster.',
     12: 'Premier Ball: ×1 (a Poké Ball with a different look).',
   };
-  const ballSlot = id => (FR11() && id >= 2 && id <= 5) ? BALL_BONUS + (id - 2) : -1;     // Ultra, Great, Poké, Safari
+  const ballSlot = id => (O().ballBonus >= 0 && id >= 2 && id <= 5) ? O().ballBonus + (id - 2) : -1;     // Ultra, Great, Poké, Safari
   const ballBonus = id => { const a = ballSlot(id); return a < 0 ? null : R().u8[a] / 10; };
   function setBallBonus(id, x) { const a = ballSlot(id); if (a < 0) return; R().w8(a, Math.max(1, Math.min(255, Math.round(x * 10)))); }
 

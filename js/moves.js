@@ -4,7 +4,7 @@
 
 const MovesTab = (() => {
   const R = () => App.rom, G = () => App.game, O = () => App.game.offsets, L = () => App.getLists();
-  const DESCS = 0x488748, TUTORS = 0x459BC0, TUTOR_COUNT = 15, TM_COUNT = 58;          // FireRed 1.1
+  const TM_COUNT = 58;
   // Gen 3 battle effects, in order
   const EFFECTS = ('hit|sleep|poison hit|absorb|burn hit|freeze hit|paralyze hit|explosion|dream eater|mirror move|attack up|defense up|speed up|sp. atk up|sp. def up|accuracy up|evasion up|' +
     'always hits|attack down|defense down|speed down|sp. atk down|sp. def down|accuracy down|evasion down|haze|bide|rampage|roar|multi-hit|conversion|flinch hit|restore HP|toxic|pay day|' +
@@ -28,7 +28,7 @@ const MovesTab = (() => {
   function info(m) {
     const r = R(), b = md(m);
     return { m, b, name: Charmap.decode(r.u8, O().moveNames + m * 13, 13).text, effect: r.u8[b], power: r.u8[b + 1], type: r.u8[b + 2], acc: r.u8[b + 3], pp: r.u8[b + 4], chance: r.u8[b + 5],
-      target: r.u8[b + 6], prio: (r.u8[b + 7] << 24) >> 24, flags: r.u8[b + 8], desc: m > 0 ? r.ptr(DESCS + (m - 1) * 4) : -1 };
+      target: r.u8[b + 6], prio: (r.u8[b + 7] << 24) >> 24, flags: r.u8[b + 8], desc: m > 0 && O().moveDescs >= 0 ? r.ptr(O().moveDescs + (m - 1) * 4) : -1 };
   }
   const tmMove = k => R().r16(O().tmMoves + k * 2);
   const tmName = k => k < 50 ? 'TM' + String(k + 1).padStart(2, '0') : 'HM' + String(k - 49).padStart(2, '0');
@@ -36,7 +36,7 @@ const MovesTab = (() => {
   function learners(m) {
     const r = R(), g = G(), o = O(), out = { level: [], tm: [], tutor: [] };
     const tm = []; for (let k = 0; k < TM_COUNT; k++) if (tmMove(k) === m) tm.push(k);
-    const tutor = []; for (let k = 0; k < TUTOR_COUNT; k++) if (r.r16(TUTORS + k * 2) === m) tutor.push(k);
+    const tutor = []; if (O().tutors >= 0) for (let k = 0; k < App.game.tutorCount; k++) if (r.r16(O().tutors + k * 2) === m) tutor.push(k);
     for (let sp = 1; sp < g.speciesCount; sp++) {
       const p = r.ptr(o.learnsets + sp * 4);
       for (let i = 0; p >= 0 && i < 64; i++) { const v = r.r16(p + i * 2); if (v === 0xFFFF) break; if ((v & 0x1FF) === m) { out.level.push([sp, v >> 9]); break; } }
@@ -96,9 +96,9 @@ const MovesTab = (() => {
   function tmPanel() {
     const r = R(), mv = L().moves, rer = () => render(root);
     const tms = h('div', { class: 'mv-tms' });
-    for (let k = 0; k < TM_COUNT; k++) tms.append(h('label', { class: 'field' }, tmName(k), makeSelect(mv, tmMove(k), v => { r.w16(O().tmMoves + k * 2, v); App.lists = null; rer(); })));
+    for (let k = 0; k < TM_COUNT; k++) tms.append(h('label', { class: 'field' }, tmName(k), makeSelect(mv, tmMove(k), v => { r.w16(O().tmMoves + k * 2, v); if (O().tmMovesCopy >= 0) r.w16(O().tmMovesCopy + k * 2, v); App.lists = null; rer(); })));
     const tut = h('div', { class: 'mv-tms' });
-    for (let k = 0; k < TUTOR_COUNT; k++) tut.append(h('label', { class: 'field' }, T('Tutor') + ' ' + (k + 1), makeSelect(mv, r.r16(TUTORS + k * 2), v => { r.w16(TUTORS + k * 2, v); rer(); })));
+    if (O().tutors >= 0) for (let k = 0; k < App.game.tutorCount; k++) tut.append(h('label', { class: 'field' }, T('Tutor') + ' ' + (k + 1), makeSelect(mv, r.r16(O().tutors + k * 2), v => { r.w16(O().tutors + k * 2, v); rer(); })));
     return h('div', { class: 'panel' }, h('h3', {}, '💿 ' + T('TMs and HMs')),
       h('p', { class: 'muted' }, T('Which move each TM / HM teaches. Which Pokémon can use it is set on each Pokémon (Pokémon tab → Moves). HMs also open paths on the map (Cut, Surf, Strength…), so change them carefully.')), tms,
       h('h3', {}, '🎓 ' + T('Move tutors')), h('p', { class: 'muted' }, T('The moves the tutors around the region teach.')), tut);

@@ -7,7 +7,7 @@
 
 const Legends = (() => {
   const R = () => App.rom, G = () => App.game, L = () => App.getLists();
-  const PAL_REF = 0x5F5DC;
+  const PAL_REF = () => App.game.offsets.owPalRef;
 
   // ---------- scan ----------
   function scriptsOf(g, n) {                          // [{ start, obj }] of a map: people, triggers, signs, map scripts
@@ -73,7 +73,7 @@ const Legends = (() => {
 
   // ---------- a sprite made from the Pokémon's own picture ----------
   function paletteTags() {
-    const r = R(), t = r.ptr(PAL_REF), out = [];
+    const r = R(), t = r.ptr(PAL_REF()), out = [];
     for (let i = 0; t >= 0 && i < 64; i++) { const p = r.ptr(t + i * 8); if (p < 0) break; out.push({ tag: r.r16(t + i * 8 + 4), pal: Gfx.readPal(r.u8, p) }); }
     return out;
   }

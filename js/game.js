@@ -115,7 +115,39 @@ const Game = (() => {
     o.iconTable = fr(0x3D3810, v => rom.ptr(v + 4) >= 0);                                  // pointer to a 32x64 4bpp icon per species
     o.iconPalIdx = fr(0x3D3EF0, v => rom.u8[v + 1] <= 2);                                   // which of the 3 icon palettes
     o.iconPals = fr(0x3D37B0, () => true);                                                   // 3 x 16 colours
+    // the same tables in Emerald (US), each checked against what it should hold
+    if (g.isEmerald) {
+      const em = (v, check) => check(v) ? v : -1;
+      o.tmCompat = em(0x31E898, v => rom.r32(v) === 0 && rom.r32(v + 8) !== 0);
+      o.tmMoves = em(0x616040, v => rom.r16(v) === 264 && rom.r16(v + 2) === 337);
+      o.tmMovesCopy = em(0x615B94, v => rom.r16(v) === 264 && rom.r16(v + 2) === 337);     // a second copy the game also reads
+      o.moveData = em(0x31C898, v => rom.u8[v + 12 + 1] === 40);
+      o.dexNums = em(0x31DC82, v => rom.r16(v + 24 * 2) === 25 && rom.r16(v + 276 * 2) === 252);
+      o.dexEntries = em(0x56B5B0, v => rom.ptr(v + 32 + 16) >= 0);
+      o.iconTable = em(0x57BCA8, v => rom.ptr(v + 4) >= 0);
+      o.iconPalIdx = em(0x57C388, v => rom.u8[v + 1] <= 2);
+      o.iconPals = em(0xDDE1F8, v => rom.ptr(0x57C540) === v);
+    }
+    g.dexEntrySize = g.isEmerald ? 32 : 36;
     g.moveCount = 355;
+
+    // tables the editors read directly. -1 = not known for this ROM (that part of the editor is switched off)
+    const TABLES = {
+      itemIcons: [0x3D4304, 0x614410, v => rom.ptr(v) >= 0 && rom.u8[rom.ptr(v)] === 0x10],            // {gfx, palette} per item, LZ77
+      itemEffects: [0x25292C, 0x31E58C, v => rom.ptr(v) >= 0],                                        // medicine effects, items 13..176
+      ballBonus: [0x250902, 0x31C48D, v => rom.u8[v] === 20 && rom.u8[v + 1] === 15],              // Ultra, Great, Poké, Safari (x10)
+      moveDescs: [0x488748, 0x61C524, v => rom.ptr(v) >= 0 && rom.ptr(v + 4) >= 0],
+      tutors: [0x459BC0, 0x61500C, v => rom.r16(v) === 5 && rom.r16(v + 2) === 14],                // Mega Punch, Swords Dance…
+      trainerPics: [0x2395EC, 0x305654, v => rom.ptr(v) >= 0 && rom.r16(v + 4) === 0x800],
+      trainerPals: [0x239A8C, 0x30593C, v => rom.ptr(v) >= 0 && rom.r16(v + 12) === 1],
+      owGfx: [0x39FE20, 0x505620, v => rom.ptr(v) >= 0 && rom.r16(rom.ptr(v)) === 0xFFFF],          // overworld sprite infos
+      owPalRef: [0x5F5DC, 0x8E8BC, v => rom.ptr(v) >= 0],                                            // a pointer to the overworld palettes
+      classRef: [0xD80B4, 0x183B4, v => rom.ptr(v) >= 0],                                            // a pointer to the trainer class names
+    };
+    for (const [k, [f, e, ok]] of Object.entries(TABLES)) { const v = fr11 ? f : g.isEmerald ? e : -1; o[k] = v >= 0 && ok(v) ? v : -1; }
+    g.tutorCount = g.isEmerald ? 30 : 15;
+    g.trainerPicCount = g.isEmerald ? 93 : 148;
+    g.classCount = g.isEmerald ? 66 : 107;
 
     // Free space: largest run of 0xFF
     let best = [0, 0], start = -1;

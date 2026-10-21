@@ -4,7 +4,6 @@
 
 const ItemsTab = (() => {
   const R = () => App.rom, G = () => App.game, O = () => App.game.offsets, L = () => App.getLists();
-  const ICONS = 0x3D4304;                                        // FireRed 1.1: {gfx, palette} per item, LZ77
   const POCKETS = ['', 'Items', 'Key items', 'Poké Balls', 'TMs & HMs', 'Berries'];
   let view = 'items', sel = 13, selShop = 0, query = '', pocket = 0, root = null, openIcon = false;
 
@@ -20,7 +19,7 @@ const ItemsTab = (() => {
     if (cv === undefined) {
       cv = null;
       try {
-        const r = R(), g = LZ.decompress(r.u8, r.ptr(ICONS + i * 8)), p = LZ.decompress(r.u8, r.ptr(ICONS + i * 8 + 4));
+        const r = R(), g = LZ.decompress(r.u8, r.ptr(O().itemIcons + i * 8)), p = LZ.decompress(r.u8, r.ptr(O().itemIcons + i * 8 + 4));
         if (g && p) { cv = h('canvas', { width: 24, height: 24, class: 'pixel' }); cv.getContext('2d').putImageData(Gfx.toImageData(Gfx.tilesToPixels(g.data, 24, 24), 24, 24, Gfx.readPal(p.data, 0), true), 0, 0); }
       } catch (e) { cv = null; }
       iconCache.set(i, cv);
@@ -98,15 +97,15 @@ const ItemsTab = (() => {
   }
   // ---------- the item's icon: 24x24, 16 colours of its own (both LZ77) ----------
   function iconData(i) {
-    const r = R(), g = LZ.decompress(r.u8, r.ptr(ICONS + i * 8)), p = LZ.decompress(r.u8, r.ptr(ICONS + i * 8 + 4));
+    const r = R(), g = LZ.decompress(r.u8, r.ptr(O().itemIcons + i * 8)), p = LZ.decompress(r.u8, r.ptr(O().itemIcons + i * 8 + 4));
     if (!g || !p) return null;
     return { px: Gfx.tilesToPixels(g.data, 24, 24), pal: Gfx.readPal(p.data, 0) };
   }
   // new copies (icons and palettes are shared between items: the others keep theirs)
   function saveIcon(i, px, pal) {
     const r = R();
-    r.wptr(ICONS + i * 8, r.writeNew(LZ.compress(Gfx.pixelsToTiles(px, 24, 24))));
-    r.wptr(ICONS + i * 8 + 4, r.writeNew(LZ.compress(Gfx.palBytes(pal))));
+    r.wptr(O().itemIcons + i * 8, r.writeNew(LZ.compress(Gfx.pixelsToTiles(px, 24, 24))));
+    r.wptr(O().itemIcons + i * 8 + 4, r.writeNew(LZ.compress(Gfx.palBytes(pal))));
     iconCache.delete(i);
   }
   function iconSection(i) {
@@ -235,7 +234,7 @@ const ItemsTab = (() => {
     const desc = Charmap.encode(T('A new item.'), { rtl: App.settings.rtl }), d = new Uint8Array(desc.length + 1); d.set(desc); d[desc.length] = 0xFF;
     r.wptr(base(id) + 20, r.writeNew(d));
     if (te) ItemFx.writeEffect(id, te);
-    r.write(ICONS + id * 8, r.u8.slice(ICONS + tpl * 8, ICONS + tpl * 8 + 8)); iconCache.delete(id);
+    r.write(O().itemIcons + id * 8, r.u8.slice(O().itemIcons + tpl * 8, O().itemIcons + tpl * 8 + 8)); iconCache.delete(id);
     App.lists = null; sel = id; query = ''; pocket = 0;
     toast(Tf('New item #{id} made like {tpl}: give it a name, an icon and a description', { id, tpl: info(tpl).name }));
     render(root);

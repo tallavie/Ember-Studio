@@ -282,8 +282,10 @@ const WorldTab = (() => {
         const { dx, dy } = S.drag; S.drag = null;
         if (!dx && !dy) { draw(); side(); return; }
         let res = null;
+        const before = S.list.slice(), oldRect = { k: p.k, x: p.x, y: p.y, w: p.w, h: p.h }, newRect = { k: p.k, x: p.x + dx, y: p.y + dy, w: p.w, h: p.h };
         if (op('move ' + nameOf(p.k), () => { res = freeMove(p.k, dx, dy); }, { t: 'freemove', k: p.k, dx, dy }, true)) {
           placeMoved(p, dx, dy);
+          moveFx(oldRect, newRect, before);
           const msg = [res.cut.length ? T('Disconnected from') + ' ' + res.cut.map(nameOf).join(', ') : '', res.joined.length ? T('Connected to') + ' ' + res.joined.map(nameOf).join(', ') : ''].filter(Boolean).join(' · ');
           if (msg) toast(nameOf(p.k) + ': ' + msg);
         }
@@ -324,6 +326,46 @@ const WorldTab = (() => {
       S.floating.delete(p.k); S.lastPos.delete(p.k); cache.delete(p.k);
       toast(res.removed ? Tf('{a} was deleted', { a: nameOf(p.k) }) : Tf('{a} left the world (it stays in the map list)', { a: nameOf(p.k) }));
       deselect();
+    }
+  }
+  // a short animation after a move: the moved map pulses, joined edges glow green, cut edges flash red
+  function edgeSeg(a, b) {
+    const y0 = Math.max(a.y, b.y), y1 = Math.min(a.y + a.h, b.y + b.h), x0 = Math.max(a.x, b.x), x1 = Math.min(a.x + a.w, b.x + b.w);
+    if (a.x + a.w === b.x || b.x + b.w === a.x) return { x0: a.x + a.w === b.x ? b.x : a.x, y0, x1: a.x + a.w === b.x ? b.x : a.x, y1 };
+    return { x0, y0: a.y + a.h === b.y ? b.y : a.y, x1, y1: a.y + a.h === b.y ? b.y : a.y };
+  }
+  function moveFx(oldRect, newRect, list) {
+    const t0 = performance.now(), fx = [];
+    for (const q of list) {
+      if (q.k === newRect.k) continue;
+      const was = !!touching(oldRect, q), now = !!touching(newRect, q);
+      if (now && !was) fx.push({ kind: 'join', seg: edgeSeg(newRect, q) });
+      if (was && !now) fx.push({ kind: 'cut', seg: edgeSeg(oldRect, q) });
+    }
+    if (newRect.k === S.root) {             // the start map stays at (0, 0): everything else moved the other way
+      const dx = newRect.x - oldRect.x, dy = newRect.y - oldRect.y;
+      for (const f of fx) { f.seg.x0 -= dx; f.seg.x1 -= dx; f.seg.y0 -= dy; f.seg.y1 -= dy; }
+      newRect = Object.assign({}, newRect, { x: newRect.x - dx, y: newRect.y - dy });
+    }
+    S.fx = { t0, items: fx, pulse: newRect };
+    const tick = () => { if (!S.fx) return; draw(); if (performance.now() - S.fx.t0 < 900) requestAnimationFrame(tick); else { S.fx = null; draw(); } };
+    requestAnimationFrame(tick);
+  }
+  function drawFx(ctx) {
+    if (!S.fx) return;
+    const age = performance.now() - S.fx.t0, k = Math.min(1, age / 900), z = S.zoom;
+    for (const f of S.fx.items) {
+      const [x0, y0] = W2S(f.seg.x0, f.seg.y0), [x1, y1] = W2S(f.seg.x1, f.seg.y1);
+      ctx.save(); ctx.globalAlpha = 1 - k; ctx.lineCap = 'round';
+      ctx.strokeStyle = f.kind === 'join' ? '#40c057' : '#fa5252'; ctx.lineWidth = 4 + 10 * (1 - k);
+      if (f.kind === 'cut') ctx.setLineDash([10, 8]);
+      ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 16 * (1 - k);
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.restore();
+    }
+    const p = S.fx.pulse; if (p && age < 500) {
+      const g = (age / 500) * 14, [sx, sy] = W2S(p.x, p.y);
+      ctx.save(); ctx.globalAlpha = 1 - age / 500; ctx.strokeStyle = '#ffd43b'; ctx.lineWidth = 3;
+      ctx.strokeRect(sx - g, sy - g, p.w * 16 * z + 2 * g, p.h * 16 * z + 2 * g); ctx.restore();
     }
   }
   function labelAt(sx, sy) { for (const l of (S.labels || []).slice().reverse()) if (sx >= l.x && sy >= l.y && sx < l.x + l.w && sy < l.y + l.h) return l.k; return null; }
@@ -442,6 +484,7 @@ const WorldTab = (() => {
       if (S.mode === 'resize') { ctx.strokeStyle = 'rgba(255,212,59,.55)'; ctx.lineWidth = 7; ctx.strokeRect(sx, sy, sw, sh); ctx.lineWidth = 1; }
       if (S.mode === 'resize') for (const [hx, hy] of handles(sx, sy, sw, sh)) { ctx.fillStyle = '#ffd43b'; ctx.fillRect(hx - 5, hy - 5, 10, 10); ctx.strokeStyle = '#000'; ctx.strokeRect(hx - 5.5, hy - 5.5, 11, 11); }
     }
+    drawFx(ctx);
     // brush ghost (where a click would stamp) and the copy rectangle being dragged with the right button
     if (S.mode === 'paint' && S.brush && S.hover && S.hover.k === S.active && !S.drag) {
       const p = list.find(q => q.k === S.hover.k);

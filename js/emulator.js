@@ -90,7 +90,7 @@ const Emu = (() => {
       const a = new Script.Asm(), C = Script.C;
       C.lockall(a); C.setvar(a, TEST_VAR, 1);
       for (const m of spec.team || []) C.givemon(a, m.sp, m.lvl);
-      if ((spec.team || []).length) C.setflag(a, 0x828);                  // FLAG_SYS_POKEMON_GET: the start menu shows POKéMON
+      if ((spec.team || []).length) C.setflag(a, App.game.pokemonGetFlag);                  // FLAG_SYS_POKEMON_GET: the start menu shows POKéMON
       for (const [mon, slot, move] of spec.moves || []) a.b(0x7B, mon, slot).h(move);   // setmonmove: e.g. HMs for a test team
       if (spec.story && spec.story.stageVar != null) C.setvar(a, spec.story.stageVar, spec.story.stage);
       for (const f of spec.flags || []) C.setflag(a, f);

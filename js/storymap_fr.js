@@ -1,4 +1,4 @@
-// Names for the story that is already in Pokémon FireRed (see js/storymap.js): chapters by place, and the main
+// Names for the story that is already in Pokémon FireRed and Emerald (see js/storymap.js): chapters by place, and the main
 // beats by what they do. A beat matches when it is on that map and does that thing:
 //   'v4055=1' sets a variable · 'f820' sets a flag · 'c9d' clears one · 'i265' gives an item · 'm131' gives a Pokémon · 't414' a battle
 // Hacks keep most of FireRed's scripts, so what still matches keeps its name; everything else gets a name from what it does.
@@ -6,7 +6,7 @@
 
 const StoryNames = (() => {
   // chapters in the order of the game: [English, Hebrew, map sections (header byte 20), maps that belong elsewhere]
-  const CHAPTERS = [
+  const FR_CHAPTERS = [
     ['Pallet Town', 'עיירת פלט', [0x58, 0x65]],
     ['Viridian City and the parcel', 'העיר ורידיאן והחבילה', [0x59, 0x66, 0x7A]],
     ['Viridian Forest and Pewter: Brock', 'יער ורידיאן ופיוטר: ברוק', [0x7E, 0x5A, 0x67]],
@@ -29,7 +29,7 @@ const StoryNames = (() => {
   const FR_NAMES = ['BROCK', 'MISTY', 'LT. SURGE', 'ERIKA', 'KOGA', 'SABRINA', 'BLAINE', 'GIOVANNI', 'LORELEI', 'BRUNO', 'AGATHA', 'LANCE', 'TERRY', 'GARY', 'BLUE', 'GRUNT', 'SUPER NERD', 'MIGUEL', 'ADMIN'];
 
   // the main story of FireRed: [map, what it does, English, Hebrew]
-  const BEATS = [
+  const FR_BEATS = [
     ['3.0', 'v4055=1', 'Oak stops you at the tall grass', 'אוק עוצר אותך ליד הדשא הגבוה'],
     ['4.3', 'v4055=2', 'In the lab: Oak lets you choose a Pokémon', 'במעבדה: אוק מציע לבחור פוקימון'],
     ['4.3', 'f828', 'Choose your first Pokémon', 'בחירת הפוקימון הראשון'],
@@ -99,6 +99,58 @@ const StoryNames = (() => {
     ['1.101', 'f2bd', 'Mt. Ember: Moltres', 'הר הגחלת: מולטרס'],
   ];
 
+  // ---------- Emerald (US): chapters by Hoenn map sections, and its main beats ----------
+  const R = n => 0x10 + n - 101;                       // Emerald: ROUTE 101 is map section 0x10
+  const EM_CHAPTERS = [
+    ['Littleroot Town and Route 101', 'ליטלרוט וכביש 101', [0x54, 0x00, R(101)]],
+    ['Oldale Town and the rival', 'אולדייל והיריב', [0x01, R(103)]],
+    ['Petalburg City: meet your father', 'פטלבורג: הפגישה עם אבא', [0x07, R(102)], ['8.0']],
+    ['Petalburg Woods and Rustboro: Roxanne', 'יער פטלבורג ורוסטבורו: רוקסן', [R(104), 0x3B, 0x0A, R(116), 0x3C]],
+    ['Dewford Town: Brawly', "דיופורד: בראולי", [0x02, R(105), R(106), 0x37]],
+    ['Slateport City', 'סלייטפורט', [R(107), R(108), R(109), 0x08, 0x3D, R(110)]],
+    ['Mauville City: Wattson', 'מוביל: ווטסון', [0x09, R(117), 0x05, 0x3E]],
+    ['Mt. Chimney and Team Magma', 'הר הארובה וצוות מגמה', [R(111), R(112), R(113), R(114), R(115), 0x04, 0x3F, 0x40, 0x4A, 0x4B, 0x38, 0x4C, 0x4D, 0xC7]],
+    ['Lavaridge Town: Flannery', 'לאברידג׳: פלנרי', [0x03]],
+    ['Petalburg Gym: Norman', 'המכון בפטלבורג: נורמן', [], ['8.1']],
+    ['Fortree City: Winona', 'פורטרי: וינונה', [R(118), R(119), 0x0B]],
+    ['Lilycove City and Mt. Pyre', 'לילקוב והר פייר', [R(120), R(121), R(122), R(123), 0x41, 0x0C, 0x39, 0xC5]],
+    ['Mossdeep City: Tate & Liza', 'מוסדיפ: טייט וליזה', [R(124), R(125), 0x0D, 0x43, 0xC6]],
+    ['Seafloor Cavern and Sootopolis: Juan', 'מערת קרקעית הים וסוטופוליס: חואן', [R(126), R(127), R(128), R(129), R(130), R(131), R(132), R(133), R(134), 0x06,
+      0x44, 0x45, 0x32, 0x33, 0x34, 0x35, 0x36, 0x0E, 0x48, 0x55]],
+    ['Victory Road and the Pokémon League', 'דרך הניצחון והליגה', [0x0F, 0x46]],
+    ['After the game', 'אחרי המשחק', [0x3A, 0x47, 0x49, 0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4]],
+  ];
+  const EM_BEATS = [
+    ['1.4', 'm152', 'Professor Birch: your first Pokémon', 'פרופסור בירץ׳: הפוקימון הראשון'],
+    ['11.3', 'f867', 'Roxanne: the Stone Badge', 'רוקסן: תג האבן'],
+    ['11.11', 'i339', 'The Cutter gives HM01 Cut', 'החוטב נותן את HM01 חיתוך'],
+    ['3.3', 'f868', 'Brawly: the Knuckle Badge', 'בראולי: תג האגרוף'],
+    ['24.7', 'i343', 'Granite Cave: HM05 Flash', 'מערת הגרניט: HM05 הבזק'],
+    ['10.0', 'f869', 'Wattson: the Dynamo Badge', 'ווטסון: תג הדינמו'],
+    ['10.2', 'i344', 'HM06 Rock Smash', 'HM06 ניפוץ סלעים'],
+    ['24.4', 'i342', 'Rusturf Tunnel: HM04 Strength', 'מנהרת רוסטרף: HM04 כוח'],
+    ['24.12', 't602', 'Mt. Chimney: stop Maxie', 'הר הארובה: לעצור את מקסי'],
+    ['4.1', 'f86a', 'Flannery: the Heat Badge', 'פלנרי: תג החום'],
+    ['8.1', 'f86b', 'Norman: the Balance Badge', 'נורמן: תג האיזון'],
+    ['8.0', 'i341', "Wally's father gives HM03 Surf", 'אבא של וולי נותן את HM03 גלישה'],
+    ['32.1', 't32', 'The Weather Institute: Team Aqua', 'מכון מזג האוויר: צוות אקווה'],
+    ['0.34', 'i340', 'The rival on Route 119: HM02 Fly', 'היריב בכביש 119: HM02 תעופה'],
+    ['12.1', 'f86c', 'Winona: the Feather Badge', 'וינונה: תג הנוצה'],
+    ['24.91', 't601', 'The Magma Hideout: Maxie', 'המחבוא של מגמה: מקסי'],
+    ['14.0', 'f86d', 'Tate & Liza: the Mind Badge', 'טייט וליזה: תג המוח'],
+    ['14.7', 'i346', 'Steven gives HM08 Dive', 'סטיבן נותן את HM08 צלילה'],
+    ['24.36', 'v407b=1', 'Seafloor Cavern: Archie', 'מערת קרקעית הים: ארצ׳י'],
+    ['0.7', 'i345', 'Wallace gives HM07 Waterfall', 'וואלאס נותן את HM07 מפל'],
+    ['15.0', 'f86e', 'Juan: the Rain Badge', 'חואן: תג הגשם'],
+    ['16.0', 't261', 'Elite Four: Sidney', 'ארבעת הגדולים: סידני'],
+    ['16.1', 't262', 'Elite Four: Phoebe', 'ארבעת הגדולים: פיבי'],
+    ['16.2', 't263', 'Elite Four: Glacia', 'ארבעת הגדולים: גלאסיה'],
+    ['16.3', 't264', 'Elite Four: Drake', 'ארבעת הגדולים: דרייק'],
+    ['16.4', 't335', 'The Champion: Wallace', 'האלוף: וואלאס'],
+  ];
+  const EM_NAMES = ['ROXANNE', 'BRAWLY', 'WATTSON', 'FLANNERY', 'NORMAN', 'WINONA', 'TATE&LIZA', 'JUAN', 'SIDNEY', 'PHOEBE', 'GLACIA', 'DRAKE', 'WALLACE',
+    'MAXIE', 'ARCHIE', 'SHELLY', 'BRENDAN', 'MAY'];
+
   function tokens(b) {
     const t = new Set();
     for (const e of b.events) {
@@ -111,6 +163,7 @@ const StoryNames = (() => {
 
   function apply(m) {
     const r = App.rom, g = App.game, he = I18N.lang === 'he';
+    const CHAPTERS = g.isEmerald ? EM_CHAPTERS : FR_CHAPTERS, BEATS = g.isEmerald ? EM_BEATS : FR_BEATS, NAMES = g.isEmerald ? EM_NAMES : FR_NAMES;
     const secOf = (gi, ni) => r.u8[g.mapGroups[gi][ni] + 20];
     const chapterOf = (gi, ni) => {
       const k = gi + '.' + ni, sec = secOf(gi, ni);
@@ -128,7 +181,7 @@ const StoryNames = (() => {
         b.title = he ? BEATS[hit][3] : BEATS[hit][2]; b.main = true;
         // a hack that renamed the trainer of this moment: say who it is now
         const tb = b.events.flatMap(x => x.battles).find(x => x.k === 'trainer'), o = tb && Objects.trainer(tb.id);
-        if (o && o.name && !FR_NAMES.includes(o.name.trim().toUpperCase())) b.title += ' (' + o.name.trim() + ')';
+        if (o && o.name && !NAMES.includes(o.name.trim().toUpperCase())) b.title += ' (' + o.name.trim() + ')';
         continue;
       }
       // no hand-written name: say what it does
@@ -136,7 +189,8 @@ const StoryNames = (() => {
       const tr = b.events.flatMap(x => x.battles).find(x => x.k === 'trainer'), mon = b.events.flatMap(x => x.gives).filter(x => x.k === 'mon');
       const item = b.events.flatMap(x => x.gives).find(x => x.k === 'item' && !x.found);
       const trName = tr ? (() => { const o = Objects.trainer(tr.id); return o ? ((cls[o.cls] || '') + ' ' + o.name).trim() : '#' + tr.id; })() : '';
-      const leader = tr && [0x54, 0x51, 0x55, 0x59, 0x5A, 0x57].includes((Objects.trainer(tr.id) || {}).cls);
+      const tcls = tr ? (Objects.trainer(tr.id) || {}).cls : -1;
+      const leader = tr && (g.isEmerald ? /^(LEADER|ELITE FOUR|CHAMPION|AQUA LEADER|MAGMA LEADER)$/.test((cls[tcls] || '').trim()) : [0x54, 0x51, 0x55, 0x59, 0x5A, 0x57].includes(tcls));
       if (mon.length) b.title = Tf('Get {what}', { what: [...new Set(mon.map(x => L.species[x.sp] || '#' + x.sp))].join(' / ') });
       else if (tr) b.title = Tf('Battle: {who}', { who: trName });
       else if (item) b.title = Tf('Get {what}', { what: L.items[item.item] || '#' + item.item });
@@ -145,7 +199,7 @@ const StoryNames = (() => {
         let s = ''; try { if (p >= 0) s = Charmap.decodeEditable(r.u8, p, App.settings.rtl).text.replace(/\\[pnl]/g, ' ').replace(/\s+/g, ' ').trim(); } catch (x) { s = ''; }
         b.title = s ? '“' + (s.length > 48 ? s.slice(0, 46) + '…' : s) + '”' : T('A change in the story');
       }
-      b.main = !!(mon.length || leader || (item && pocket(item.item) === 2) || b.events.some(x => x.eff.some(f => f.k === 'flag' && f.set && f.f >= 0x820 && f.f < 0x828)));
+      b.main = !!(mon.length || leader || (item && pocket(item.item) === 2) || b.events.some(x => x.eff.some(f => f.k === 'flag' && f.set && g.isBadge(f.f))));
     }
     // the same named moment found twice (its variants came out at different depths): one beat
     const keep = [];
@@ -169,5 +223,5 @@ const StoryNames = (() => {
     if (!fr) for (const b of keep) b.key = isFinite(b.depth) ? b.depth : 1e4;
     m.timeline = keep.slice().sort((x, y) => x.chapter - y.chapter || x.key - y.key || x.g - y.g || x.n - y.n);
   }
-  return { apply, CHAPTERS, BEATS, tokens };
+  return { apply, get CHAPTERS() { return App.game && App.game.isEmerald ? EM_CHAPTERS : FR_CHAPTERS; }, get BEATS() { return App.game && App.game.isEmerald ? EM_BEATS : FR_BEATS; }, tokens };
 })();

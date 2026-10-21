@@ -5,7 +5,7 @@
 
 const Journey = (() => {
   const R = () => App.rom, G = () => App.game, L = () => App.getLists();
-  const HM_FIRST = 339, HM_LAST = 346, BADGE0 = 0x820;
+  const HM_FIRST = 339, HM_LAST = 346;
   const HM_ICON = ['✂', '🕊', '🌊', '💪', '🔦', '🪨', '🌀', '🤿'];
 
   function stops(m) {
@@ -18,8 +18,8 @@ const Journey = (() => {
       s.beats.push(b); if (b.main) s.main.push(b);
       const mk = b.g + '.' + b.n; s.places.set(mk, (s.places.get(mk) || 0) + 1);
       for (const e of b.events) {
-        for (const x of e.eff) if (x.k === 'flag' && x.set && x.f >= BADGE0 && x.f < BADGE0 + 8) {
-          s.badge = x.f - BADGE0 + 1;
+        for (const x of e.eff) if (x.k === 'flag' && x.set && App.game.isBadge(x.f)) {
+          s.badge = x.f - App.game.badgeFlag + 1;
           const tb = e.battles.find(bt => bt.k === 'trainer'); if (tb && !s.leader) s.leader = tb.id;
         }
         for (const gv of e.gives) { if (gv.item >= HM_FIRST && gv.item <= HM_LAST) s.hms.add(gv.item); if (gv.sp) s.gifts.add(gv.sp); }

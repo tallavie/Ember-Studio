@@ -8,9 +8,12 @@
 const PathCheck = (() => {
   const R = () => App.rom, G = () => App.game;
   const HM = { 339: 'cut', 340: 'fly', 341: 'surf', 342: 'strength', 343: 'flash', 344: 'smash', 345: 'waterfall', 346: 'dive' };
-  const BADGE_FOR = { cut: 2, flash: 1, smash: 6, strength: 4, surf: 5, fly: 3, waterfall: 7, dive: 8 };      // FireRed: the badge number each HM needs
-  const WATER = new Set([0x10, 0x11, 0x12, 0x15, 0x1A]), WATERFALL = 0x13;
-  const OBST = { 95: 'cut', 96: 'smash', 97: 'strength' };
+  let BADGE_FOR = {}, WATER = new Set(), OBST = {};
+  const WATERFALL = 0x13, DIVE = new Set([0x11, 0x12, 0x14]), NO_SURFACING = 0x19;   // Emerald: where Dive goes down, and where it can't come up
+  function rules() {                                     // FireRed and Emerald differ in these
+    const g = G(); BADGE_FOR = g.hmBadge; OBST = g.obstacleGfx;
+    WATER = new Set(g.isEmerald ? [0x10, 0x11, 0x12, 0x14, 0x15, 0x50, 0x51, 0x52, 0x53] : [0x10, 0x11, 0x12, 0x15, 0x1A]);   // Emerald: + Sootopolis water, currents
+  }
   const DIRS = [[0, 1, 0x3B], [0, -1, 0x3A], [1, 0, 0x38], [-1, 0, 0x39]];
 
   // ---------- the world ----------
@@ -91,6 +94,10 @@ const PathCheck = (() => {
       const w = mi.warps.get(here);
       if (w && (mi.beh[here] || mi.coll[here] || mi.openSet.has(here)) && w.g !== 127) { const t = mapOf(w.g, w.n); if (t && t.warpList[w.id]) { const [tx, ty] = t.warpList[w.id]; if (tx >= 0 && ty >= 0 && tx < t.w && ty < t.h) visit(t, tx, ty); } }
       if (mi.coll[here] && !w) continue;
+      if (can.dive) for (const c of mi.conns) {                             // Dive down (5) from deep water, come up (6) anywhere but a no-surfacing spot
+        if (!((c.dir === 5 && DIVE.has(mi.beh[here])) || (c.dir === 6 && mi.beh[here] !== NO_SURFACING))) continue;
+        const t = mapOf(c.g, c.n); if (t && x < t.w && y < t.h && !t.coll[y * t.w + x]) visit(t, x, y);
+      }
       // arrived through a door with nowhere to step: the game walks the player in (E4 rooms, scripted entrances)
       if (w && DIRS.every(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx < 0 || ny < 0 || nx >= mi.w || ny >= mi.h || mi.coll[ny * mi.w + nx]; }))
         for (const [dx, dy] of DIRS) { const nx = x + dx, ny = y + dy; if (nx > 0 && ny > 0 && nx < mi.w - 1 && ny < mi.h - 1) { const nx2 = nx + dx, ny2 = ny + dy; if (nx2 >= 0 && ny2 >= 0 && nx2 < mi.w && ny2 < mi.h && !mi.coll[ny2 * mi.w + nx2]) visit(mi, nx2, ny2); } }
@@ -127,18 +134,19 @@ const PathCheck = (() => {
 
   // ---------- run ----------
   function run() {
-    maps = new Map(); champClasses = null;
-    const m = StoryMap.get(), start = mapOf(4, 1) || mapOf(...firstMap());
+    maps = new Map(); champClasses = null; rules();
+    const m = StoryMap.get(), start = mapOf(...G().startMap) || mapOf(...firstMap());
     const sx = start.warpList[0] ? start.warpList[0][0] : Math.floor(start.w / 2), sy = start.warpList[0] ? start.warpList[0][1] : Math.floor(start.h / 2);
     // where the HMs are got and the badges won, and where the game ends
     const hms = [], badges = [], ends = [];
     for (const b of m.beats) for (const e of b.events) {
       for (const gv of e.gives) if (HM[gv.item]) hms.push({ hm: HM[gv.item], item: gv.item, g: e.g, n: e.n, xy: e.xy, beat: b });
-      for (const x of e.eff) if (x.k === 'flag' && x.set) { if (x.f >= 0x820 && x.f < 0x828) badges.push({ n: x.f - 0x820 + 1, g: e.g, n2: e.n, xy: e.xy, beat: b, trainer: (e.battles.find(t => t.k === 'trainer') || {}).id }); if (x.f === 0x82C) ends.push({ g: e.g, n: e.n, xy: e.xy, beat: b }); }
+      for (const x of e.eff) if (x.k === 'flag' && x.set) { if (G().isBadge(x.f)) badges.push({ n: x.f - G().badgeFlag + 1, g: e.g, n2: e.n, xy: e.xy, beat: b, trainer: (e.battles.find(t => t.k === 'trainer') || {}).id }); if (x.f === G().gameClearFlag) ends.push({ g: e.g, n: e.n, xy: e.xy, beat: b }); }
       for (const t of e.battles) if (t.k === 'trainer' && champion(t.id)) ends.push({ g: e.g, n: e.n, xy: e.xy, beat: b, champ: true });
     }
     const jumps = [];
     for (const b of m.beats) for (const e of b.events) for (const a of (e.acts || [])) if (a.k === 'warp' && a.g != null && a.g !== 127 && !(a.g === e.g && a.n === e.n)) jumps.push({ from: e.g + '.' + e.n, g: a.g, n: a.n });
+    for (const [from, gg, nn] of G().engineWarps) jumps.push({ from, g: gg, n: nn });
     const have = new Set(), won = new Set(), steps = [];
     let seen = null;
     for (let round = 0; round < 30; round++) {

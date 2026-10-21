@@ -94,7 +94,7 @@ const Objects = (() => {
   const flagHex = f => '0x' + f.toString(16).toUpperCase();
   function flagMeaning(f) {
     if (f >= 0x500 && f < 0x800) return 'beat trainer #' + (f - 0x500);
-    if (f >= 0x820 && f < 0x828) return 'badge ' + (f - 0x81F);
+    if (G().isBadge(f)) return 'badge ' + (f - G().badgeFlag + 1);
     if (f >= 0x800) return 'game system flag';
     if (f < 0x20) return 'temporary flag (reset on every map)';
     return 'story flag';

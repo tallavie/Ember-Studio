@@ -129,6 +129,17 @@ const Game = (() => {
       o.iconPals = em(0xDDE1F8, v => rom.ptr(0x57C540) === v);
     }
     g.dexEntrySize = g.isEmerald ? 32 : 36;
+
+    // the game's own rules: story flags, which badge each HM needs, the HM obstacles on the map, where the player starts
+    g.badgeFlag = g.isEmerald ? 0x867 : 0x820;                       // the first of the eight badge flags
+    g.gameClearFlag = g.isEmerald ? 0x864 : 0x82C;
+    g.pokemonGetFlag = g.isEmerald ? 0x860 : 0x828;                  // the start menu shows POKéMON
+    g.hmBadge = g.isEmerald ? { cut: 1, flash: 2, smash: 3, strength: 4, surf: 5, fly: 6, dive: 7, waterfall: 8 }
+      : { cut: 2, flash: 1, smash: 6, strength: 4, surf: 5, fly: 3, waterfall: 7, dive: 8 };
+    g.obstacleGfx = g.isEmerald ? { 82: 'cut', 86: 'smash', 87: 'strength' } : { 95: 'cut', 96: 'smash', 97: 'strength' };
+    g.startMap = g.isEmerald ? [1, 1] : [4, 1];                      // the player's room
+    g.isBadge = f => f >= g.badgeFlag && f < g.badgeFlag + 8;
+    g.engineWarps = g.isEmerald ? [['19.0', 19, 1], ['19.1', 19, 0], ['24.5', 0, 7], ['24.26', 24, 27]] : [];   // trips the game makes in code, not script: Emerald's cable car, surfacing in Sootopolis and the Seafloor Cavern
     g.moveCount = 355;
 
     // tables the editors read directly. -1 = not known for this ROM (that part of the editor is switched off)

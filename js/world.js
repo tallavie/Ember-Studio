@@ -67,7 +67,10 @@ const WorldTab = (() => {
   }
   function layoutWorld() {
     const pos = new Map(), warn = [];
-    if (!hdrOf(S.root)) S.root = allMaps().find(k => isOutdoor(k) && conns(hdrOf(k)).length) || '0.0';
+    if (!hdrOf(S.root) || !isOutdoor(S.root)) {                     // another game (Emerald: 3.0 is a house): its first town, else any connected outdoor map
+      const first = game().isEmerald ? '0.9' : '3.0';
+      S.root = hdrOf(first) && isOutdoor(first) ? first : allMaps().find(k => isOutdoor(k) && conns(hdrOf(k)).length) || '0.0';
+    }
     pos.set(S.root, { x: 0, y: 0 });
     const q = [S.root];
     while (q.length) {
@@ -845,6 +848,14 @@ const WorldTab = (() => {
   const PC_STAMP = [[12667, 12668, 12669, 12670, 12671], [1096, 1097, 1098, 1099, 1415], [1104, 1105, 1106, 1107, 1423], [1112, 1113, 1114, 1115, 1431], [1120, 1121, 1122, 1414, 1439]];
   const MART_STAMP = [[12328, 12329, 12330, 12331], [1072, 1073, 1074, 1075], [1080, 1081, 1082, 1083], [1088, 1089, 1122, 1123]];
   const PC_SRC = [5, 4], MART_SRC = [6, 3];                    // FireRed: Viridian Pokémon Center 1F, Pewter Mart
+  // Emerald: the buildings of Oldale Town (primary tileset, plus the Mart's roof corner every town tileset has), its Center and Mart
+  const EM_NEW = { group: 0, pcSrc: [2, 2], martSrc: [2, 4], pcDoor: [1, 3], martDoor: [1, 3],
+    pc: [[0x48, 0x49, 0x4A, 0x4B], [0x50, 0x51, 0x52, 0x53], [0x58, 0x59, 0x5A, 0x5B], [0x60, 0x61, 0x62, 0x63]],
+    mart: [[0x28, 0x29, 0x29, 0x285], [0x30, 0x31, 0x32, 0x33], [0x38, 0x39, 0x3A, 0x3B], [0x60, 0x41, 0x42, 0x43]] };
+  const FR_NEW = { group: 3, pcSrc: PC_SRC, martSrc: MART_SRC, pcDoor: [2, 4], martDoor: [2, 3], pc: PC_STAMP, mart: MART_STAMP };
+  const NEW = () => game().isEmerald ? EM_NEW : FR_NEW;
+  // where the name of a map section is: FireRed's own name table; Emerald's region map entries (8 bytes, name at +4)
+  const secNameAt = s => game().isEmerald ? game().offsets.regionMapEntries + s * 8 + 4 : TOWNMAP_DATA.names + (s - 0x58) * 4;
   function newMapDrag(e, r, wx0, wy0) {
     const bx = Math.floor(wx0), by = Math.floor(wy0);
     S.pending = null;
@@ -897,6 +908,12 @@ const WorldTab = (() => {
   }
   function freeSections(fly) {
     const r = rom(), used = reachableSections(), D = TOWNMAP_DATA, out = [];
+    if (game().isEmerald) {                                          // the Kanto names Emerald keeps but no map uses; no Fly points yet
+      if (fly) return out;
+      const all = new Set(); for (const grp of game().mapGroups) for (const hp of grp) all.add(r.u8[hp + 20]);
+      for (let s = 0x58; s < 0xC5; s++) if (!all.has(s) && !used.has(s) && r.ptr(secNameAt(s)) >= 0) out.push(s);
+      return out;
+    }
     for (let s = 0x58; s < 0xC5; s++) {
       if (used.has(s) || r.ptr(D.names + (s - 0x58) * 4) < 0) continue;
       const heal = r.u8[D.fly + (s - 0x58) * 3 + 2];
@@ -955,7 +972,8 @@ const WorldTab = (() => {
   function template(spec, touch) {
     const r = rom(), { w, h } = spec, src = entry(spec.from).m;
     const ground = groundOf(src);
-    const b = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => TREE[y & 1][x & 1]));
+    const fill = game().isEmerald ? (() => { const bd = src.border; return [[rom().r16(bd), rom().r16(bd + 2)], [rom().r16(bd + 4), rom().r16(bd + 6)]]; })() : TREE;
+    const b = Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => fill[y & 1][x & 1]));
     const city = spec.type === 'city', edge = city ? 2 : 0;
     if (city) for (let y = edge; y < h - edge; y++) for (let x = edge; x < w - edge; x++) b[y][x] = ground;
     const cx = Math.floor(w / 2), cy = Math.floor(h / 2);
@@ -998,9 +1016,10 @@ const WorldTab = (() => {
     let pc = null, mart = null;
     if (city && w >= 16 && h >= 13) {
       const px = cx - 7, py = cy - 5, mx = cx + 2, my = cy - 4;
-      PC_STAMP.forEach((row, y) => row.forEach((v, x) => { b[py + y][px + x] = v; }));
-      MART_STAMP.forEach((row, y) => row.forEach((v, x) => { b[my + y][mx + x] = v; }));
-      pc = [px + 2, py + 4]; mart = [mx + 2, my + 3];
+      const N = NEW();
+      N.pc.forEach((row, y) => row.forEach((v, x) => { b[py + y][px + x] = v; }));
+      N.mart.forEach((row, y) => row.forEach((v, x) => { b[my + y][mx + x] = v; }));
+      pc = [px + N.pcDoor[0], py + N.pcDoor[1]]; mart = [mx + N.martDoor[0], my + N.martDoor[1]];
       for (let x = px; x <= mx + 3; x++) carve(x, py + 5);        // a street in front of both doors
     }
     return { blocks: b, pc, mart };
@@ -1019,24 +1038,25 @@ const WorldTab = (() => {
     if (!pool.length) throw new Error(fly ? 'No free Fly slot left (the 7 Sevii island towns are used)' : 'No free map-section (name) slot left');
     const sec = pool[0];
     const name = (spec.name || '').trim() || (city ? 'עיר חדשה' : 'דרך חדשה');
-    r.wptr(D.names + (sec - 0x58) * 4, r.writeNew(Charmap.encode(name, { rtl: App.settings.rtl })));
+    r.wptr(secNameAt(sec), r.writeNew(Charmap.encode(name, { rtl: App.settings.rtl })));
+    const OG = NEW().group, [PCG, PCN] = NEW().pcSrc, [MG, MN] = NEW().martSrc;      // the outdoor map group, the interiors to copy
     // layout (+ a new layout id)
     const blk = new Uint8Array(w * h * 2), bv = new DataView(blk.buffer);
     tpl.blocks.forEach((row, y) => row.forEach((v, x) => bv.setUint16((y * w + x) * 2, v, true)));
-    const bw = r.u8[nlay + 24] || 2, bh = r.u8[nlay + 25] || 2, nbd = r.ptr(nlay + 8);
+    const bw = g.isEmerald ? 2 : r.u8[nlay + 24] || 2, bh = g.isEmerald ? 2 : r.u8[nlay + 25] || 2, nbd = r.ptr(nlay + 8);   // Emerald: always 2x2
     const lay = r.u8.slice(nlay, nlay + 28), lv = new DataView(lay.buffer);
     lv.setUint32(0, w, true); lv.setUint32(4, h, true);
     lv.setUint32(8, 0x08000000 + r.writeNew(r.u8.slice(nbd, nbd + bw * bh * 2)), true);
     lv.setUint32(12, 0x08000000 + r.writeNew(blk), true);
     const layOff = r.writeNew(lay), layId = newLayoutId(layOff);
     // numbers of the new maps (the city first, then its interiors)
-    const num = g.mapGroups[3].length;
+    const num = g.mapGroups[OG].length;
     const warps = [];
     let pc1 = null, martNum = null;
     if (tpl.pc) {
-      pc1 = g.mapGroups[PC_SRC[0]].length;
-      martNum = g.mapGroups[MART_SRC[0]].length + (MART_SRC[0] === PC_SRC[0] ? 2 : 0);
-      warps.push([tpl.pc[0], tpl.pc[1], 3, 1, pc1, PC_SRC[0]], [tpl.mart[0], tpl.mart[1], 3, 1, martNum, MART_SRC[0]]);
+      pc1 = g.mapGroups[PCG].length;
+      martNum = g.mapGroups[MG].length + (MG === PCG ? 2 : 0);
+      warps.push([tpl.pc[0], tpl.pc[1], 3, 1, pc1, PCG], [tpl.mart[0], tpl.mart[1], 3, 1, martNum, MG]);
     }
     // events: the two doors
     const evs = new Uint8Array(20), ed = new DataView(evs.buffer);
@@ -1056,11 +1076,11 @@ const WorldTab = (() => {
     const hdr = r.u8.slice(nb, nb + 28), hv = new DataView(hdr.buffer);
     hv.setUint32(0, 0x08000000 + layOff, true); hv.setUint32(4, 0x08000000 + r.writeNew(evs), true); hv.setUint32(8, 0x08000000 + scr, true);
     hv.setUint32(12, 0, true); hv.setUint16(18, layId, true); hdr[20] = sec; hdr[23] = city ? 2 : 3;
-    if (appendToGroup(3, r.writeNew(hdr)) !== num) throw new Error('map number mismatch');
-    const k = key(3, num);
+    if (appendToGroup(OG, r.writeNew(hdr)) !== num) throw new Error('map number mismatch');
+    const k = key(OG, num);
     // interiors: Pokémon Center 1F / 2F and the Mart; their doors lead back here
     if (tpl.pc) {
-      const [pg, pn] = PC_SRC, src1 = g.mapGroups[pg][pn], ev1 = r.ptr(src1 + 4), wp1 = r.ptr(ev1 + 8);
+      const pg = PCG, pn = PCN, src1 = g.mapGroups[pg][pn], ev1 = r.ptr(src1 + 4), wp1 = r.ptr(ev1 + 8);
       let up = null; for (let i = 0; i < r.u8[ev1 + 1]; i++) if (r.u8[wp1 + i * 8 + 7] === pg && r.u8[wp1 + i * 8 + 6] !== pn) up = r.u8[wp1 + i * 8 + 6];
       const heal = fly ? r.u8[D.fly + (sec - 0x58) * 3 + 2] : 0;
       let scripts1 = null;
@@ -1072,13 +1092,13 @@ const WorldTab = (() => {
         ents.forEach(([ty, p], i) => { t[i * 5] = ty; tv.setUint32(i * 5 + 1, ty === 3 ? 0x08000000 + code : p, true); });
         scripts1 = r.writeNew(t);
       }
-      const n1 = cloneMap(pg, pn, w0 => w0.group === 3 ? Object.assign(w0, { num, warp: 0 }) : (w0.group === pg && w0.num === up ? Object.assign(w0, { num: pc1 + 1 }) : w0), scripts1);
+      const n1 = cloneMap(pg, pn, w0 => w0.group === OG ? Object.assign(w0, { num, warp: 0 }) : (w0.group === pg && w0.num === up ? Object.assign(w0, { num: pc1 + 1 }) : w0), scripts1);
       const n2 = up != null ? cloneMap(pg, up, w0 => w0.group === pg && w0.num === pn ? Object.assign(w0, { num: n1 }) : w0, null) : null;
-      const nm = cloneMap(MART_SRC[0], MART_SRC[1], w0 => w0.group === 3 ? Object.assign(w0, { num, warp: 1 }) : w0, null);
+      const nm = cloneMap(MG, MN, w0 => w0.group === OG ? Object.assign(w0, { num, warp: 1 }) : w0, null);
       if (n1 !== pc1 || (n2 != null && n2 !== pc1 + 1) || nm !== martNum) throw new Error('interior number mismatch');
       if (fly) {
-        r.write(D.fly + (sec - 0x58) * 3, new Uint8Array([3, num, heal]));
-        const he = new Uint8Array(8), hd = new DataView(he.buffer); he[0] = 3; he[1] = num; hd.setInt16(2, tpl.pc[0], true); hd.setInt16(4, tpl.pc[1] + 1, true);
+        r.write(D.fly + (sec - 0x58) * 3, new Uint8Array([OG, num, heal]));
+        const he = new Uint8Array(8), hd = new DataView(he.buffer); he[0] = OG; he[1] = num; hd.setInt16(2, tpl.pc[0], true); hd.setInt16(4, tpl.pc[1] + 1, true);
         r.write(D.heal + (heal - 1) * 8, he);
         const rs = new Uint8Array(4), rv = new DataView(rs.buffer); rv.setUint16(0, pg, true); rv.setUint16(2, n1, true);
         r.write(D.respawn + (heal - 1) * 4, rs); r.w8(D.healer + heal - 1, r.u8[D.healer + 1]);

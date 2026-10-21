@@ -7,7 +7,6 @@
 const StoryMap = (() => {
   const R = () => App.rom, G = () => App.game;
   const TRAINER_FLAGS = 0x500;                         // FireRed: "trainer beaten" flags start here
-  const BADGES = [0x820, 0x821, 0x822, 0x823, 0x824, 0x825, 0x826, 0x827];
   const COND_TABLE = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [0, 1, 1], [1, 0, 1]];   // goto_if code x compare result (<, =, >)
   const OPS = ['<', '=', '>', '≤', '≥', '≠'];
   const persistentVar = v => v >= 0x4010 && v < 0x4100;      // 0x4000-0x400F are reset on every map change
@@ -286,5 +285,5 @@ const StoryMap = (() => {
     return cache;
   }
 
-  return { get, follow, entries, initialFlags, OPS, TRAINER_FLAGS, BADGES, varOk, _consistent: consistent };
+  return { get, follow, entries, initialFlags, OPS, TRAINER_FLAGS, get BADGES() { const b = App.game.badgeFlag; return [0, 1, 2, 3, 4, 5, 6, 7].map(i => b + i); }, varOk, _consistent: consistent };
 })();

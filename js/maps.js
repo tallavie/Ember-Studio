@@ -5,7 +5,7 @@
 const MapsTab = (() => {
   let cur = null;               // loaded map
   let selGroup = 0, selMap = 0, zoom = 2, mode = 'tiles', selBlock = 1, selColl = 1, selElev = 3;
-  let showColl = false, showEvents = true, showGrid = false, selEvent = null, filterText = '';
+  let showColl = false, showEvents = true, showGrid = false, playerView = false, selEvent = null, filterText = '';
   const tsCache = new Map(), mtCache = new Map();
   const undo = [];
 
@@ -215,12 +215,14 @@ const MapsTab = (() => {
       h('label', {}, h('input', { type: 'checkbox', checked: showColl, onchange: e => { showColl = e.target.checked; redraw(); } }), ' Collision'),
       h('label', {}, h('input', { type: 'checkbox', checked: showEvents, onchange: e => { showEvents = e.target.checked; redraw(); } }), ' Events'),
       h('label', {}, h('input', { type: 'checkbox', checked: showGrid, onchange: e => { showGrid = e.target.checked; redraw(); } }), ' Grid'),
+      h('label', { title: T('A frame the size of the game screen (15×10 squares) around the mouse: what the player sees standing there') }, h('input', { type: 'checkbox', checked: playerView, onchange: e => { playerView = e.target.checked; pv.hidden = true; } }), ' 👁 ' + T('Player view')),
       h('button', { onclick: () => { const u = undo.pop(); if (u) { App.rom.write(u.off, u.data); redraw(); } } }, '↶ Undo'),
       h('button', { class: pickPlay ? 'sel' : '', title: 'Click a spot on the map: the game starts there', onclick: () => { pickPlay = !pickPlay; render(root); } }, '▶ Play from here'),
       h('button', { title: 'What happens on this map in the story of the game, in order', onclick: () => { StoryView.setPlace(cur.gi + '.' + cur.mi); App.show('story'); } }, '📖 ' + T('Story here')),
       h('button', { title: 'The Pokémon the player gets in the test', onclick: () => Emu.teamDialog() }, '🎒'),
       h('span', { class: 'muted', id: 'mapPos' }));
     const cv = h('canvas', { class: 'pixel mapcanvas' });
+    const pv = h('div', { class: 'pv-frame', hidden: true }, h('span', {}, T('what the player sees')));     // the game screen around the mouse
     const redraw = () => drawMap(cv);
     redraw();
 
@@ -256,6 +258,7 @@ const MapsTab = (() => {
     };
     cv.onmousemove = e => {
       const [x, y] = cell(e);
+      if (playerView) { const s = 16 * zoom; pv.hidden = false; Object.assign(pv.style, { left: (x - 7) * s + 'px', top: (y - 4) * s + 'px', width: 15 * s + 'px', height: 10 * s + 'px' }); }
       if (x >= 0 && y >= 0 && x < cur.w && y < cur.h) {
         const b = block(cur, x, y);
         $('#mapPos').textContent = `(${x}, ${y}) block ${hex(b & 0x3FF, 3)} collision ${(b >> 10) & 3} elevation ${b >> 12}`;
@@ -286,7 +289,8 @@ const MapsTab = (() => {
     }
     renderSide();
 
-    root.append(h('div', { class: 'cols maps' }, left, h('div', { class: 'panel mapmain' }, tb, h('div', { class: 'mapscroll' }, cv)), side));
+    cv.onmouseleave = () => { pv.hidden = true; };
+    root.append(h('div', { class: 'cols maps' }, left, h('div', { class: 'panel mapmain' }, tb, h('div', { class: 'mapscroll' }, h('div', { class: 'pv-wrap' }, cv, pv))), side));
   }
 
   // ---------- events ----------

@@ -485,6 +485,12 @@ const WorldTab = (() => {
       if (S.mode === 'resize') for (const [hx, hy] of handles(sx, sy, sw, sh)) { ctx.fillStyle = '#ffd43b'; ctx.fillRect(hx - 5, hy - 5, 10, 10); ctx.strokeStyle = '#000'; ctx.strokeRect(hx - 5.5, hy - 5.5, 11, 11); }
     }
     drawFx(ctx);
+    if (S.playerView && S.hoverW && !S.drag) {             // the game screen (15x10 squares) around the mouse, the rest darker
+      const [bx, by] = S.hoverW, [x0, y0] = W2S(bx - 7, by - 4), w = 15 * 16 * z, hh = 10 * 16 * z;
+      ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.rect(0, 0, cv.width, cv.height); ctx.rect(x0, y0, w, hh); ctx.fill('evenodd');
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(x0, y0, w, hh);
+      ctx.font = '600 11px system-ui'; ctx.fillStyle = '#fff'; ctx.fillText(T('what the player sees'), x0 + 4, y0 - 5); ctx.restore();
+    }
     // brush ghost (where a click would stamp) and the copy rectangle being dragged with the right button
     if (S.mode === 'paint' && S.brush && S.hover && S.hover.k === S.active && !S.drag) {
       const p = list.find(q => q.k === S.hover.k);
@@ -600,6 +606,7 @@ const WorldTab = (() => {
         st.textContent = t;
       }
       const hv = p ? { k: p.k, x: Math.floor(wx) - p.x, y: Math.floor(wy) - p.y } : null;
+      S.hoverW = [Math.floor(wx), Math.floor(wy)]; if (S.playerView) draw();
       const hev = p && S.showEvents && S.zoom >= 0.2 ? eventAt(p, hv.x, hv.y) : null;
       cv.title = hev ? (() => { const [g, n] = parse(p.k); return Objects.tooltip(g, n, hev); })() : '';
       if (S.brush && S.mode === 'paint' && JSON.stringify(hv) !== JSON.stringify(S.hover)) { S.hover = hv; draw(); } else S.hover = hv;
@@ -1377,6 +1384,7 @@ const WorldTab = (() => {
       h('button', { onclick: () => { S.fitted = false; draw(); } }, 'Fit all'),
       h('label', {}, h('input', { type: 'checkbox', checked: S.showNames, onchange: e => { S.showNames = e.target.checked; draw(); } }), ' names'),
       h('label', {}, h('input', { type: 'checkbox', checked: S.showEvents, onchange: e => { S.showEvents = e.target.checked; draw(); } }), ' people & doors'),
+      h('label', { title: T('A frame the size of the game screen (15×10 squares) around the mouse: what the player sees standing there') }, h('input', { type: 'checkbox', checked: !!S.playerView, onchange: e => { S.playerView = e.target.checked; draw(); } }), ' 👁 ' + T('Player view')),
       h('button', { onclick: () => exportEdits(), title: 'Saves your world edits to world_edits.json (also used by build steps)' }, '💾 ' + T('Export map changes') + ' (' + S.log.length + ')'),
       h('label', { class: 'btn', title: 'Load world_edits.json: applied directly if this is the same ROM, otherwise the edits are replayed' }, '📂 Import edits', h('input', { type: 'file', accept: '.json', hidden: true, onchange: e => e.target.files[0] && importEdits(e.target.files[0]) })),
       TownMap.supported() ? h('button', { onclick: () => { op('redraw town map', () => {}, { t: 'townmap' }, true); side(); } }, '🗺 Redraw town map') : null,

@@ -370,3 +370,8 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .sr-row.sel { background: var(--accent); color: var(--accent-ink); } .sr-row.sel .muted { color: inherit; opacity: .8; }
 .sr-ic { width: 22px; text-align: center; font-size: 16px; } .sr-title { flex: 1; } .sr-sub { font-size: 12px; white-space: nowrap; }
 .sr-foot { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 8px 12px; border-top: 1px solid var(--line); font-size: 12px; }
+
+/* player view: the game screen around the mouse */
+.pv-wrap { position: relative; display: inline-block; overflow: hidden; vertical-align: top; }
+.pv-frame { position: absolute; pointer-events: none; border: 2px solid #fff; box-shadow: 0 0 0 2000px rgba(0,0,0,.5); }
+.pv-frame span { position: absolute; top: -18px; left: 0; color: #fff; font: 600 11px system-ui; text-shadow: 0 1px 2px #000; white-space: nowrap; }

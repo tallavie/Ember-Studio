@@ -137,8 +137,13 @@ Ember Studio creates the project folder and builds the game. You land in the edi
 
 At the top of the window:
 
+- **☰** shows or hides the side bar.
 - **The title**: Ember Studio and the name of the open project.
-- **The tabs**, one for each part of the game:
+- **🔍 Search… (Ctrl+K)** finds anything in the game: a map, a Pokémon, a legendary, a trainer, an item, a move or a screen of the editor. Type a few letters, move with the arrows and press Enter to go there. *Search "…" in the game's text* finds a line of dialogue.
+
+On the side, **the side bar** holds the tabs in groups (World, Story & text, Characters, Things, Look & sound, Check). It folds to icons only, and remembers how you left it.
+
+The tabs, one for each part of the game:
 
 | Tab | What you edit there |
 |---|---|
@@ -266,6 +271,22 @@ The **World view** shows all the maps that connect to each other, laid out the w
 
 If two maps overlap, or their connections disagree, a warning appears above the map. Fix it before you share the game.
 
+## The library and editing on the map
+
+In **🧭 General map management** and **👤 People & doors**, the side panel has a **📚 Drag onto the map** library with three lists: Pokémon, items and trainers. Drag one onto any map:
+
+- a **Pokémon** becomes a legendary standing there (talk to it to battle it; a sprite is made from its picture if it has none);
+- an **item** becomes an item ball;
+- a **trainer** stands there, ready to battle.
+
+**Double-click a person or a sign** (in the world view or the map editor) to edit what they say right on the map, in a speech bubble with a preview of the game's message box. Ctrl+Enter saves, Esc cancels.
+
+When you move a map, a short animation shows what changed: edges that joined glow green, edges that came apart flash red.
+
+## 👁 Player view
+
+Tick **👁 Player view** (in the world view and in the map editor) to see a frame the size of the game screen, 15×10 squares, around the mouse: exactly what the player sees when standing there. Everything else gets darker.
+
 ## Going through doors
 
 In **👤 People & doors** you can follow a door to the map it leads to, and come back:
@@ -331,6 +352,7 @@ Click an object in **👤 Events** mode to open its settings.
 - **Movement**: stands still, looks around, walks in an area, or walks up and down.
 - **Script**: what happens when the player talks to them. See *Blocks* below.
 - **Name**: a note for you, shown only in the editor.
+- **💬 Open as a conversation** shows everything they say as a chat: their lines in bubbles, in the game's own font; the player's YES / NO answers as two threads side by side; conditions ("if you already beat this trainer") and what happens (a gift, a battle, a flag) as small notes between the bubbles. Click a bubble to edit it; the preview shows the game's message box as you type.
 
 ![Choosing a sprite](img/en/sprite-gallery.png)
 
@@ -415,6 +437,17 @@ In the *Story* tab, **▶ Play the preview** shows a quick animation of the walk
 The **📖 Story** tab is where you write the plot of your game: what the player must do, in what order, and what people say along the way. You don't write scripts and flags by hand. You make a list of **steps**, and Ember Studio builds everything else.
 
 ![The Story tab](img/en/story.png)
+
+## 🧭 The journey
+
+**🧭 The journey** (the first button above the story) shows the whole game on one line, from the first town to the league. Every stop shows:
+
+- the place and the chapter of the story;
+- the badge won there, with the gym leader's picture and the level of their strongest Pokémon (click to open the trainer);
+- the HMs and the Pokémon you get there, and the legendaries waiting there (click to open them);
+- the main moments: click one to open it in the story.
+
+At the top, a small curve shows the leaders' levels in order. A red dot is a leader weaker than the one before.
 
 ## How it works
 
@@ -738,6 +771,15 @@ Before sharing your game, open **🩺 Game check**. It goes through the whole ga
 | Almost no free space left in the ROM | New scripts and pictures may not fit. |
 
 Each problem has a **Show** button that takes you to the right place. Press **Check again** after fixing things.
+
+## 🧭 Can the game be finished?
+
+Below the list, **Check the path** walks the whole world from the player's room, the way a player can, and tells you whether the league can be reached:
+
+- It follows walls, ledges, one-way tiles, heights, doors, map edges, water, waterfalls, Cut trees, Rock Smash rocks and Strength boulders, doors and gates that the map's own scripts open, and ferries and teleports done by scripts.
+- Each HM opens up once the place that gives it is reached **and** the badge that allows it is won.
+- The result lists, in order, every badge and HM the player gets and where, then the badges and HMs that can never be got, and the places of the main story that can't be reached, each with a **Show** button.
+- People standing in the way and story roadblocks (guards, a sleeping Snorlax…) are not checked: test those in the game.
 
 # Playing and testing
 

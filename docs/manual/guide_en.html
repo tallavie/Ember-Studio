@@ -68,6 +68,8 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 </li>
 <li><a href="#the-world-view">The world view</a><ul>
 <li><a href="#what-you-can-do-here">What you can do here</a></li>
+<li><a href="#the-library-and-editing-on-the-map">The library and editing on the map</a></li>
+<li><a href="#player-view">👁 Player view</a></li>
 <li><a href="#going-through-doors">Going through doors</a></li>
 <li><a href="#play-from-here-world-view">▶ Play from here (world view)</a></li>
 <li><a href="#wild-pokémon">Wild Pokémon</a></li>
@@ -91,6 +93,7 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 </ul>
 </li>
 <li><a href="#the-story">The story</a><ul>
+<li><a href="#the-journey">🧭 The journey</a></li>
 <li><a href="#how-it-works">How it works</a></li>
 <li><a href="#kinds-of-steps">Kinds of steps</a></li>
 <li><a href="#writing-a-step">Writing a step</a></li>
@@ -133,7 +136,10 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 </ul>
 </li>
 <li><a href="#music">Music</a></li>
-<li><a href="#game-check">Game check</a></li>
+<li><a href="#game-check">Game check</a><ul>
+<li><a href="#can-the-game-be-finished">🧭 Can the game be finished?</a></li>
+</ul>
+</li>
 <li><a href="#playing-and-testing">Playing and testing</a><ul>
 <li><a href="#ways-to-play">Ways to play</a></li>
 <li><a href="#keys">Keys</a></li>
@@ -279,9 +285,12 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <figure><img src="img/en/header.png" alt="The top of the window"><figcaption>The top of the window</figcaption></figure>
 <p>At the top of the window:</p>
 <ul>
+<li><strong>☰</strong> shows or hides the side bar.</li>
 <li><strong>The title</strong>: Ember Studio and the name of the open project.</li>
-<li><strong>The tabs</strong>, one for each part of the game:</li>
+<li><strong>🔍 Search… (Ctrl+K)</strong> finds anything in the game: a map, a Pokémon, a legendary, a trainer, an item, a move or a screen of the editor. Type a few letters, move with the arrows and press Enter to go there. <em>Search "…" in the game's text</em> finds a line of dialogue.</li>
 </ul>
+<p>On the side, <strong>the side bar</strong> holds the tabs in groups (World, Story &amp; text, Characters, Things, Look &amp; sound, Check). It folds to icons only, and remembers how you left it.</p>
+<p>The tabs, one for each part of the game:</p>
 <table>
 <thead>
 <tr>
@@ -434,6 +443,17 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <li><strong>💾 Export map changes</strong> and <strong>📂 Import edits</strong> save your world edits to a file (<code>world_edits.json</code>) and load them into another copy of the game.</li>
 </ul>
 <p>If two maps overlap, or their connections disagree, a warning appears above the map. Fix it before you share the game.</p>
+<h2 id="the-library-and-editing-on-the-map">The library and editing on the map</h2>
+<p>In <strong>🧭 General map management</strong> and <strong>👤 People &amp; doors</strong>, the side panel has a <strong>📚 Drag onto the map</strong> library with three lists: Pokémon, items and trainers. Drag one onto any map:</p>
+<ul>
+<li>a <strong>Pokémon</strong> becomes a legendary standing there (talk to it to battle it; a sprite is made from its picture if it has none);</li>
+<li>an <strong>item</strong> becomes an item ball;</li>
+<li>a <strong>trainer</strong> stands there, ready to battle.</li>
+</ul>
+<p><strong>Double-click a person or a sign</strong> (in the world view or the map editor) to edit what they say right on the map, in a speech bubble with a preview of the game's message box. Ctrl+Enter saves, Esc cancels.</p>
+<p>When you move a map, a short animation shows what changed: edges that joined glow green, edges that came apart flash red.</p>
+<h2 id="player-view">👁 Player view</h2>
+<p>Tick <strong>👁 Player view</strong> (in the world view and in the map editor) to see a frame the size of the game screen, 15×10 squares, around the mouse: exactly what the player sees when standing there. Everything else gets darker.</p>
 <h2 id="going-through-doors">Going through doors</h2>
 <p>In <strong>👤 People &amp; doors</strong> you can follow a door to the map it leads to, and come back:</p>
 <ul>
@@ -489,6 +509,7 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <li><strong>Movement</strong>: stands still, looks around, walks in an area, or walks up and down.</li>
 <li><strong>Script</strong>: what happens when the player talks to them. See <em>Blocks</em> below.</li>
 <li><strong>Name</strong>: a note for you, shown only in the editor.</li>
+<li><strong>💬 Open as a conversation</strong> shows everything they say as a chat: their lines in bubbles, in the game's own font; the player's YES / NO answers as two threads side by side; conditions ("if you already beat this trainer") and what happens (a gift, a battle, a flag) as small notes between the bubbles. Click a bubble to edit it; the preview shows the game's message box as you type.</li>
 </ul>
 <figure><img src="img/en/sprite-gallery.png" alt="Choosing a sprite"><figcaption>Choosing a sprite</figcaption></figure>
 <h2 id="trainers">Trainers</h2>
@@ -655,6 +676,15 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <h1 id="the-story">The story</h1>
 <p>The <strong>📖 Story</strong> tab is where you write the plot of your game: what the player must do, in what order, and what people say along the way. You don't write scripts and flags by hand. You make a list of <strong>steps</strong>, and Ember Studio builds everything else.</p>
 <figure><img src="img/en/story.png" alt="The Story tab"><figcaption>The Story tab</figcaption></figure>
+<h2 id="the-journey">🧭 The journey</h2>
+<p><strong>🧭 The journey</strong> (the first button above the story) shows the whole game on one line, from the first town to the league. Every stop shows:</p>
+<ul>
+<li>the place and the chapter of the story;</li>
+<li>the badge won there, with the gym leader's picture and the level of their strongest Pokémon (click to open the trainer);</li>
+<li>the HMs and the Pokémon you get there, and the legendaries waiting there (click to open them);</li>
+<li>the main moments: click one to open it in the story.</li>
+</ul>
+<p>At the top, a small curve shows the leaders' levels in order. A red dot is a leader weaker than the one before.</p>
 <h2 id="how-it-works">How it works</h2>
 <ul>
 <li>The story is a list of <strong>chapters</strong> (on the side). Each chapter is a list of <strong>steps</strong>.</li>
@@ -964,6 +994,14 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 </tbody>
 </table>
 <p>Each problem has a <strong>Show</strong> button that takes you to the right place. Press <strong>Check again</strong> after fixing things.</p>
+<h2 id="can-the-game-be-finished">🧭 Can the game be finished?</h2>
+<p>Below the list, <strong>Check the path</strong> walks the whole world from the player's room, the way a player can, and tells you whether the league can be reached:</p>
+<ul>
+<li>It follows walls, ledges, one-way tiles, heights, doors, map edges, water, waterfalls, Cut trees, Rock Smash rocks and Strength boulders, doors and gates that the map's own scripts open, and ferries and teleports done by scripts.</li>
+<li>Each HM opens up once the place that gives it is reached <strong>and</strong> the badge that allows it is won.</li>
+<li>The result lists, in order, every badge and HM the player gets and where, then the badges and HMs that can never be got, and the places of the main story that can't be reached, each with a <strong>Show</strong> button.</li>
+<li>People standing in the way and story roadblocks (guards, a sleeping Snorlax…) are not checked: test those in the game.</li>
+</ul>
 <h1 id="playing-and-testing">Playing and testing</h1>
 <figure><img src="img/en/emulator.png" alt="The built-in emulator"><figcaption>The built-in emulator</figcaption></figure>
 <p>Ember Studio has the <strong>mGBA</strong> emulator built in. It opens in a window inside the editor.</p>

@@ -354,6 +354,11 @@ js/items.js      Items & shops tab (icon editor, what an item does, new items)
 js/itemfx.js     item effects: medicine table, hold effects, ball catch bonuses, repels
 js/legends.js    Pokémon → Legendaries in the world: fixed battles on the maps, their sprites, new ones
 js/i18n_he9.js   Hebrew strings of the items tab and the legendaries
+js/search.js     search everything (Ctrl+K)
+js/dialogue.js   a person's conversation as a chat
+js/journey.js    Story → The journey: the whole game on one line
+js/pathcheck.js  Game check → Can the game be finished? (walks the world, unlocks HMs by badges)
+js/i18n_he10.js  Hebrew strings of the side bar, search, journey, path check, chat and map tools
 js/moves.js      Moves tab (+ TM/HM, tutors)
 js/i18n_he3.js   Hebrew strings of the trainers / items / moves tabs
 js/script.js     script assembler + blocks compiler (FireRed script language)

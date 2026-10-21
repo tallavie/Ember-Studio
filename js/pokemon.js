@@ -488,7 +488,7 @@ const PokemonTab = (() => {
         : h('p', {}, 'None found.'));
   }
 
-  return { render, select: s => { sel = s; view = 'mon'; }, iconCanvas };
+  return { render, select: s => { sel = s; view = 'mon'; }, legends: () => { view = 'legends'; }, iconCanvas };
 })();
 
 // ---------- starters & gift Pokémon: givemon / setwildbattle in the maps' scripts ----------

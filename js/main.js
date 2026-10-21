@@ -20,6 +20,9 @@ const App = {
     music: ['Music', root => MusicTab.render(root)],
     doctor: ['🩺 Game check', root => Doctor.render(root)],
   },
+  navGroups: [[null, ['home']], ['World', ['maps']], ['Story & text', ['story', 'text']], ['Characters', ['pokemon', 'trainers']], ['Things', ['items', 'moves']],
+    ['Look & sound', ['graphics', 'music', 'hebrew']], ['Check', ['doctor']]],
+  navIcons: { home: '🏠', maps: '🗺', story: '📖', text: '💬', pokemon: '🐾', trainers: '🧢', items: '🎒', moves: '⚔', graphics: '🎨', music: '🎵', hebrew: 'א', doctor: '🩺' },
   show(tab) {
     this.tab = tab;
     $$('#nav button').forEach(b => b.classList.toggle('sel', b.dataset.tab === tab));
@@ -171,8 +174,23 @@ window.addEventListener('DOMContentLoaded', async () => {
   { const ql = new URLSearchParams(location.search).get('lang'); if (ql) I18N.lang = ql; }   // screenshots for the guide: language without saving it
   I18N.apply();
   I18N.translateDom($('header'));
+  // the side bar: the tabs in groups, an icon and a name each (folded: icons only)
   const nav = $('#nav');
-  for (const [k, [label]] of Object.entries(App.tabs)) nav.append(h('button', { 'data-tab': k, class: k === 'home' ? 'sel' : 'needrom', disabled: k !== 'home', onclick: () => App.show(k) }, label));
+  for (const [group, keys] of App.navGroups) {
+    if (group) nav.append(h('div', { class: 'nav-group' }, T(group)));
+    for (const k of keys) {
+      const label = App.tabs[k][0].replace(/^\S+\s/u, m => /\p{Extended_Pictographic}/u.test(m) ? '' : m);
+      nav.append(h('button', { 'data-tab': k, class: k === 'home' ? 'sel' : 'needrom', disabled: k !== 'home', title: T(label), onclick: () => App.show(k) },
+        h('span', { class: 'nav-ic' }, App.navIcons[k] || '•'), h('span', { class: 'nav-label' }, T(label))));
+    }
+  }
+  const side = $('#side'), fold = v => { side.classList.toggle('folded', v); try { localStorage.setItem('ember-side-folded', v ? '1' : ''); } catch (e) {} };
+  try { fold(!!localStorage.getItem('ember-side-folded')); } catch (e) {}
+  $('#btnSide').onclick = () => fold(!side.classList.contains('folded'));
+  const hdr = () => document.documentElement.style.setProperty('--hdr', $('header').offsetHeight + 'px');
+  hdr(); window.addEventListener('resize', hdr);
+  $('#btnSearch').onclick = () => Search.open();
+  window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && App.rom) { e.preventDefault(); Search.open(); } });
   $('#btnHelp').onclick = async () => {                // the PDF guide: the system viewer through the backend, or a new tab in a plain browser
     if (Host.ok) { try { await Host.json('POST', '/api/guide', { lang: I18N.lang }); } catch (e) { toast(e.message, 'err'); } }
     else window.open('docs/Ember-Studio-Guide-' + (I18N.lang === 'he' ? 'he' : 'en') + '.pdf', '_blank');

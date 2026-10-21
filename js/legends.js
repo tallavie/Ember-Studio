@@ -213,5 +213,5 @@ const Legends = (() => {
         } catch (e) { toast(e.message, 'err'); }
       } }, '✔ ' + T('Put it on the map')));
   }
-  return { scan, panel, create, species, level, item, spriteFromPicture, freeSprites, writeSprite, knownSprites };
+  return { select: k => { sel = k; showNew = false; }, visible: () => scan().filter(x => x.obj >= 0 || x.how === 'special'), scan, panel, create, species, level, item, spriteFromPicture, freeSprites, writeSprite, knownSprites };
 })();

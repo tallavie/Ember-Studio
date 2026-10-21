@@ -223,5 +223,5 @@ const TrainersTab = (() => {
     return h('div', { class: 'panel tr-card' }, head, teamSec, battleSec, whereSec);
   }
 
-  return { render, info, curve, movesAt, writeTeam, picCanvas, PICS, PALS, PIC_COUNT, select: id => { sel = id; } };
+  return { render, info, curve, movesAt, writeTeam, picCanvas, PICS, PALS, PIC_COUNT, select: id => { sel = id; }, COUNT };
 })();

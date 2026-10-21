@@ -8,8 +8,9 @@
 </head>
 <body>
 <header>
+  <button id="btnSide" class="iconbtn" title="Show or hide the side bar">☰</button>
   <div class="brand">🔥 Ember Studio <span id="projname" class="projname"></span></div>
-  <nav id="nav"></nav>
+  <button id="btnSearch" class="searchbtn needrom" disabled title="Search everything (Ctrl+K)">🔍 <span>Search…</span> <kbd>Ctrl K</kbd></button>
   <div class="right">
     <span id="romname" class="muted"></span>
     <span id="watching" class="muted"></span>
@@ -26,7 +27,10 @@
     <button id="btnLang" title="Interface language">English</button>
   </div>
 </header>
-<main id="main"></main>
+<div class="shell">
+  <aside id="side"><nav id="nav"></nav></aside>
+  <main id="main"></main>
+</div>
 <div id="toasts"></div>
 <script src="js/i18n.js"></script>
 <script src="js/i18n_he.js"></script>
@@ -38,6 +42,7 @@
 <script src="js/i18n_he7.js"></script>
 <script src="js/i18n_he8.js"></script>
 <script src="js/i18n_he9.js"></script>
+<script src="js/i18n_he10.js"></script>
 <script src="js/rom.js"></script>
 <script src="js/host.js"></script>
 <script src="js/charmap.js"></script>
@@ -78,6 +83,7 @@
 <script src="js/doctor.js"></script>
 <script src="js/filelink.js"></script>
 <script src="js/docshot.js"></script>
+<script src="js/search.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

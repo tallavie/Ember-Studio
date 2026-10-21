@@ -506,5 +506,5 @@ const TextTab = (() => {
     root.append(panel);
   }
 
-  return { render, preview, saveAt, layout, applyNamePack, applyTranslation, wrapText, scanRom, replaceAll, encodeDialogue, encodeOpts, reset: () => { entries = null; } };
+  return { search: q => { state.q = q; state.sub = 'strings'; }, render, preview, saveAt, layout, applyNamePack, applyTranslation, wrapText, scanRom, replaceAll, encodeDialogue, encodeOpts, reset: () => { entries = null; } };
 })();

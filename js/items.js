@@ -286,5 +286,5 @@ const ItemsTab = (() => {
       h('p', { class: 'muted' }, T('Prices are set per item (Items tab) and are the same in every shop.')));
     el.append(h('div', { class: 'cols it-cols' }, left, card));
   }
-  return { render, info, shops, icon };
+  return { render, info, shops, icon, select: i => { sel = i; view = 'items'; query = ''; pocket = 0; } };
 })();

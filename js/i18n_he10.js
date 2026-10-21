@@ -38,4 +38,7 @@ Object.assign(I18N.dicts.he, {
   'Checked: walls, ledges, one-way tiles, heights, doors, map edges, water, waterfalls, Cut trees, Rock Smash rocks and Strength boulders, and which badge each HM needs. Not checked: people standing in the way and story roadblocks (guards, a sleeping Snorlax…).':
     'נבדקים: קירות, מדרגות קפיצה, משבצות חד-כיווניות, גבהים, דלתות, קצוות מפה, מים, מפלים, עצי חיתוך, סלעי ניפוץ וסלעי כוח, ואיזה תג כל HM צריך. לא נבדקים: אנשים שעומדים בדרך ומחסומי עלילה (שומרים, סנורלקס ישן…).',
   'Only after the game: {list}': 'רק אחרי סוף המשחק: {list}', 'Cut': 'חיתוך', 'Fly': 'תעופה', 'Surf': 'גלישה', 'Strength': 'כוח', 'Flash': 'הבזק', 'Rock Smash': 'ניפוץ סלעים', 'Waterfall': 'מפל', 'Dive': 'צלילה',
+  // test in battle
+  "The player's room was not found": 'החדר של השחקן לא נמצא', "There is no free spot in the player's room": 'אין מקום פנוי בחדר של השחקן',
+  'Talk to the person below you (X) to battle {who}': 'דברו עם הדמות שמתחתיכם (X) כדי להילחם ב-{who}',
 });

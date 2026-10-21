@@ -138,6 +138,8 @@ const Game = (() => {
       : { cut: 2, flash: 1, smash: 6, strength: 4, surf: 5, fly: 3, waterfall: 7, dive: 8 };
     g.obstacleGfx = g.isEmerald ? { 82: 'cut', 86: 'smash', 87: 'strength' } : { 95: 'cut', 96: 'smash', 97: 'strength' };
     g.startMap = g.isEmerald ? [1, 1] : [4, 1];                      // the player's room
+    g.introMap = g.isEmerald ? [25, 40] : [4, 1];                    // where a new game first gives control (Emerald: the moving truck)
+    g.ram = g.isEmerald ? { sb1: 0x03005D8C, objs: 0x02037350 } : { sb1: 0x03005008, objs: 0x02036E38 };   // gSaveBlock1Ptr, gObjectEvents
     g.isBadge = f => f >= g.badgeFlag && f < g.badgeFlag + 8;
     g.engineWarps = g.isEmerald ? [['19.0', 19, 1], ['19.1', 19, 0], ['24.5', 0, 7], ['24.26', 24, 27]] : [];   // trips the game makes in code, not script: Emerald's cable car, surfacing in Sootopolis and the Seafloor Cavern
     g.moveCount = 355;

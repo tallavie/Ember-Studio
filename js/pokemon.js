@@ -553,27 +553,27 @@ const Gifts = (() => {
   return { scan, setSpecies, setLevel, LEN, TRAINER_LEN };
 })();
 
-// ---------- quick test in mGBA (through tools/devserver.py) ----------
+// ---------- quick test: the game starts in the player's room, next to a person who starts a battle against the Pokémon ----------
 const Tester = {
-  // a copy of the ROM where a person in the player's room gives a level-50 partner and starts a battle against `sp`
-  async battle(sp) {
-    const src = App.rom, r = new Rom(src.u8.slice().buffer, 'test.gba'); r.freeStart = src.freeStart; r.freeEnd = src.freeEnd;
-    const keep = App.rom; App.rom = r;
-    try {
-      if (!App.game.mapGroups[4] || !App.game.mapGroups[4][1]) throw new Error("The player's room (map 4.1) was not found");
-      const e = MapsTab.api.addEvent(4, 1, 'obj', 7, 8), partner = 6;
-      r.w8(e.off + 9, 7);                                             // faces up, towards the room's middle
-      const code = [0x6A, 0x5A, 0x79, partner & 255, partner >> 8, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xB6, sp & 255, sp >> 8, 50, 0, 0, 0xB7, 0x6C, 0x02];
-      r.wptr(e.off + 16, r.writeNew(Uint8Array.from(code)));
-    } catch (x) { App.rom = keep; toast(x.message, 'err'); return; }
-    App.rom = keep;
-    try {
-      const res = await fetch('/__mgba', { method: 'POST', body: r.u8 });
-      if (!res.ok) throw new Error(await res.text());
-      toast('mGBA started. Start a new game and talk to the person in your room: a battle against ' + (App.getLists().species[sp] || sp) + ' begins.');
-    } catch (x) {
-      download(r.u8, 'test_' + sp + '.gba');
-      toast('mGBA can only be started when the editor runs through tools/devserver.py. The test ROM was downloaded instead: open it in mGBA.', 'err');
+  battle(sp) {
+    const g = App.game, [rg, rn] = g.startMap;
+    if (!g.mapGroups[rg] || !g.mapGroups[rg][rn]) { toast(T("The player's room was not found"), 'err'); return; }
+    // a free spot near the middle of the room with a free spot below it: the player stands there, the person below
+    const r = App.rom, m = MapsTab.api.loadMap(rg, rn), busy = new Set([...m.events.obj, ...m.events.warp].map(e => MapsTab.api.evXY(e).join(',')));
+    const free = (x, y) => x >= 0 && y >= 0 && x < m.w && y < m.h && !((r.r16(m.blocks + (y * m.w + x) * 2) >> 10) & 3) && !busy.has(x + ',' + y);
+    let best = null;
+    for (let y = 0; y < m.h - 1; y++) for (let x = 0; x < m.w; x++) if (free(x, y) && free(x, y + 1)) {
+      const d = Math.abs(x - m.w / 2) + Math.abs(y - m.h / 2); if (!best || d < best.d) best = { x, y, d };
     }
+    if (!best) { toast(T("There is no free spot in the player's room"), 'err'); return; }
+    const name = App.getLists().species[sp] || '#' + sp;
+    Emu.playFrom({ g: rg, n: rn, x: best.x, y: best.y, team: Emu.team(), label: Tf('Battle: {who}', { who: name }),
+      prepare: () => {
+        const e = MapsTab.api.addEvent(rg, rn, 'obj', best.x, best.y + 1);
+        App.rom.w8(e.off + 9, 7);                                       // faces up, towards the player
+        const code = [0x6A, 0x5A, 0xB6, sp & 255, sp >> 8, 50, 0, 0, 0xB7, 0x6C, 0x02];   // lock, faceplayer, setwildbattle sp 50, dowildbattle, release, end
+        App.rom.wptr(e.off + 16, App.rom.writeNew(Uint8Array.from(code)));
+      } });
+    toast(Tf('Talk to the person below you (X) to battle {who}', { who: name }));
   },
 };

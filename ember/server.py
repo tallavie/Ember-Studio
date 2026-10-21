@@ -167,7 +167,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self.reply({'png': T.screenshot(a['rom'], a.get('frame', 900), a.get('presses', []), find_mgba())})
             if path == '/api/tools/startstate':               # "play from here": intro at full speed -> save state at the spot
                 a = self.json_in()
-                return self.reply({'state': T.startstate(a['rom'], a['g'], a['n'], a['x'], a['y'], find_mgba())})
+                return self.reply({'state': T.startstate(a['rom'], a['g'], a['n'], a['x'], a['y'], find_mgba(), a.get('ram'))})
             if path == '/api/guide':                          # open the user guide PDF in the system viewer
                 lang = 'he' if self.json_in().get('lang') == 'he' else 'en'
                 pdf = os.path.join(APP, 'docs', 'Ember-Studio-Guide-%s.pdf' % lang)

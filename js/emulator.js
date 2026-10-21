@@ -100,7 +100,8 @@ const Emu = (() => {
       a.b(0x39, spec.g, spec.n, 0xFF).h(spec.x).h(spec.y);           // warp to x, y
       C.releaseall(a); C.end(a);
       const w = a.write();
-      Script.addFrameScript(4, 1, TEST_VAR, 0, w.off);
+      Script.addFrameScript(...App.game.introMap, TEST_VAR, 0, w.off);
+      if (spec.prepare) spec.prepare(r);                               // e.g. a person who starts a test battle
     } finally { App.rom = keep; }
     return r.u8;
   }
@@ -110,7 +111,7 @@ const Emu = (() => {
     try {
       const bytes = testRom(spec), tmp = Host.info.temp, rom = joinPath(tmp, 'play.gba');
       await Host.writeFile(rom, bytes);
-      const res = await Host.json('POST', '/api/tools/startstate', { rom, g: spec.g, n: spec.n, x: spec.x, y: spec.y });
+      const res = await Host.json('POST', '/api/tools/startstate', { rom, g: spec.g, n: spec.n, x: spec.x, y: spec.y, ram: App.game.ram });
       const state = await Host.readFile(res.state);
       App.busy();
       await run(bytes, { name: 'play', state, label: spec.label || '' });

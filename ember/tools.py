@@ -73,13 +73,13 @@ START_LUA = r'''
 local OUT = %s
 local TG, TN, TX, TY = %d, %d, %d, %d
 local K = C.GBA_KEY
-local SB1 = 0x03005008
+local SB1, OBJS = %d, %d
 local held, holdUntil, arrived = nil, 0, nil
 local LOG = io.open(OUT .. ".log", "w")
 local function loc()
   local sb = emu:read32(SB1)
   if sb < 0x02000000 or sb > 0x0203FFFF then return -1, -1, 0, 0 end
-  return emu:read8(sb + 4), emu:read8(sb + 5), emu:read16(0x02036E38 + 0x10) - 7, emu:read16(0x02036E38 + 0x12) - 7
+  return emu:read8(sb + 4), emu:read8(sb + 5), emu:read16(OBJS + 0x10) - 7, emu:read16(OBJS + 0x12) - 7
 end
 callbacks:add("frame", function()
   local f = emu:currentFrame()
@@ -100,7 +100,7 @@ end)
 '''
 
 
-def startstate(rom, g, n, x, y, mgba=None):
+def startstate(rom, g, n, x, y, mgba=None, ram=None):
     """run a test ROM (made by the editor's "Play from here") through the intro at full speed until the player stands
     on (g.n, x, y), then save a state there -> state path"""
     exe = mgba
@@ -109,7 +109,8 @@ def startstate(rom, g, n, x, y, mgba=None):
         exe = server.find_mgba()
     if not exe: raise RuntimeError('mGBA not found')
     d = temp_dir(); state = os.path.join(d, 'play_%d.ss1' % int(time.time() * 1000)); lua = os.path.join(d, 'start.lua')
-    open(lua, 'w').write(START_LUA % (json.dumps(state.replace(os.sep, '/')), g, n, x, y))
+    ram = ram or {'sb1': 0x03005008, 'objs': 0x02036E38}             # FireRed: gSaveBlock1Ptr, gObjectEvents
+    open(lua, 'w').write(START_LUA % (json.dumps(state.replace(os.sep, '/')), g, n, x, y, int(ram['sb1']), int(ram['objs'])))
     run_mgba(exe, lua, rom, 90)
     if os.path.isfile(state): to_state_version(state, 10)
     if not os.path.isfile(state):

@@ -452,7 +452,8 @@ const Objects = (() => {
     const nameIn = h('input', { value: customName(g, n, e), placeholder: 'your name for it (editor only)', style: { width: '100%' },
       onchange: ev => { setCustomName(g, n, e, ev.target.value.trim()); ctx.refresh(); } });
     wrap.append(h('div', { class: 'ob-head' }, pic, h('div', { style: { flex: 1, minWidth: 0 } },
-      h('div', { class: 'ob-type' }, T(d.type)), h('div', { class: 'ob-who' }, d.who || '—'), d.says ? h('div', { class: 'muted ob-says' }, '“' + d.says + '”') : '', nameIn)));
+      h('div', { class: 'ob-type' }, T(d.type)), h('div', { class: 'ob-who' }, d.who || '—'), d.says ? h('div', { class: 'muted ob-says' }, '“' + d.says + '”') : '', nameIn,
+      d.textPtr >= 0 ? h('button', { style: { marginTop: '6px' }, onclick: () => Dialogue.open(g, n, e, ctx) }, '💬 ' + T('Open as a conversation')) : '')));
 
     if (e.kind === 'obj') {
       const spr = sec('Looks like', h('div', { class: 'row' }, h('span', {}, gfxName(d.gfx) + ' (' + d.gfx + ')'),

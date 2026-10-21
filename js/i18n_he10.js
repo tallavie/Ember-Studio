@@ -16,4 +16,10 @@ Object.assign(I18N.dicts.he, {
     'גוררים פוקימון (אגדי שעומד שם), חפץ (כדור חפץ) או מאמן אל כל מפה. דאבל-קליק על דמות או על שלט עורך את מה שהם אומרים.',
   '{name} stands here now (a legendary: talk to it to battle)': '{name} עומד כאן עכשיו (אגדי: מדברים איתו כדי להילחם)', 'An item ball with {name}': 'כדור חפץ עם {name}', '{name} stands here now': '{name} עומד כאן עכשיו',
   'This one says nothing that can be edited here': 'אין כאן טקסט שאפשר לערוך מהמפה', 'Text saved': 'הטקסט נשמר',
+  // the conversation as a chat
+  'Open as a conversation': 'פתיחה כשיחה', 'This one has no script': 'אין לו סקריפט', 'Close': 'סגירה', 'Click to edit': 'לחיצה לעריכה',
+  'Click a bubble to edit it. Answers and conditions split the conversation into threads.': 'לוחצים על בועה כדי לערוך אותה. תשובות ותנאים מפצלים את השיחה לשרשורים.',
+  'YES': 'כן', 'NO': 'לא', 'A trainer battle': 'קרב מאמנים', 'Nothing is said here.': 'לא נאמר כאן כלום.',
+  'Before the battle': 'לפני הקרב', 'When you beat them': 'כשמנצחים אותו', 'Defeat line': 'משפט ההפסד', 'Line when you win': 'כשאתם מנצחים', 'Line when you lose': 'כשאתם מפסידים', 'If you have only one Pokémon': 'אם יש לכם רק פוקימון אחד',
+  'Otherwise:': 'אחרת:', 'Right after the battle:': 'מיד אחרי הקרב:', 'If you already beat this trainer:': 'אם כבר ניצחתם את המאמן הזה:', 'If you did not beat this trainer yet:': 'אם עוד לא ניצחתם את המאמן הזה:',
 });

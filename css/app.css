@@ -460,3 +460,8 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .ma-thumb.sel { border-color: var(--accent); }
 .ma-slide { display: flex; flex-direction: column; min-width: 200px; font-size: 12px; }
 .ma-slider { width: 100%; }
+
+/* world view: where maps meet */
+.seam-row { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
+.seam-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-inline-end: 6px; }
+.seam-dot.red { background: #e03131; } .seam-dot.orange { background: #f76707; }

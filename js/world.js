@@ -444,6 +444,181 @@ const WorldTab = (() => {
     setTimeout(() => { const off = ev => { if (S.menu && !S.menu.contains(ev.target)) { closeMenu(); window.removeEventListener('mousedown', off, true); } }; window.addEventListener('mousedown', off, true); });
   }
 
+  // ---------- seams: do two connected maps meet in a way that looks right? (the Seams module learns it from the game) ----------
+  // how much a map is the user's own: 2 = its blocks changed or it is new, 1 = only its header (e.g. a new connection)
+  function builtScore(k, memo) {
+    if (memo.has(k)) return memo.get(k);
+    const r = rom(), o = r.original, h0 = hdrOf(k), d = dims(k);
+    const same = (a, n) => { if (a < 0 || a + n > o.length) return false; for (let i = 0; i < n; i++) if (r.u8[a + i] !== o[a + i]) return false; return true; };
+    const v = d.lay < 0 || !same(d.lay, 24) || !same(r.ptr(d.lay + 12), d.w * d.h * 2) ? 2 : same(h0, 28) ? 0 : 1;
+    memo.set(k, v); return v;
+  }
+  function seamList(list) {
+    const out = [], at = new Map(list.filter(p => !p.floating).map(p => [p.k, p])), seen = new Set();
+    for (const p of at.values()) for (const c of conns(hdrOf(p.k))) {
+      const q0 = c.dir >= 1 && c.dir <= 4 && at.get(key(c.g, c.n)); if (!q0 || q0.k === p.k) continue;
+      const id = [p.k, q0.k].sort().join('|'); if (seen.has(id)) continue; seen.add(id);
+      // where the game puts the neighbour: by the connection itself (the world view may show it elsewhere when the
+      // game's own connections disagree, as Emerald's do in a few places)
+      const q = { k: q0.k, w: q0.w, h: q0.h, x: c.dir <= 2 ? p.x + c.off : c.dir === 3 ? p.x - q0.w : p.x + p.w, y: c.dir === 2 ? p.y - q0.h : c.dir === 1 ? p.y + p.h : p.y + c.off };
+      const [a, b] = c.dir === 1 || c.dir === 4 ? [p, q] : [q, p], vert = c.dir <= 2;
+      const o = vert ? Math.max(a.x, b.x) : Math.max(a.y, b.y), n = (vert ? Math.min(a.x + a.w, b.x + b.w) : Math.min(a.y + a.h, b.y + b.h)) - o;
+      if (n > 0) out.push({ id, vert, o, n, a, b, from: p.k, conn: c });
+    }
+    return out;
+  }
+  // one side of a seam, in seam coordinates: d = rows away from the seam, i = along it (0 = where both maps start)
+  function seamSide(P, first, vert, o, water) {
+    const m = entry(P.k).m, r = rom(), cells = new Map(), doors = new Set((events(P.k).warp || []).map(w => MapsTab.api.evXY(w).join(',')));
+    const xy = (d, i) => { const w = o + i; return vert ? [w - P.x, first ? P.h - 1 - d : d] : [first ? P.w - 1 - d : d, w - P.y]; };
+    return { k: P.k, m, xy, tilesets: { prim: m.prim.off, sec: m.sec.off }, ext: vert ? [P.x - o, P.x + P.w - o] : [P.y - o, P.y + P.h - o],
+      door: (d, i) => doors.has(xy(d, i).join(',')),
+      changed(d, i) { const [x, y] = xy(d, i); if (x < 0 || y < 0 || x >= P.w || y >= P.h) return false; const a = m.blocks + (y * P.w + x) * 2, o = r.original; return a + 1 >= o.length || r.u8[a] !== o[a] || r.u8[a + 1] !== o[a + 1]; },
+      get(d, i) { const [x, y] = xy(d, i); return x < 0 || y < 0 || x >= P.w || y >= P.h ? -1 : r.r16(m.blocks + (y * P.w + x) * 2); },
+      cell(v) {
+        let c = cells.get(v); if (c) return c;
+        c = { u: Seams.uidOf(m.prim.off, m.sec.off, v), cls: water.has(behavior(m, v & 0x3FF)) ? 'water' : (v >> 10) & 3 ? 'wall' : 'walk' };
+        cells.set(v, c); return c;
+      } };
+  }
+  // the same connection in the original game (then only the spots where blocks changed are checked)
+  function sameConnAsGame(s) {
+    const o = rom().original, hp = hdrOf(s.from); if (hp + 28 > o.length) return false;
+    const dv = new DataView(o.buffer, o.byteOffset, o.byteLength), ptr = a => { const v = dv.getUint32(a, true); return v >= 0x08000000 && v - 0x08000000 < o.length - 8 ? v - 0x08000000 : -1; };
+    const cp = ptr(hp + 12); if (cp < 0) return false;
+    const n = dv.getUint32(cp, true), lp = ptr(cp + 4); if (lp < 0 || n > 32) return false;
+    const [g, nn] = parse(s.conn.g + '.' + s.conn.n);
+    for (let i = 0; i < n; i++) { const e = lp + i * 12; if (dv.getUint32(e, true) === s.conn.dir && dv.getInt32(e + 4, true) === s.conn.off && o[e + 8] === g && o[e + 9] === nn) return true; }
+    return false;
+  }
+  function checkSeams(list) {
+    const ign = new Set(Project.getData('seamIgnore', () => []) || []), memo = new Map(), water = Seams.WATER(), out = [];
+    for (const s of seamList(list)) {
+      const sa = builtScore(s.a.k, memo), sb = builtScore(s.b.k, memo);
+      if (!sa && !sb) continue;                                      // the game's own seam, untouched
+      const seam = { vert: s.vert, n: s.n, A: seamSide(s.a, true, s.vert, s.o, water), B: seamSide(s.b, false, s.vert, s.o, water) };
+      if (sameConnAsGame(s)) seam.keep = i => [0, 1, 2].some(d => seam.A.changed(d, i) || seam.B.changed(d, i));   // the game's own dead ends stay unmarked
+      const res = Seams.analyze(seam);
+      if (!res.issues.length && !res.blocked) continue;
+      // the map that changes in a fix: the one the user built; if both, the selected one, else the smaller one
+      const user = sa !== sb ? (sa > sb ? 'A' : 'B') : S.active === s.b.k ? 'B' : S.active === s.a.k ? 'A' : s.a.w * s.a.h <= s.b.w * s.b.h ? 'A' : 'B';
+      out.push(Object.assign(s, { seam, res, user, ignored: ign.has(s.id) }));
+    }
+    return out;
+  }
+  const seamWorst = s => s.res.blocked || s.res.issues.some(x => x.kind === 'block') ? 'red' : 'orange';
+  function drawSeams(ctx) {
+    S.seamBadges = [];
+    const z = S.zoom, th = Math.max(3, 5 * z), len = 16 * z;
+    for (const s of S.seams || []) {
+      if (s.ignored) continue;
+      const [lx, ly] = s.vert ? W2S(s.o, s.b.y) : W2S(s.b.x, s.o);
+      if (s.res.blocked) { ctx.save(); ctx.setLineDash([8, 6]); ctx.strokeStyle = '#fa5252'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + (s.vert ? s.n * len : 0), ly + (s.vert ? 0 : s.n * len)); ctx.stroke(); ctx.restore(); }
+      for (const it of s.res.issues) {
+        ctx.fillStyle = it.kind === 'block' ? 'rgba(250,82,82,.95)' : 'rgba(253,126,20,.95)';
+        if (s.vert) ctx.fillRect(lx + it.i * len + 1, ly - th / 2, len - 2, th); else ctx.fillRect(lx - th / 2, ly + it.i * len + 1, th, len - 2);
+      }
+      const is = s.res.issues.length ? s.res.issues : [{ i: s.n / 2 }], mid = (is[0].i + is[is.length - 1].i + 1) / 2;
+      const bx = s.vert ? lx + mid * len : lx, by = s.vert ? ly : ly + mid * len;
+      ctx.fillStyle = seamWorst(s) === 'red' ? '#e03131' : '#f76707'; ctx.beginPath(); ctx.arc(bx, by, 10, 0, 7); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); ctx.lineWidth = 1;
+      ctx.fillStyle = '#fff'; ctx.font = '700 13px system-ui'; ctx.textAlign = 'center'; ctx.fillText('!', bx, by + 5); ctx.textAlign = 'start';
+      S.seamBadges.push({ s, sx: bx, sy: by });
+    }
+  }
+  const seamBadgeAt = (sx, sy) => (S.seamBadges || []).find(b => Math.hypot(b.sx - sx, b.sy - sy) < 12);
+  function seamSummary(s) {
+    const c = k => s.res.issues.filter(x => x.kind === k).length, out = [];
+    if (s.res.blocked) out.push(T('the player cannot cross between these maps'));
+    if (c('block')) out.push(Tf('a road runs into a wall ({n} blocks)', { n: c('block') }));
+    if (c('terrain')) out.push(Tf('water meets land without a shore ({n} blocks)', { n: c('terrain') }));
+    if (c('cut')) out.push(Tf('{n} blocks look cut (half a tree, a fence, a cliff)', { n: c('cut') }));
+    return out;
+  }
+  // the seam and a few rows on each side, before or after a fix
+  function seamPicture(s, fix, marks) {
+    const seam = fix ? Seams.overlay(s.seam, s.user, fix) : s.seam, g = fix ? fix.grow : 0;
+    const is = s.res.issues.length ? s.res.issues.map(x => x.i) : [0, s.n - 1];
+    const lo = Math.max(Math.min(s.seam.A.ext[0], s.seam.B.ext[0]), Math.min(...is) - 4), hi = Math.min(Math.max(s.seam.A.ext[1], s.seam.B.ext[1]), Math.max(...is) + 5);
+    const DA = 5 + (s.user === 'A' ? g : 0), DB = 5 + (s.user === 'B' ? g : 0), W = hi - lo, H = DA + DB;
+    const cv = h('canvas', { class: 'pixel', width: (s.vert ? W : H) * 16, height: (s.vert ? H : W) * 16, style: { width: (s.vert ? W : H) * 32 + 'px', maxWidth: '100%', border: '1px solid var(--line)' } }), c = cv.getContext('2d');
+    const put = (row, i, fn) => { const x = s.vert ? (i - lo) * 16 : row * 16, y = s.vert ? row * 16 : (i - lo) * 16; fn(x, y); };
+    for (const [X, D, rowOf] of [[seam.A, DA, d => DA - 1 - d], [seam.B, DB, d => DA + d]])
+      for (let d = 0; d < D; d++) for (let i = lo; i < hi; i++) {
+        const v = X.get(d, i);
+        put(rowOf(d), i, (x, y) => { if (v < 0) { c.fillStyle = '#000'; c.fillRect(x, y, 16, 16); } else c.drawImage(MapsTab.api.metatileCanvas(X.m, v & 0x3FF), x, y); });
+      }
+    c.strokeStyle = 'rgba(255,255,255,.8)'; c.setLineDash([4, 3]); c.beginPath();
+    if (s.vert) { c.moveTo(0, DA * 16); c.lineTo(W * 16, DA * 16); } else { c.moveTo(DA * 16, 0); c.lineTo(DA * 16, W * 16); }
+    c.stroke(); c.setLineDash([]); c.lineWidth = 2;
+    for (const m of marks) { c.strokeStyle = m.color; put(m.side === 'A' ? DA - 1 - m.d : DA + m.d, m.i, (x, y) => c.strokeRect(x + 1, y + 1, 14, 14)); }
+    return cv;
+  }
+  function seamDialog(s) {
+    const userP = s.user === 'A' ? s.a : s.b, other = s.user === 'A' ? s.b : s.a, side0 = s.seam[s.user];
+    const evs = new Set(Object.values(events(userP.k)).flat().map(e => MapsTab.api.evXY(e).join(',')));
+    const cnt = new Map(), m = entry(userP.k).m;
+    for (let i = 0; i < m.w * m.h; i++) { const v = rom().r16(m.blocks + i * 2); cnt.set(v, (cnt.get(v) || 0) + 1); }
+    const frequent = [...cnt].sort((a, b) => b[1] - a[1]).slice(0, 12).map(x => x[0]);
+    const fix = Seams.propose(s.seam, s.user, { frequent, fixed: (d, i) => evs.has(side0.xy(d, i).join(',')) });
+    const before = seamPicture(s, null, s.res.issues.flatMap(x => [{ side: 'A', d: 0, i: x.i, color: x.kind === 'block' ? '#ff4040' : '#ff9f1a' }, { side: 'B', d: 0, i: x.i, color: x.kind === 'block' ? '#ff4040' : '#ff9f1a' }]));
+    const after = fix && seamPicture(s, fix, fix.changes.map(c => ({ side: s.user, d: c.d, i: c.i, color: '#51cf66' })));
+    const close = () => back.remove();
+    const what = !fix ? T('No automatic fix was found within 4 rows. Paint the edge by hand, or make the map bigger.')
+      : fix.grow ? Tf('{a} (the map you built) grows by {k} rows toward {b}, and the new rows close the edge naturally. {b} moves {k} squares; people, doors and connections move with the maps.', { a: nameOf(userP.k), b: nameOf(other.k), k: fix.grow })
+      : Tf('{n} blocks of {a} (the map you built) change.', { n: fix.changes.length, a: nameOf(userP.k) });
+    const back = h('div', { class: 'modal-back', onclick: e => { if (e.target === back) close(); } },
+      h('div', { class: 'panel modal', style: { maxWidth: '760px' } },
+        h('h3', {}, Tf('Where {a} meets {b}', { a: nameOf(s.a.k), b: nameOf(s.b.k) })),
+        h('ul', {}, ...seamSummary(s).map(t => h('li', {}, t))),
+        h('div', { class: 'row wrap', style: { alignItems: 'flex-start', gap: '12px' } },
+          h('div', {}, h('div', { class: 'muted' }, T('Now')), before),
+          after ? h('div', {}, h('div', { class: 'muted' }, T('After the fix')), after) : null),
+        h('p', { dir: 'auto' }, what),
+        fix && (fix.left || fix.bad) ? h('p', { class: 'warn' }, Tf('{n} small problems stay: the fix makes it better, not perfect.', { n: (fix.left % 100) + fix.bad })) : null,
+        h('div', { class: 'row wrap ask-btns' },
+          fix ? h('button', { class: 'primary', onclick: () => { close(); applySeamFix(s, fix); } }, '✔ ' + T('Fix')) : null,
+          h('button', { onclick: () => { close(); const l = Project.getData('seamIgnore', () => []) || []; Project.setData('seamIgnore', [...new Set([...l, s.id])]); draw(); side(); toast(T('This connection is no longer checked')); } }, T('Ignore this connection')),
+          h('button', { onclick: close }, T('Close')))));
+    document.body.append(back);
+  }
+  // a fix as edits the world view knows (resize + blocks), one undo step; replayed from the log like any other edit
+  function applyOp(o) {
+    if (o.t === 'resize') resizeMap(o.k, o.dl, o.dt, o.dr, o.db);
+    else if (o.t === 'paintfull') { const lay = rom().ptr(hdrOf(o.k)), bl = rom().ptr(lay + 12), w = rom().r32(lay); for (const [x, y, v] of o.cells) rom().w16(bl + (y * w + x) * 2, v); S.touched.add(o.k); }
+  }
+  function applySeamFix(s, fix) {
+    const P = s.user === 'A' ? s.a : s.b, first = s.user === 'A', vert = s.vert, k = fix.grow, ops = [];
+    const ok = op('fix the seam ' + nameOf(s.a.k) + ' / ' + nameOf(s.b.k), () => {
+      if (k) { const g = vert ? (first ? [0, 0, 0, k] : [0, k, 0, 0]) : (first ? [0, 0, k, 0] : [k, 0, 0, 0]); const o = { t: 'resize', k: P.k, dl: g[0], dt: g[1], dr: g[2], db: g[3] }; applyOp(o); ops.push(o); }
+      const W = P.w + (vert ? 0 : k), H = P.h + (vert ? k : 0), cells = [];
+      for (const c of fix.changes) {
+        const w = s.o + c.i, x = vert ? w - P.x : (first ? W - 1 - c.d : c.d), y = vert ? (first ? H - 1 - c.d : c.d) : w - P.y;
+        if (x >= 0 && y >= 0 && x < W && y < H) cells.push([x, y, c.v]);
+      }
+      const o = { t: 'paintfull', k: P.k, cells }; applyOp(o); ops.push(o);
+    }, { t: 'multi', ops }, true);
+    if (!ok) return;
+    cache.clear();
+    if (k && S.floating.has(P.k) && !first) { const f = S.floating.get(P.k); S.floating.set(P.k, { x: f.x - (vert ? 0 : k), y: f.y - (vert ? k : 0) }); }
+    toast(k ? Tf('{a} grew by {k} rows: the seam looks right now', { a: nameOf(P.k), k }) : Tf('{n} blocks fixed in {a}', { n: fix.changes.length, a: nameOf(P.k) }));
+    draw(); side();
+  }
+  // the side panel: the seams that need a look (all of them, or the selected map's)
+  function seamPanel(k) {
+    const list = (S.seams || []).filter(s => !s.ignored && (!k || s.a.k === k || s.b.k === k)), ign = (S.seams || []).filter(s => s.ignored).length;
+    const box = h('details', { class: 'hdr', open: list.length > 0 }, h('summary', {}, '🧩 ' + T('Where maps meet') + ' (' + list.length + ')'));
+    if (!list.length) box.append(h('p', { class: 'muted' }, T('Every connection looks right: no cut trees, no roads into walls, no water without a shore.')));
+    for (const s of list) box.append(h('div', { class: 'seam-row' },
+      h('span', { class: 'seam-dot ' + seamWorst(s) }), h('b', {}, nameOf(s.a.k) + ' ↔ ' + nameOf(s.b.k)),
+      h('div', { class: 'muted', style: { fontSize: '12px' } }, seamSummary(s).join(' · ')),
+      h('div', { class: 'row' }, h('button', { onclick: () => { const mid = s.o + (s.res.issues.length ? s.res.issues[0].i : s.n / 2), cv = S.cv; S.panX = (s.vert ? mid : s.b.x) * 16 - cv.width / S.zoom / 2; S.panY = (s.vert ? s.b.y : mid) * 16 - cv.height / S.zoom / 2; draw(); } }, T('Show')),
+        h('button', { class: 'primary', onclick: () => seamDialog(s) }, T('Fix…')))));
+    if (ign) box.append(h('button', { onclick: () => { Project.setData('seamIgnore', []); draw(); side(); } }, Tf('Check the {n} ignored connections again', { n: ign })));
+    box.append(h('p', { class: 'muted', style: { fontSize: '12px' } }, T('Checked all the time, like the game would show it: the ! on a seam opens the fix.')));
+    return box;
+  }
+
   // ---------- drawing ----------
   const W2S = (bx, by) => [(bx * 16 - S.panX) * S.zoom, (by * 16 - S.panY) * S.zoom];
   const S2W = (sx, sy) => [(sx / S.zoom + S.panX) / 16, (sy / S.zoom + S.panY) / 16];
@@ -473,6 +648,7 @@ const WorldTab = (() => {
       const [x0, y0] = W2S(o.x0, o.y0), [x1, y1] = W2S(o.x1, o.y1);
       ctx.fillStyle = 'rgba(240,40,40,.45)'; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
     }
+    if (!S.drag || !['move', 'resize'].includes(S.drag.kind)) { try { S.seams = checkSeams(list); } catch (e) { console.error(e); S.seams = []; } drawSeams(ctx); } else S.seamBadges = [];
     if (S.showEvents && z >= 0.2) {
       const s = 16 * z, sel = S.mode === 'events' && S.selEv;
       for (const p of list) {
@@ -558,7 +734,8 @@ const WorldTab = (() => {
     }
     drawMini(list);
     const wb = $('#wv-warn');
-    if (wb) { const ov = overlaps(list).length; wb.textContent = (ov ? ov + ' ' + T('overlap(s) shown in red.') + ' ' : '') + (warn.length ? warn.length + ' ' + T('connection mismatch(es):') + ' ' + warn.slice(0, 2).join('; ') : ''); }
+    if (wb) { const ov = overlaps(list).length; wb.textContent = (ov ? ov + ' ' + T('overlap(s) shown in red.') + ' ' : '') + (warn.length ? warn.length + ' ' + T('connection mismatch(es):') + ' ' + warn.slice(0, 2).join('; ') : '')
+      + ((S.seams || []).some(s => !s.ignored) ? ' ' + Tf('{n} places where maps meet need a look (click the ! on the seam).', { n: S.seams.filter(s => !s.ignored).length }) : ''); }
   }
   function handles(sx, sy, sw, sh) { return [[sx, sy], [sx + sw / 2, sy], [sx + sw, sy], [sx, sy + sh / 2], [sx + sw, sy + sh / 2], [sx, sy + sh], [sx + sw / 2, sy + sh], [sx + sw, sy + sh]]; }
   function connMarkers(list) {
@@ -661,7 +838,10 @@ const WorldTab = (() => {
       const hv = p ? { k: p.k, x: Math.floor(wx) - p.x, y: Math.floor(wy) - p.y } : null;
       S.hoverW = [Math.floor(wx), Math.floor(wy)]; if (S.playerView) draw();
       const hev = p && S.showEvents && S.zoom >= 0.2 ? eventAt(p, hv.x, hv.y) : null;
-      cv.title = hev ? (() => { const [g, n] = parse(p.k); return Objects.tooltip(g, n, hev); })() : '';
+      const sbd = seamBadgeAt(sx, sy);
+      cv.title = sbd ? Tf('Where {a} meets {b}', { a: nameOf(sbd.s.a.k), b: nameOf(sbd.s.b.k) }) + ': ' + seamSummary(sbd.s).join(', ') + ' · ' + T('click to see and fix')
+        : hev ? (() => { const [g, n] = parse(p.k); return Objects.tooltip(g, n, hev); })() : '';
+      if (sbd) { cv.style.cursor = 'pointer'; return; }
       if (S.brush && S.mode === 'paint' && JSON.stringify(hv) !== JSON.stringify(S.hover)) { S.hover = hv; draw(); } else S.hover = hv;
       const hd = S.mode === 'resize' && handleAt(sx, sy);
       cv.style.cursor = S.pickPlay ? (p ? 'crosshair' : 'not-allowed') : hd ? ((hd.l && hd.t) || (hd.r && hd.b) ? 'nwse-resize' : (hd.r && hd.t) || (hd.l && hd.b) ? 'nesw-resize' : hd.l || hd.r ? 'ew-resize' : 'ns-resize')
@@ -676,6 +856,8 @@ const WorldTab = (() => {
         else toast(T('Click on a map'), 'err');
         return;
       }
+      const sbd = e.button === 0 && !S.space && seamBadgeAt(sx0, sy0);
+      if (sbd) { seamDialog(sbd.s); return; }
       if (p && S.pending && e.button === 0) { S.pending = null; S.active = null; playBtn(); }      // clicking a map closes the new-map form
       let moved = false;
       const pan = (button) => {
@@ -1236,6 +1418,7 @@ const WorldTab = (() => {
         case 'addev': ok = op('add', () => { const [g, n] = parse(o.k); MapsTab.api.addEvent(g, n, o.kind, o.x, o.y); }, o); break;
         case 'delev': ok = op('delete', () => { const [g, n] = parse(o.k); MapsTab.api.deleteEvent(g, n, o.kind, o.i); }, o); break;
         case 'townmap': ok = op('town map', () => {}, o, true); break;
+        case 'multi': ok = op('fix', () => o.ops.forEach(applyOp), o, true); break;
         case 'addobj': ok = op('add', () => { const [g, n] = parse(o.k); Objects.add(g, n, o.tpl, o.x, o.y); }, o); break;
         case 'evbyte': ok = op('object', () => {
           const e = events(o.k)[o.kind][o.i], a = e.off + o.at;
@@ -1321,7 +1504,7 @@ const WorldTab = (() => {
     if ((S.mode === 'events' || S.mode === 'manage') && !S.pending) el.append(libraryBox());
     if (S.pending) { newMapForm(el); if (S.active) el.append(paletteSection(S.active)); if (TownMap.supported()) el.append(townPanel()); return; }
     const k = S.active;
-    if (!k) { el.append(h('p', { class: 'muted' }, 'Click a map to select it, or drag on the black area to add a new map.')); addMapBox(el); if (TownMap.supported()) el.append(townPanel()); return; }
+    if (!k) { el.append(h('p', { class: 'muted' }, 'Click a map to select it, or drag on the black area to add a new map.')); el.append(seamPanel(null)); addMapBox(el); if (TownMap.supported()) el.append(townPanel()); return; }
     const d = dims(k), r = rom(), h0 = hdrOf(k), used = (d.w + 15) * (d.h + 14);
     const sharers = allMaps().filter(k2 => k2 !== k && r.r16(hdrOf(k2) + 18) === r.r16(h0 + 18)).length;
     el.append(h('h3', {}, nameOf(k) + ' ' + k),
@@ -1369,6 +1552,7 @@ const WorldTab = (() => {
     } else if (S.tab === 'header') el.append(MapsTab.api.headerPanelFor(g, n));
     else if (S.tab === 'wild') el.append(h('h4', {}, 'Wild Pokémon'), Wild.panel(g, n, () => { if (S.highlight) highlight(S.highlight.sp); draw(); }));
     if (S.tab !== 'blocks') el.append(paletteSection(k));
+    el.append(seamPanel(k));
     addMapBox(el);
     if (TownMap.supported()) el.append(townPanel());
   }
@@ -1482,5 +1666,5 @@ const WorldTab = (() => {
   }
   return { render, exportEdits, ops: () => S.log.slice(), replayOps: ops => { const e = replay(ops); cache.clear(); return e; }, highlight: sp => { highlight(sp); S.fitted = false; }, reset: keep => { cache.clear(); S.floating.clear(); S.lastPos.clear(); S.touched.clear(); S.undo = []; S.log = []; S.pending = null; S.layoutTable = null; S.brush = null; S.selEv = null;
       if (!keep) { S.active = null; S.fitted = false; } },
-    _test: { S, exportData, createMap, updateTownMap, freeSections, replay, crc32, placed, resizeMap, moveMap, connect, disconnect, conns, op, undo, layoutTable, dims } };
+    _test: { S, exportData, createMap, updateTownMap, freeSections, replay, crc32, placed, resizeMap, moveMap, connect, disconnect, conns, op, undo, layoutTable, dims, checkSeams, applySeamFix, seamDialog, seamList, seamSide } };
 })();

@@ -57,4 +57,18 @@ Object.assign(I18N.dicts.he, {
   'Frame {n}': 'פריים {n}', 'Not saved yet': 'עוד לא נשמר', 'Both frames saved': 'שני הפריימים נשמרו', 'Flip between them': 'מעבר ביניהם', 'Stop': 'עצירה', 'Edit the frames': 'עריכת הפריימים',
   'Show the other frame faintly': 'להציג את הפריים השני בשקיפות', 'Import PNG into this frame': 'ייבוא PNG לפריים הזה', 'Copy the other frame here': 'העתקת הפריים השני לכאן',
   'Save both frames': 'שמירת שני הפריימים', 'Move the slider, click a small picture, or press [ and ] in the editor to go between the frames.': 'מזיזים את הסליידר, לוחצים על תמונה קטנה, או לוחצים [ ו-] בעורך כדי לעבור בין הפריימים.',
+  // world view: where maps meet
+  'the player cannot cross between these maps': 'השחקן לא יכול לעבור בין המפות האלה', 'a road runs into a wall ({n} blocks)': 'דרך נגמרת בקיר ({n} אריחים)',
+  'water meets land without a shore ({n} blocks)': 'מים פוגשים יבשה בלי חוף ({n} אריחים)', '{n} blocks look cut (half a tree, a fence, a cliff)': '{n} אריחים נראים חתוכים (חצי עץ, גדר, צוק)',
+  'No automatic fix was found within 4 rows. Paint the edge by hand, or make the map bigger.': 'לא נמצא תיקון אוטומטי בטווח של 4 שורות. אפשר לצייר את הקצה ידנית או להגדיל את המפה.',
+  '{a} (the map you built) grows by {k} rows toward {b}, and the new rows close the edge naturally. {b} moves {k} squares; people, doors and connections move with the maps.': '{a} (המפה שבנית) גדלה ב-{k} שורות לכיוון {b}, והשורות החדשות סוגרות את הקצה בצורה טבעית. {b} זזה {k} משבצות; דמויות, דלתות וחיבורים זזים יחד עם המפות.',
+  '{n} blocks of {a} (the map you built) change.': '{n} אריחים ב-{a} (המפה שבנית) משתנים.', 'Where {a} meets {b}': 'איפה ש-{a} פוגשת את {b}',
+  'Now': 'עכשיו', 'After the fix': 'אחרי התיקון', '{n} small problems stay: the fix makes it better, not perfect.': 'נשארות {n} בעיות קטנות: התיקון משפר, אבל לא מושלם.',
+  'Fix': 'תיקון', 'Ignore this connection': 'להתעלם מהחיבור הזה', 'This connection is no longer checked': 'החיבור הזה כבר לא נבדק',
+  '{a} grew by {k} rows: the seam looks right now': '{a} גדלה ב-{k} שורות: החיבור נראה תקין עכשיו', '{n} blocks fixed in {a}': '{n} אריחים תוקנו ב-{a}',
+  'Where maps meet': 'איפה שמפות נפגשות', 'Every connection looks right: no cut trees, no roads into walls, no water without a shore.': 'כל החיבורים נראים תקינים: אין עצים חתוכים, אין דרכים שנגמרות בקיר ואין מים בלי חוף.',
+  'Show': 'הצגה', 'Fix…': 'תיקון…', 'Check the {n} ignored connections again': 'לבדוק שוב את {n} החיבורים שהתעלמנו מהם',
+  'Checked all the time, like the game would show it: the ! on a seam opens the fix.': 'נבדק כל הזמן, כמו שהמשחק יציג את זה: ה-! על קו החיבור פותח את התיקון.',
+  '{n} places where maps meet need a look (click the ! on the seam).': '{n} מקומות שבהם מפות נפגשות צריכים בדיקה (לחצו על ה-! שעל קו החיבור).',
+  'click to see and fix': 'לחיצה כדי לראות ולתקן',
 });

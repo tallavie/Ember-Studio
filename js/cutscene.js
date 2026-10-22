@@ -75,12 +75,53 @@ const Cutscene = (() => {
     }
     return { actors, say };
   }
-  // two clips of the same character at the same time
-  function overlaps(sc) {
-    const bad = new Set();
+  // the squares a person can walk on: no collision, not water, not a ledge (a ledge is only jumped down)
+  const WATER = () => new Set(G().isEmerald ? [0x10, 0x11, 0x12, 0x14, 0x15, 0x50, 0x51, 0x52, 0x53] : [0x10, 0x11, 0x12, 0x15, 0x1A]), LEDGE = new Set([0x38, 0x39, 0x3A, 0x3B]);
+  function walkGrid(m) {
+    const r = R(), gm = G(), water = WATER(), bc = new Map(), ok = new Uint8Array(m.w * m.h);
+    const beh = id => {
+      if (bc.has(id)) return bc.get(id);
+      const sec = id >= gm.primaryMetatiles, ts = sec ? m.sec : m.prim, local = sec ? id - gm.primaryMetatiles : id, attr = r.ptr(ts.off + (gm.isEmerald ? 16 : 20));
+      const v = attr < 0 ? 0 : gm.isEmerald ? r.r16(attr + local * 2) & 0xFF : r.r32(attr + local * 4) & 0x1FF; bc.set(id, v); return v;
+    };
+    for (let i = 0; i < m.w * m.h; i++) { const v = r.r16(m.blocks + i * 2), b = beh(v & 0x3FF); ok[i] = !((v >> 10) & 3) && !water.has(b) && !LEDGE.has(b) ? 1 : 0; }
+    return ok;
+  }
+  // the shortest way from a to b on free squares (few turns, so it looks like someone walking); [] when there is none
+  function findPath(m, free, a, b) {
+    if (a.x === b.x && a.y === b.y) return [];
+    const W = m.w, H = m.h, N = W * H * 4, cost = new Float64Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), dirs = ['up', 'down', 'left', 'right'];
+    const open = [];                                                // a small binary heap of [cost, state]
+    const push = (c, st) => { open.push([c, st]); let i = open.length - 1; while (i) { const p = (i - 1) >> 1; if (open[p][0] <= open[i][0]) break; [open[p], open[i]] = [open[i], open[p]]; i = p; } };
+    const pop = () => { const top = open[0], last = open.pop(); if (open.length) { open[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r2 = l + 1; let k = i; if (l < open.length && open[l][0] < open[k][0]) k = l; if (r2 < open.length && open[r2][0] < open[k][0]) k = r2; if (k === i) break; [open[k], open[i]] = [open[i], open[k]]; i = k; } } return top; };
+    for (let d = 0; d < 4; d++) { const st = (a.y * W + a.x) * 4 + d; cost[st] = 0; push(0, st); }
+    while (open.length) {
+      const [c, st] = pop(); if (c > cost[st]) continue;
+      const cell = st >> 2, d0 = st & 3, x = cell % W, y = (cell - x) / W;
+      if (x === b.x && y === b.y) {
+        const out = []; let k = st; while (prev[k] >= 0) { out.push(dirs[k & 3]); k = prev[k]; } return out.reverse();
+      }
+      for (let d = 0; d < 4; d++) {
+        const [dx, dy] = D[dirs[d]], nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H || !free(nx, ny)) continue;
+        const ns = (ny * W + nx) * 4 + d, nc = c + 1 + (d !== d0 && prev[st] >= 0 ? 0.3 : 0);
+        if (nc < cost[ns]) { cost[ns] = nc; prev[ns] = st; push(nc, ns); }
+      }
+    }
+    return null;
+  }
+  // what is wrong with clips: two of the same character at the same time, a walk through a wall
+  function clipProblems(sc, st, m, grid) {
+    const bad = new Map();
     for (const a of sc.actors) {
       const mine = sc.clips.filter(c => c.a === a.id).sort((x, y) => x.t - y.t);
-      for (let i = 1; i < mine.length; i++) if (mine[i].t < mine[i - 1].t + dur(mine[i - 1])) { bad.add(mine[i].id); bad.add(mine[i - 1].id); }
+      for (let i = 1; i < mine.length; i++) if (mine[i].t < mine[i - 1].t + dur(mine[i - 1])) { bad.set(mine[i].id, T('two actions of the same character at the same time')); bad.set(mine[i - 1].id, T('two actions of the same character at the same time')); }
+      if (a.fly) continue;
+      for (const c of mine) {
+        if (c.k !== 'walk' || bad.has(c.id)) continue;
+        const s0 = stateAt(sc, st, m, c.t - 0.001).actors.get(a.id); let x = Math.round(s0.x), y = Math.round(s0.y);
+        for (const d of c.path || []) { x += D[d][0]; y += D[d][1]; if (x < 0 || y < 0 || x >= m.w || y >= m.h || !grid[y * m.w + x]) { bad.set(c.id, Tf('walks into a wall or water at ({x}, {y})', { x, y })); break; } }
+      }
     }
     return bad;
   }
@@ -90,7 +131,8 @@ const Cutscene = (() => {
     const sc = scene(st), out = [];
     if (sc.actors.some(a => a.kind === 'new' || a.kind === 'mon') && sc.clips.some(c => sc.actors.find(a => a.id === c.a && (a.kind === 'new' || a.kind === 'mon'))))
       out.push(T('new characters and Pokémon play in the editor; in the game they come in the next update (for now the player and people on the map)'));
-    return out;
+    if (st.g != null) { const m = MapsTab.api.loadMap(st.g, st.n), bad = clipProblems(sc, st, m, walkGrid(m)); for (const [id, why] of bad) { const c = sc.clips.find(x => x.id === id), a = sc.actors.find(x => x.id === c.a); out.push((a.name || '') + ' · ' + Tf('Step {n}', { n: c.t }) + ': ' + why); } }
+    return [...new Set(out)];
   }
   function toBlocks(st) {
     const sc = scene(st), out = [], who = id => { const a = sc.actors.find(x => x.id === id); return !a ? null : a.kind === 'player' ? 'player' : a.kind === 'npc' ? String(a.localId) : null; };
@@ -146,6 +188,14 @@ const Cutscene = (() => {
         if (before) { let x = Math.round(before.x), y = Math.round(before.y); c2.strokeStyle = 'rgba(255,220,0,.9)'; c2.lineWidth = 3; c2.beginPath(); c2.moveTo(x * 16 + 8, y * 16 + 8);
           for (const d of sel.path || []) { x += D[d][0]; y += D[d][1]; c2.lineTo(x * 16 + 8, y * 16 + 8); } c2.stroke(); c2.fillStyle = '#ffd43b'; c2.fillRect(x * 16 + 5, y * 16 + 5, 6, 6); c2.lineWidth = 1; }
       }
+      if (E.drawPath) {                                            // the way being drawn: blue, red where there is none
+        const dp = E.drawPath; let x = dp.from.x, y = dp.from.y;
+        c2.strokeStyle = dp.ok ? '#4dabf7' : '#fa5252'; c2.lineWidth = 3; c2.setLineDash([5, 3]); c2.beginPath(); c2.moveTo(x * 16 + 8, y * 16 + 8);
+        if (dp.ok) for (const d of dp.path) { x += D[d][0]; y += D[d][1]; c2.lineTo(x * 16 + 8, y * 16 + 8); } else c2.lineTo(dp.to.x * 16 + 8, dp.to.y * 16 + 8);
+        c2.stroke(); c2.setLineDash([]); c2.lineWidth = 1;
+        c2.strokeStyle = dp.ok ? '#4dabf7' : '#fa5252'; c2.lineWidth = 2; c2.strokeRect(dp.to.x * 16 + 1, dp.to.y * 16 + 1, 14, 14); c2.lineWidth = 1;
+        if (dp.ok) { c2.fillStyle = 'rgba(0,0,0,.7)'; c2.fillRect(dp.to.x * 16 - 4, dp.to.y * 16 - 13, 24, 11); c2.fillStyle = '#fff'; c2.font = '9px sans-serif'; c2.fillText(dp.path.length + '', dp.to.x * 16, dp.to.y * 16 - 4); }
+      }
       const list = sc.actors.map(a => [a, S.actors.get(a.id)]).filter(([, s]) => s && s.vis).sort((p, q) => p[1].y - q[1].y);
       for (const [a, s] of list) {
         const spr = Objects.sprite(s.gfx, s.dir);
@@ -169,14 +219,65 @@ const Cutscene = (() => {
       if (playhead) playhead.style.left = (LEFT + E.t * PX()) + 'px';
     }
     const cellOf = e => { const r = cv.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / (r.width / m.w)), Math.floor((e.clientY - r.top) / (r.height / m.h))]; };
-    cv.onclick = e => {
+    const walk = walkGrid(m), still = new Set();                     // people of the map who are not in the scene stand in the way
+    const stillSet = () => { still.clear(); const inScene = new Set(sc.actors.filter(a => a.kind === 'npc').map(a => a.localId)); for (const e of m.events.obj) if (!inScene.has(R().u8[e.off])) { const [x, y] = MapsTab.api.evXY(e); still.add(x + ',' + y); } };
+    // free for a: walkable, nobody of the map there, nobody of the scene standing there at time t (a flying one goes over all)
+    const freeFor = (a, t) => {
+      if (a.fly) return (x, y) => x >= 0 && y >= 0 && x < m.w && y < m.h;
+      stillSet(); const S = stateAt(sc, st, m, t), taken = new Set();
+      for (const o of sc.actors) { const s = S.actors.get(o.id); if (o.id !== a.id && s && s.vis) taken.add(Math.round(s.x) + ',' + Math.round(s.y)); }
+      return (x, y) => walk[y * m.w + x] && !still.has(x + ',' + y) && !taken.has(x + ',' + y);
+    };
+    // the end of a walk clip on the map (drag it to make the way longer)
+    const walkEnd = c => { const s0 = stateAt(sc, st, m, c.t - 0.001).actors.get(c.a); let x = Math.round(s0.x), y = Math.round(s0.y); const from = { x, y }; for (const d of c.path || []) { x += D[d][0]; y += D[d][1]; } return { from, x, y }; };
+    cv.onmousedown = e => {
+      if (e.button !== 0) return;
       const [x, y] = cellOf(e);
       if (E.placing) { const a = actorOf(E.placing); E.placing = null; if (a) commit(() => { a.x = x; a.y = y; }); return; }
-      const S = stateAt(sc, st, m, E.t);
-      const hit = sc.actors.find(a => { const s = S.actors.get(a.id); return s && Math.round(s.x) === x && Math.round(s.y) === y; });
-      if (hit) { E.actor = hit.id; E.sel = null; refresh(); }
+      stop();
+      const S = stateAt(sc, st, m, E.t), sel = clipOf(E.sel);
+      let mode = null;
+      if (sel && sel.k === 'walk') { const we = walkEnd(sel); if (we.x === x && we.y === y) mode = { kind: 'extend', clip: sel, a: actorOf(sel.a), from: { x, y }, t: sel.t }; }
+      if (!mode) {
+        const hit = sc.actors.find(a => { const s = S.actors.get(a.id); return s && Math.round(s.x) === x && Math.round(s.y) === y; });
+        if (!hit) return;
+        // a new walk starts at the playhead, or right after what the character is doing then
+        const t0 = sc.clips.filter(c => c.a === hit.id).reduce((v, c) => c.t <= v && c.t + dur(c) > v ? c.t + dur(c) : v, Math.round(E.t));
+        const s0 = stateAt(sc, st, m, t0).actors.get(hit.id);
+        mode = { kind: 'new', a: hit, from: { x: Math.round(s0.x), y: Math.round(s0.y) }, t: t0 };
+        if (E.actor !== hit.id || E.sel) { E.actor = hit.id; E.sel = null; drawProps(); drawTimeline(); }
+      }
+      e.preventDefault();
+      const free = freeFor(mode.a, mode.t);
+      let last = null;
+      const mv = ev => {
+        const [tx, ty] = cellOf(ev); if (last && last[0] === tx && last[1] === ty) return; last = [tx, ty];
+        const path = tx === mode.from.x && ty === mode.from.y ? [] : findPath(m, free, mode.from, { x: tx, y: ty });
+        E.drawPath = { from: mode.from, path: path || [], ok: !!path, to: { x: tx, y: ty } }; drawMap();
+      };
+      const up = () => {
+        window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up);
+        const dp = E.drawPath; E.drawPath = null;
+        if (!dp || !last) { drawMap(); return; }                                   // a click: the character is selected
+        if (!dp.ok) { toast(T('There is no way there (walls, water or people in the way)'), 'err'); drawMap(); return; }
+        if (!dp.path.length) { drawMap(); return; }
+        if (mode.kind === 'extend') commit(() => {                  // going back the way it came cancels out (no walking back and forth)
+          const OPP = { up: 'down', down: 'up', left: 'right', right: 'left' }, p = mode.clip.path, add = dp.path.slice();
+          while (p.length && add.length && OPP[p[p.length - 1]] === add[0]) { p.pop(); add.shift(); }
+          p.push(...add); if (!p.length) { sc.clips = sc.clips.filter(c => c !== mode.clip); E.sel = null; }
+        });
+        else { const c = { id: uid(), a: mode.a.id, t: mode.t, k: 'walk', path: dp.path, speed: 'walk' }; commit(() => { sc.clips.push(c); E.sel = c.id; E.actor = mode.a.id; }); }
+      };
+      window.addEventListener('mousemove', mv); window.addEventListener('mouseup', up);
     };
-    cv.onmousemove = e => { const [x, y] = cellOf(e); cv.title = E.placing ? T('Click where the character starts') : '(' + x + ', ' + y + ')'; cv.style.cursor = E.placing ? 'crosshair' : 'default'; };
+    cv.onmousemove = e => {
+      if (E.drawPath) return;
+      const [x, y] = cellOf(e), S = stateAt(sc, st, m, E.t), sel = clipOf(E.sel);
+      const onActor = sc.actors.some(a => { const s = S.actors.get(a.id); return s && Math.round(s.x) === x && Math.round(s.y) === y; });
+      const onEnd = sel && sel.k === 'walk' && (() => { const we = walkEnd(sel); return we.x === x && we.y === y; })();
+      cv.title = E.placing ? T('Click where the character starts') : onEnd ? T('Drag to make the way longer') : onActor ? T('Drag to where the character walks') : '(' + x + ', ' + y + ')';
+      cv.style.cursor = E.placing ? 'crosshair' : onActor || onEnd ? 'grab' : 'default';
+    };
 
     // --- playing ---
     let raf = 0, last = 0;
@@ -239,7 +340,8 @@ const Cutscene = (() => {
             h('button', { onclick: () => set(() => { c.path = []; }) }, T('Clear'))),
             h('div', { class: 'bl-path' }, (c.path || []).map(d => ARROW[d]).join(' ') || T('(no steps yet)'))),
             field(T('Speed'), h('select', { onchange: e => set(() => { c.speed = e.target.value; }) }, ...[['walk', T('walk')], ['run', T('run')], ['slow', T('slowly')]].map(([k, l]) => h('option', { value: k, selected: c.speed === k }, l)))),
-            h('p', { class: 'muted' }, T('The yellow line on the map is the way. Drawing the way with the mouse comes in the next update.')));
+            h('p', { class: 'muted' }, T('The yellow line on the map is the way. Drag the yellow square at its end to make it longer, or drag from the character to draw a new way.')));
+          const pb = clipProblems(sc, st, m, walk).get(c.id); if (pb) add(h('div', { class: 'warn' }, '⚠ ' + pb));
         } else if (c.k === 'jump') add(field(T('Direction (2 squares)'), dirSel(c.dir, v => set(() => { c.dir = v; }))));
         else if (c.k === 'face') add(field(T('Look'), dirSel(c.dir, v => set(() => { c.dir = v; }))));
         else if (c.k === 'emote') add(field(T('Emote'), h('select', { onchange: e => set(() => { c.kind = e.target.value; }) }, ...Object.entries(EMOTES).map(([k, ic]) => h('option', { value: k, selected: c.kind === k }, ic + ' ' + T({ '!': 'surprised', '?': 'confused', '♥': 'happy' }[k]))))));
@@ -254,9 +356,11 @@ const Cutscene = (() => {
         if (a.kind === 'new' || a.kind === 'mon') add(field(T('Looks like'), h('button', { onclick: () => Objects.gallery(a.gfx, v => set(() => { a.gfx = v; })) }, '🖼 ' + Objects.gfxName(a.gfx))));
         if (a.kind !== 'npc') add(field(T('Starts at'), h('div', { class: 'row' }, h('span', {}, '(' + p.x + ', ' + p.y + ')'), h('button', { class: E.placing === a.id ? 'sel' : '', onclick: () => { E.placing = a.id; toast(T('Click on the map where the character starts')); drawProps(); } }, '👆 ' + T('Pick on the map')))));
         else add(h('p', { class: 'muted' }, Tf('Starts where they stand on the map ({x}, {y}).', { x: p.x, y: p.y })));
+        if (a.kind === 'mon' || a.kind === 'new') add(h('label', {}, h('input', { type: 'checkbox', checked: !!a.fly, onchange: e => set(() => { a.fly = e.target.checked; }) }), ' 🪽 ' + T('Flies (goes over walls, trees and water)')));
         add(field(T('Looks at first'), h('select', { onchange: e => set(() => { a.dir = e.target.value; }) }, ...Object.keys(ARROW).map(d => h('option', { value: d, selected: p.dir === d }, ARROW[d] + ' ' + T(d))))));
         add(h('div', { class: 'cs-addrow' }, ...Object.entries(KINDS).map(([k, [ic, l]]) => h('button', { title: T(l), onclick: () => addClip(k) }, ic + ' ' + T(l)))),
           h('p', { class: 'muted' }, T('Adds at the playhead. Or double-click the character\'s row on the timeline.')),
+          h('p', { class: 'muted' }, '🖱 ' + T('To make them walk: drag from the character on the map to where they go. The way goes around walls, water and people by itself.')),
           a.kind !== 'player' ? h('button', { class: 'danger', onclick: async () => { if (!(await ask(Tf('Remove {a} and their actions from the scene?', { a: nameOf(a) }), { danger: true }))) return; commit(() => { sc.clips = sc.clips.filter(c => c.a !== a.id); sc.actors = sc.actors.filter(x => x !== a); E.actor = 'player'; }); } }, '✕ ' + T('Remove from the scene')) : null);
       }
     }
@@ -268,7 +372,7 @@ const Cutscene = (() => {
     let playhead = null;
     function drawTimeline() {
       const keep = tlScroll.scrollLeft, keepY = tlScroll.scrollTop, px = PX();
-      const len = Math.max(endOf(sc) + 10, 24), W = len * px, bad = overlaps(sc);
+      const len = Math.max(endOf(sc) + 10, 24), W = len * px, bad = clipProblems(sc, st, m, walk);
       const grid = h('div', { class: 'cs-grid', style: { width: (LEFT + W) + 'px' } }); grid.style.setProperty('--z', E.zoom);
       const ruler = h('div', { class: 'cs-track cs-ruler', style: { width: W + 'px' } });
       for (let i = 0; i <= len; i++) ruler.append(h('div', { class: 'cs-tick' + (i % 4 ? '' : ' big'), style: { left: i * px + 'px' } }, i % 4 ? '' : String(i)));
@@ -283,7 +387,7 @@ const Cutscene = (() => {
         track.oncontextmenu = e => { if (e.target !== track) return; e.preventDefault(); track.ondblclick(e); };
         for (const c of sc.clips.filter(x => x.a === a.id)) {
           const [ic, l, col] = KINDS[c.k], label = c.k === 'walk' ? (c.path || []).map(d => ARROW[d]).join('') || T(l) : c.k === 'say' ? (c.text || T(l)) : c.k === 'emote' ? (EMOTES[c.kind] || '!') : c.k === 'face' || c.k === 'jump' ? ARROW[c.dir || 'down'] : T(l);
-          const el = h('div', { class: 'cs-clip' + (c.id === E.sel ? ' sel' : '') + (bad.has(c.id) ? ' bad' : ''), title: T(l) + (bad.has(c.id) ? ' · ' + T('two actions of the same character at the same time') : ''),
+          const el = h('div', { class: 'cs-clip' + (c.id === E.sel ? ' sel' : '') + (bad.has(c.id) ? ' bad' : ''), title: T(l) + (bad.has(c.id) ? ' · ' + bad.get(c.id) : ''),
             style: { left: c.t * px + 'px', width: Math.max(8, dur(c) * px - 2) + 'px', background: col } }, h('span', {}, ic + ' ' + label));
           if (STRETCH.has(c.k)) el.append(h('div', { class: 'cs-grip', title: T('Drag to make it longer or shorter') }));
           el.onmousedown = e => dragClip(e, c, el);

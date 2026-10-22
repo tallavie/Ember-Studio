@@ -91,4 +91,9 @@ Object.assign(I18N.dicts.he, {
   's': 'שנ׳', 'two actions of the same character at the same time': 'שתי פעולות של אותה דמות באותו זמן',
   'when the player arrives on the map': 'כשהשחקן מגיע למפה', 'when the player steps on a square': 'כשהשחקן דורך על משבצת', 'when the player talks to someone': 'כשהשחקן מדבר עם מישהו',
   '{a} characters · {c} actions · {s} seconds': '{a} דמויות · {c} פעולות · {s} שניות',
+  'walks into a wall or water at ({x}, {y})': 'הדרך נכנסת לקיר או למים ב-({x}, {y})', 'There is no way there (walls, water or people in the way)': 'אין דרך לשם (קירות, מים או אנשים בדרך)',
+  'Drag to make the way longer': 'גוררים כדי להאריך את הדרך', 'Drag to where the character walks': 'גוררים לאן שהדמות הולכת',
+  'The yellow line on the map is the way. Drag the yellow square at its end to make it longer, or drag from the character to draw a new way.': 'הקו הצהוב על המפה הוא הדרך. גוררים את הריבוע הצהוב שבסוף כדי להאריך אותה, או גוררים מהדמות כדי לצייר דרך חדשה.',
+  'Flies (goes over walls, trees and water)': 'עפה (עוברת מעל קירות, עצים ומים)',
+  'To make them walk: drag from the character on the map to where they go. The way goes around walls, water and people by itself.': 'כדי שהדמות תלך: גוררים ממנה על המפה למקום שאליו היא הולכת. הדרך עוקפת קירות, מים ואנשים לבד.',
 });

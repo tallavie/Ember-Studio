@@ -84,9 +84,9 @@ def write_version(stage):
   ffi=FixedFileInfo(filevers=%r, prodvers=%r, mask=0x3f, flags=0x0, OS=0x40004, fileType=0x1, subtype=0x0, date=(0, 0)),
   kids=[StringFileInfo([StringTable('040904B0', [StringStruct('CompanyName', 'Ember Studio (open source)'),
     StringStruct('FileDescription', 'Ember Studio - Pokemon FireRed game editor'), StringStruct('FileVersion', '%s'),
-    StringStruct('InternalName', 'EmberStudio'), StringStruct('LegalCopyright', 'GPL-3.0'), StringStruct('OriginalFilename', exe_name() + '.exe'),
+    StringStruct('InternalName', 'EmberStudio'), StringStruct('LegalCopyright', 'GPL-3.0'), StringStruct('OriginalFilename', '%s.exe'),
     StringStruct('ProductName', 'Ember Studio'), StringStruct('ProductVersion', '%s')])]), VarFileInfo([VarStruct('Translation', [1033, 1200])])])
-''' % (t, t, server.VERSION, server.VERSION))
+''' % (t, t, server.VERSION, exe_name(), server.VERSION))
     return p
 
 

@@ -101,6 +101,7 @@ const Script = (() => {
         break;
       }
       case 'face': { const id = whoId(bl.who, ctx); C.move(a, id, [MOVE.turn(bl.dir || 'down')]); C.waitmove(a, id); break; }
+      case 'jump': { const id = whoId(bl.who, ctx); C.move(a, id, [MOVE.jump(bl.dir || 'down')]); C.waitmove(a, id); break; }
       case 'face_player': C.faceplayer(a); break;
       case 'emote': { const id = whoId(bl.who, ctx); C.move(a, id, [MOVE.emote[bl.kind || '!'] || MOVE.emote['!']]); C.waitmove(a, id); break; }
       case 'wait': C.delay(a, Math.max(1, Math.round((bl.seconds || 1) * 60))); break;

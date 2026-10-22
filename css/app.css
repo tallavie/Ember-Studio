@@ -465,3 +465,45 @@ button.danger { background: var(--err); border-color: var(--err); color: #fff; }
 .seam-row { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 3px; }
 .seam-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-inline-end: 6px; }
 .seam-dot.red { background: #e03131; } .seam-dot.orange { background: #f76707; }
+
+/* story: the scene editor (an animation timeline) */
+.cs-back { position: fixed; inset: 0; z-index: 150; background: rgba(0,0,0,.55); display: flex; }
+.cs-win { flex: 1; margin: 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+.cs-top { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.cs-time { font: 12px ui-monospace, monospace; min-width: 120px; color: var(--muted); }
+.cs-main { flex: 1; display: grid; grid-template-columns: 1fr 300px; min-height: 0; }
+.cs-mapbox { position: relative; overflow: auto; background: #0d0f14; padding: 8px; }
+.cs-map { display: block; image-rendering: pixelated; }
+.cs-say { position: sticky; bottom: 0; margin-top: -60px; min-height: 44px; background: #fff; color: #222; border: 3px solid #5a6b8a; border-radius: 8px; padding: 8px 12px; font: 15px system-ui, sans-serif; white-space: pre-wrap; box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+.cs-props { background: var(--panel); border-inline-start: 1px solid var(--line); padding: 10px; overflow-y: auto; }
+.cs-props h3 { margin: 0 0 4px; }
+.cs-addrow { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 4px; }
+.cs-addrow button { font-size: 12px; padding: 3px 7px; }
+.cs-tlbox { height: 250px; flex: none; display: flex; flex-direction: column; background: var(--panel); border-top: 1px solid var(--line); }
+.cs-tl-scroll { flex: 1; overflow: auto; position: relative; direction: ltr; }
+.cs-hint { font-size: 11px; padding: 3px 10px; border-top: 1px solid var(--line); }
+.cs-grid { position: relative; min-height: 100%; }
+.cs-row { display: flex; height: 40px; border-bottom: 1px solid var(--line); }
+.cs-row.sel { background: var(--sel); }
+.cs-row.drop { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.cs-row.cs-head { height: 26px; position: sticky; top: 0; z-index: 3; background: var(--panel); }
+.cs-who { position: sticky; left: 0; z-index: 2; width: 180px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 6px; background: var(--panel); border-inline-end: 1px solid var(--line); cursor: pointer; overflow: hidden; white-space: nowrap; direction: rtl; justify-content: flex-end; }
+html:not([dir="rtl"]) .cs-who { direction: ltr; justify-content: flex-start; }
+.cs-row.sel .cs-who { background: var(--sel); font-weight: 600; }
+.cs-head .cs-who button { margin-inline-start: auto; font-size: 12px; padding: 1px 6px; }
+.cs-icon { width: 32px; height: 32px; flex: none; image-rendering: pixelated; }
+.cs-track { position: relative; flex: none; background-image: linear-gradient(to right, var(--line) 1px, transparent 1px); background-size: calc(30px * var(--z, 1)) 100%; }
+.cs-ruler { cursor: ew-resize; background: none; }
+.cs-tick { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--line); font-size: 10px; color: var(--muted); padding-left: 2px; }
+.cs-tick.big { border-left-color: var(--muted); }
+.cs-clip { position: absolute; top: 5px; height: 30px; border-radius: 6px; color: #fff; font-size: 12px; line-height: 30px; padding: 0 6px; overflow: hidden; white-space: nowrap; cursor: grab; box-shadow: 0 1px 3px rgba(0,0,0,.35); user-select: none; box-sizing: border-box; }
+.cs-clip span { pointer-events: none; }
+.cs-clip.sel { outline: 3px solid #ffd43b; z-index: 1; }
+.cs-clip.bad { background-image: repeating-linear-gradient(45deg, rgba(255,0,0,.55) 0 6px, transparent 6px 12px) !important; }
+.cs-grip { position: absolute; right: 0; top: 0; bottom: 0; width: 8px; cursor: ew-resize; background: rgba(255,255,255,.35); }
+.cs-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #e03131; z-index: 4; pointer-events: none; }
+.cs-playhead::before { content: ''; position: absolute; top: 0; left: -5px; border: 6px solid transparent; border-top-color: #e03131; }
+.cs-menu-back { position: fixed; inset: 0; z-index: 220; }
+.cs-menu { position: fixed; display: flex; flex-direction: column; gap: 2px; padding: 6px; min-width: 160px; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.cs-menu button { text-align: start; }
+.cs-open { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }

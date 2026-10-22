@@ -8,8 +8,11 @@ const StoryTab = (() => {
   const R = () => App.rom, G = () => App.game;
   const TYPES = {
     talk: ['💬', 'Talk to someone'], beat: ['⚔', 'Beat a trainer'], reach: ['📍', 'Reach a place'], scene: ['🎬', 'A scene when you arrive'],
-    choice: ['❓', 'A choice (yes / no)'], rival: ['🥊', 'Rival battle'],
+    choice: ['❓', 'A choice (yes / no)'], rival: ['🥊', 'Rival battle'], cutscene: ['🎞', 'An animated scene'],
   };
+  // an animated scene is compiled like the step its trigger is like: arriving on the map, stepping on a square, talking to someone
+  const kindOf = st => st.type === 'cutscene' ? ({ step: 'reach', talk: 'talk' })[st.trig] || 'scene' : st.type;
+  const blocksOf = st => st.type === 'cutscene' ? Cutscene.toBlocks(st) : st.blocks;
   let selPath = null, root = null;                       // selPath: [chapter, step] or [chapter, step, 'yes'|'no', sub]
   const uid = () => 's' + Math.random().toString(36).slice(2, 8);
 
@@ -50,6 +53,15 @@ const StoryTab = (() => {
     const out = [];
     for (const st of allSteps(s)) {
       const name = '“' + (st.title || T(TYPES[st.type][1])) + '”';
+      if (st.type === 'cutscene') {
+        if (st.g == null) out.push(name + ': ' + T('choose the map'));
+        else if (st.trig === 'step' && st.x == null) out.push(name + ': ' + T('choose the place on the map'));
+        else if (st.trig === 'step' && blocked(st.g, st.n, st.x, st.y)) out.push(name + ': ' + T('the place is a square the player cannot walk on, so the step never happens') + ' (' + st.x + ',' + st.y + ')');
+        else if (st.trig === 'talk' && st.localId == null) out.push(name + ': ' + T('choose the person on the map'));
+        for (const p of Cutscene.problems(st)) out.push(name + ': ' + p);
+        if (st.guard && (st.guard.g == null || st.guard.x == null)) out.push(name + ': ' + T('choose where the guard stands'));
+        continue;
+      }
       if (['talk', 'choice', 'rival'].includes(st.type) && (st.g == null || st.localId == null) && !(st.type === 'rival' && st.newAt)) out.push(name + ': ' + T('choose the person on the map'));
       if (st.type === 'beat' && !trainerObj(st)) out.push(name + ': ' + T('choose the trainer'));
       if (st.type === 'reach' && (st.g == null || st.x == null)) out.push(name + ': ' + T('choose the place on the map'));
@@ -167,7 +179,7 @@ const StoryTab = (() => {
     }
     // people: every talk / choice / rival step of the same person in one script
     const people = new Map();
-    for (const nd of nodes) if (['talk', 'choice', 'rival'].includes(nd.st.type)) { const id = nd.st.localId != null ? nd.st.localId : nd.st.createdId; const k = key(nd.st.g, nd.st.n, id); if (!people.has(k)) people.set(k, []); people.get(k).push(nd); }
+    for (const nd of nodes) if (['talk', 'choice', 'rival'].includes(kindOf(nd.st))) { const id = nd.st.localId != null ? nd.st.localId : nd.st.createdId; const k = key(nd.st.g, nd.st.n, id); if (!people.has(k)) people.set(k, []); people.get(k).push(nd); }
     for (const c of s.characters) if (c.g != null && c.localId != null) { const k = key(c.g, c.n, c.localId); if (!people.has(k)) people.set(k, []); }
     for (const [k, list] of people) {
       const [g, n, id] = k.split('.').map(Number), e = objOf(g, n, id); if (!e) continue;
@@ -178,7 +190,7 @@ const StoryTab = (() => {
         const lSkip = a.fresh('skip');
         Script.C.compare(a, nd.V, nd.stage); Script.C.gotoIf(a, '!=', lSkip); condJump(a, nd.cond, lSkip); reqJump(a, nd.req, lSkip);
         const st = nd.st;
-        if (st.type === 'talk') { Script.emit(st.blocks && st.blocks.length ? st.blocks : [{ op: 'say', text: '...' }], a, ctx); done(a, nd, nd.next, { g, n }); }
+        if (kindOf(st) === 'talk') { const bl = blocksOf(st); Script.emit(bl && bl.length ? bl : [{ op: 'say', text: '...' }], a, ctx); done(a, nd, nd.next, { g, n }); }
         else if (st.type === 'choice') {
           const lNo = a.fresh('no');
           Script.C.msg(a, st.question || '?', 5); Script.C.compare(a, Script.VAR_RESULT, 1); Script.C.gotoIf(a, '!=', lNo);
@@ -232,12 +244,12 @@ const StoryTab = (() => {
     }
     // places: a trigger that fires while the story is at that step
     for (const nd of nodes) {
-      if (nd.st.type !== 'reach') continue;
+      if (kindOf(nd.st) !== 'reach') continue;
       const st = nd.st, e = MapsTab.api.addEvent(st.g, st.n, 'coord', st.x, st.y);
       r.w8(e.off + 4, 0); r.w16(e.off + 6, nd.V); r.w16(e.off + 8, nd.stage);
       const a = new Script.Asm(), lSkip = a.fresh('skip');
       Script.C.lockall(a); condJump(a, nd.cond, lSkip); reqJump(a, nd.req, lSkip);
-      Script.emit(st.blocks || [], a, { stageVar: nd.V, kind: 'trigger', g: st.g, n: st.n }); done(a, nd, nd.next, { g: st.g, n: st.n });
+      Script.emit(blocksOf(st) || [], a, { stageVar: nd.V, kind: 'trigger', g: st.g, n: st.n }); done(a, nd, nd.next, { g: st.g, n: st.n });
       a.label(lSkip); Script.C.releaseall(a); Script.C.end(a);
       const w = a.write(); addAllocs(w.allocs);
       const ev = MapsTab.api.readEvents(r.ptr(G().mapGroups[st.g][st.n] + 4)).coord.find(x => MapsTab.api.evXY(x)[0] === st.x && MapsTab.api.evXY(x)[1] === st.y && r.r16(x.off + 6) === nd.V);
@@ -246,10 +258,10 @@ const StoryTab = (() => {
     }
     // scenes: play once when you are on that map at that step
     for (const nd of nodes) {
-      if (nd.st.type !== 'scene') continue;
+      if (kindOf(nd.st) !== 'scene') continue;
       const st = nd.st, a = new Script.Asm(), lSkip = a.fresh('skip');
       Script.C.lockall(a); condJump(a, nd.cond, lSkip); reqJump(a, nd.req, lSkip);
-      Script.emit(st.blocks || [], a, { stageVar: nd.V, kind: 'frame', g: st.g, n: st.n }); done(a, nd, nd.next, { g: st.g, n: st.n });
+      Script.emit(blocksOf(st) || [], a, { stageVar: nd.V, kind: 'frame', g: st.g, n: st.n }); done(a, nd, nd.next, { g: st.g, n: st.n });
       a.label(lSkip); Script.C.releaseall(a); Script.C.end(a);
       const w = a.write(); addAllocs(w.allocs);
       if (!meta.frames.some(f => f.g === st.g && f.n === st.n)) meta.frames.push({ g: st.g, n: st.n, v: nd.V, orig: r.r32(G().mapGroups[st.g][st.n] + 8) });
@@ -489,6 +501,18 @@ const StoryTab = (() => {
         h('p', { class: 'muted' }, T('Plays as soon as the player is on this map at this step (for example right after arriving).')),
         blocksField(T('The scene'), st.blocks = st.blocks || [], { kind: 'frame', g: st.g, n: st.n }));
       if (st.g != null) box.append(placePick(T('Where the player stands in the preview'), st.preview = st.preview || { g: st.g, n: st.n }), Blocks.preview(st.blocks, { g: st.g, n: st.n, start: st.preview && st.preview.x != null ? st.preview : null }));
+    } else if (st.type === 'cutscene') {
+      st.trig = st.trig || 'arrive';
+      const trig = h('select', { onchange: e => { st.trig = e.target.value; rer(); } },
+        ...[['arrive', T('when the player arrives on the map')], ['step', T('when the player steps on a square')], ['talk', T('when the player talks to someone')]].map(([k, l]) => h('option', { value: k, selected: st.trig === k }, l)));
+      box.append(field(T('Starts'), trig));
+      if (st.trig === 'step') box.append(placePick(T('Where')));
+      else if (st.trig === 'talk') box.append(personPick(T('Who')));
+      else box.append(field(T('Map'), mapSelect(st.g != null ? [st.g, st.n] : null, (g, n) => { st.g = g; st.n = n; rer(); })));
+      box.append(h('div', { class: 'cs-open' },
+        h('button', { class: 'primary', disabled: st.g == null, onclick: () => Cutscene.open(st, { onChange: () => save(s), onClose: () => rer() }) }, '🎞 ' + T('Open the scene editor')),
+        h('span', { class: 'muted' }, st.g == null ? T('Choose the map first') : Cutscene.summary(st))),
+        h('p', { class: 'muted' }, T('Build it like an animation: a row for each character on a timeline, and what they do and when. Plays once, at this step of the story.')));
     } else if (st.type === 'choice') {
       box.append(personPick(T('Who asks')), field(T('The question'), (() => { const t = h('textarea', { rows: 2, dir: 'auto', onchange: e => { st.question = e.target.value; save(s); } }); t.value = st.question || ''; return t; })()),
         blocksField('✔ ' + T('Right after YES'), st.yesBlocks = st.yesBlocks || [], { kind: 'object', g: st.g, n: st.n, selfId: st.localId }),

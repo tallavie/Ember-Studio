@@ -70,7 +70,9 @@ def main():
         subprocess.call(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', os.path.join(ROOT, 'tools', 'signing', 'sign.ps1'), exe])
 
 
-def exe_name(): return 'EmberStudio-' + server.VERSION        # the version in the file name: EmberStudio-0.4.0.exe
+def exe_name():                                                  # the version in the file name: EmberStudio-0.4.0.exe
+    import server
+    return 'EmberStudio-' + server.VERSION
 
 
 def write_version(stage):

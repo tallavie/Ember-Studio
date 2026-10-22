@@ -68,8 +68,10 @@ const Emu = (() => {
       m.setVolume(muted ? 0 : 100); m.setFastForwardMultiplier(speed); m.resumeGame();
       if (opts.state) {                                       // the core needs a moment after loadGame before it takes a state
         m.FS.writeFile(p.saveStatePath + '/' + name.replace(/\.gba$/, '.ss1'), opts.state);
+        const load = () => !!(m.loadStateSlot ? m.loadStateSlot(1) : m.loadState(1));   // this build's loadState always fails
         let ok = false;
-        for (let k = 0; k < 10 && !ok; k++) { await new Promise(r => setTimeout(r, 150)); ok = !!m.loadState(1); }
+        for (let k = 0; k < 10 && !ok; k++) { await new Promise(r => setTimeout(r, 300)); ok = load(); }
+        if (ok) { await new Promise(r => setTimeout(r, 400)); load(); }   // once more: a load during the core's start is undone by it
         if (!ok) toast(T('The start state could not be loaded: the game starts from the beginning'), 'err');
       }
       current = { bytes, opts };
@@ -120,16 +122,27 @@ const Emu = (() => {
   // just the game as it is now, from the beginning
   function playNow() { return run(App.rom.u8.slice(), { name: 'game', label: T('from the beginning') }); }
   // the team the player gets in "Play from here" (kept in the project: data/playtest.json)
-  function team() { return Project.getData('playtest', () => ({ team: [{ sp: 6, lvl: 50 }] })).team; }
+  function playtest() { return Project.getData('playtest', () => ({ random: true, team: [{ sp: 6, lvl: 50 }] })); }
+  // a Pokémon with a name (not an empty slot, not an egg)
+  function randomMon() {
+    const L = App.getLists().species, ok = [];
+    for (let s = 1; s < Math.min(App.game.speciesCount, 412); s++) { const n = L[s]; if (n && !/^\?+$/.test(n.trim()) && !/^egg$/i.test(n.trim())) ok.push(s); }
+    return ok.length ? ok[Math.floor(Math.random() * ok.length)] : 25;
+  }
+  // the team in a test: a random Pokémon at level 50 each time, or the team chosen in 🎒
+  function team() { const pt = playtest(); return pt.random !== false && !(pt.random == null && pt.custom) ? [{ sp: randomMon(), lvl: 50 }] : pt.team; }
   function teamDialog() {
-    const pt = Project.getData('playtest', () => ({ team: [{ sp: 6, lvl: 50 }] })), back = h('div', { class: 'modal-back' });
+    const pt = playtest(), back = h('div', { class: 'modal-back' });
     const draw = () => {
       back.innerHTML = '';
+      const rnd = pt.random !== false && !(pt.random == null && pt.custom);
       back.append(h('div', { class: 'panel modal' }, h('h3', {}, '🎒 ' + T('Test team')), h('p', { class: 'muted' }, T('"Play from here" gives the player these Pokémon (only in the test, not in the real game).')),
-        ...pt.team.map((m, k) => h('div', { class: 'row' }, makeSelect(App.getLists().species, m.sp, v => { m.sp = v; Project.setData('playtest', pt); }), T('lv') + ' ',
+        h('label', {}, h('input', { type: 'checkbox', checked: rnd, onchange: e => { pt.random = e.target.checked; pt.custom = !e.target.checked; Project.setData('playtest', pt); draw(); } }), ' 🎲 ' + T('A random Pokémon at level 50 (a new one in every test)')),
+        h('p', { class: 'muted' }, T('In a test the player is called TEST.')),
+        ...(rnd ? [] : pt.team).map((m, k) => h('div', { class: 'row' }, makeSelect(App.getLists().species, m.sp, v => { m.sp = v; Project.setData('playtest', pt); }), T('lv') + ' ',
           h('input', { type: 'number', value: m.lvl, min: 1, max: 100, style: { width: '56px' }, onchange: e => { m.lvl = +e.target.value; Project.setData('playtest', pt); } }),
           h('button', { class: 'mu-x', onclick: () => { pt.team.splice(k, 1); Project.setData('playtest', pt); draw(); } }, '✕'))),
-        pt.team.length < 6 ? h('button', { onclick: () => { pt.team.push({ sp: 25, lvl: 20 }); Project.setData('playtest', pt); draw(); } }, T('+ Add a Pokémon')) : '',
+        !rnd && pt.team.length < 6 ? h('button', { onclick: () => { pt.team.push({ sp: 25, lvl: 20 }); Project.setData('playtest', pt); draw(); } }, T('+ Add a Pokémon')) : '',
         h('div', { class: 'row ask-btns' }, h('button', { class: 'primary', onclick: () => back.remove() }, T('Close')))));
     };
     draw(); document.body.append(back);

@@ -99,4 +99,5 @@ Object.assign(I18N.dicts.he, {
   'animated scenes go into FireRed for now (Emerald comes later)': 'סצנות מונפשות נכנסות בינתיים ל-FireRed (אמרלד יגיע בהמשך)', 'Play in the game': 'נגן במשחק',
   'Applies the story and starts the game right before this scene': 'מחיל את הסיפור ומתחיל את המשחק ממש לפני הסצנה', 'Walk onto the square to start the scene': 'לכו על המשבצת כדי שהסצנה תתחיל',
   'Talk to the person to start the scene': 'דברו עם הדמות כדי שהסצנה תתחיל',
+  'A random Pokémon at level 50 (a new one in every test)': 'פוקימון אקראי ברמה 50 (חדש בכל בדיקה)', 'In a test the player is called TEST.': 'בבדיקה קוראים לשחקן TEST.',
 });

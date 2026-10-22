@@ -12,7 +12,7 @@ const StoryTab = (() => {
   };
   // an animated scene is compiled like the step its trigger is like: arriving on the map, stepping on a square, talking to someone
   const kindOf = st => st.type === 'cutscene' ? ({ step: 'reach', talk: 'talk' })[st.trig] || 'scene' : st.type;
-  const blocksOf = st => st.type === 'cutscene' ? Cutscene.toBlocks(st) : st.blocks;
+  const blocksOf = st => st.type === 'cutscene' ? Cutscene.blocks(st) : st.blocks;
   let selPath = null, root = null;                       // selPath: [chapter, step] or [chapter, step, 'yes'|'no', sub]
   const uid = () => 's' + Math.random().toString(36).slice(2, 8);
 
@@ -177,6 +177,8 @@ const StoryTab = (() => {
       r.w8(e.off + 1, st.gfx || 7); r.w8(e.off + 9, 8);
       meta.created.push({ kind: 'obj', g: st.g, n: st.n, localId: st.createdId });
     }
+    // animated scenes: their new characters and Pokémon become people of the map first
+    for (const nd of nodes) if (nd.st.type === 'cutscene') Cutscene.prepare(nd.st, meta);
     // people: every talk / choice / rival step of the same person in one script
     const people = new Map();
     for (const nd of nodes) if (['talk', 'choice', 'rival'].includes(kindOf(nd.st))) { const id = nd.st.localId != null ? nd.st.localId : nd.st.createdId; const k = key(nd.st.g, nd.st.n, id); if (!people.has(k)) people.set(k, []); people.get(k).push(nd); }
@@ -510,7 +512,8 @@ const StoryTab = (() => {
       else if (st.trig === 'talk') box.append(personPick(T('Who')));
       else box.append(field(T('Map'), mapSelect(st.g != null ? [st.g, st.n] : null, (g, n) => { st.g = g; st.n = n; rer(); })));
       box.append(h('div', { class: 'cs-open' },
-        h('button', { class: 'primary', disabled: st.g == null, onclick: () => Cutscene.open(st, { onChange: () => save(s), onClose: () => rer() }) }, '🎞 ' + T('Open the scene editor')),
+        h('button', { class: 'primary', disabled: st.g == null, onclick: () => Cutscene.open(st, { onChange: () => save(s), onClose: () => rer(), play: () => playScene(st, s) }) }, '🎞 ' + T('Open the scene editor')),
+        st.g != null ? h('button', { onclick: () => playScene(st, s) }, '🎮 ' + T('Play in the game')) : null,
         h('span', { class: 'muted' }, st.g == null ? T('Choose the map first') : Cutscene.summary(st))),
         h('p', { class: 'muted' }, T('Build it like an animation: a row for each character on a timeline, and what they do and when. Plays once, at this step of the story.')));
     } else if (st.type === 'choice') {
@@ -539,6 +542,14 @@ const StoryTab = (() => {
         h('div', { class: 'row' }, h('span', {}, T('Looks like') + ': ' + Objects.gfxName(gd.gfx || 18)), h('button', { onclick: () => Objects.gallery(gd.gfx || 18, v => { gd.gfx = v; rer(); }) }, '🖼 ' + T('Change sprite…'))),
         field(T('What the guard says'), (() => { const t = h('textarea', { rows: 2, dir: 'auto', placeholder: T("You can't go this way yet."), onchange: e => { gd.text = e.target.value; save(s); } }); t.value = gd.text || ''; return t; })())) : ''));
     return box;
+  }
+  // an animated scene in the game: the story goes in, and the game starts on its map with the story at this step
+  async function playScene(st, s) {
+    try { apply(); } catch (e) { await ask(e.message, { ok: T('OK'), cancel: T('Close') }); return; }
+    const nd = flatten(s).find(x => x.st === st), p = Cutscene.playSpot(st);
+    Emu.playFrom({ g: st.g, n: st.n, x: p.x, y: p.y, team: Emu.team(), story: { stageVar: s.stageVar, stage: nd ? nd.stage : 0 }, flags: nd && nd.cond && nd.cond.set ? [nd.cond.flag] : [], label: st.title || T(TYPES.cutscene[1]) });
+    if (st.trig === 'step') toast(T('Walk onto the square to start the scene'));
+    else if (st.trig === 'talk') toast(T('Talk to the person to start the scene'));
   }
   function charactersPanel(s, rer) {
     const box = h('div', { class: 'panel st-chars' }, h('h3', {}, '🎭 ' + T('Characters: lines that change with the story')),

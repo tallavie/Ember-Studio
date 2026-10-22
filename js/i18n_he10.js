@@ -96,4 +96,7 @@ Object.assign(I18N.dicts.he, {
   'The yellow line on the map is the way. Drag the yellow square at its end to make it longer, or drag from the character to draw a new way.': 'הקו הצהוב על המפה הוא הדרך. גוררים את הריבוע הצהוב שבסוף כדי להאריך אותה, או גוררים מהדמות כדי לצייר דרך חדשה.',
   'Flies (goes over walls, trees and water)': 'עפה (עוברת מעל קירות, עצים ומים)',
   'To make them walk: drag from the character on the map to where they go. The way goes around walls, water and people by itself.': 'כדי שהדמות תלך: גוררים ממנה על המפה למקום שאליו היא הולכת. הדרך עוקפת קירות, מים ואנשים לבד.',
+  'animated scenes go into FireRed for now (Emerald comes later)': 'סצנות מונפשות נכנסות בינתיים ל-FireRed (אמרלד יגיע בהמשך)', 'Play in the game': 'נגן במשחק',
+  'Applies the story and starts the game right before this scene': 'מחיל את הסיפור ומתחיל את המשחק ממש לפני הסצנה', 'Walk onto the square to start the scene': 'לכו על המשבצת כדי שהסצנה תתחיל',
+  'Talk to the person to start the scene': 'דברו עם הדמות כדי שהסצנה תתחיל',
 });

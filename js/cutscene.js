@@ -13,7 +13,7 @@ const Cutscene = (() => {
     emote: ['❗', 'Emote', '#0284c7'], say: ['💬', 'Say', '#2563eb'], hide: ['👻', 'Disappear', '#7c3aed'], show: ['✨', 'Appear', '#7c3aed'],
   };
   const STRETCH = new Set(['wait', 'emote', 'say']);
-  const SPEED = { walk: 1, run: 0.5, slow: 2 };                 // steps of time per square
+  const SPEED = { walk: 1, run: 0.5, slow: 1.5 };               // steps of time per square (measured in the game: 16 / 8 / 24 frames)
   const D = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }, ARROW = { up: '↑', down: '↓', left: '←', right: '→' };
   const EMOTES = { '!': '❗', '?': '❓', '♥': '♥' };
   const uid = () => 'c' + Math.random().toString(36).slice(2, 8);
@@ -126,14 +126,113 @@ const Cutscene = (() => {
     return bad;
   }
 
-  // ---------- for the story compiler (until scenes compile to parallel movement): the clips in time order as blocks ----------
+  // ---------- into the game ----------
   function problems(st) {
     const sc = scene(st), out = [];
-    if (sc.actors.some(a => a.kind === 'new' || a.kind === 'mon') && sc.clips.some(c => sc.actors.find(a => a.id === c.a && (a.kind === 'new' || a.kind === 'mon'))))
-      out.push(T('new characters and Pokémon play in the editor; in the game they come in the next update (for now the player and people on the map)'));
+    if (G().isEmerald && sc.clips.length) out.push(T('animated scenes go into FireRed for now (Emerald comes later)'));
     if (st.g != null) { const m = MapsTab.api.loadMap(st.g, st.n), bad = clipProblems(sc, st, m, walkGrid(m)); for (const [id, why] of bad) { const c = sc.clips.find(x => x.id === id), a = sc.actors.find(x => x.id === c.a); out.push((a.name || '') + ' · ' + Tf('Step {n}', { n: c.t }) + ': ' + why); } }
     return [...new Set(out)];
   }
+  // The timeline as movement that runs at the same time. Every clip becomes timed actions of its character (a square
+  // walked, a jump, a turn, an emote, appear / disappear) in frames (one step = 16). Text splits the scene into parts: in
+  // each part every character gets one movement list (waits fill the gaps) and all of them start together; then the
+  // script waits for all, shows the text and waits for A. Whatever starts while the text is on comes after it.
+  const SQ = { walk: 16, run: 8, slow: 24 };
+  function actionsOf(sc, a) {
+    const M = Script.MOVE, out = [];
+    const mine = sc.clips.filter(c => c.a === a.id).sort((x, y) => x.t - y.t);
+    const firstVis = mine.find(c => c.k === 'show' || c.k === 'hide');
+    if (firstVis && firstVis.k === 'show') out.push({ f: 0, len: 1, code: M.invisible });       // there from the start, but not seen yet
+    for (const c of mine) {
+      const f = c.t * 16;
+      if (c.k === 'walk') { const sq = SQ[c.speed] || 16, mv = c.speed === 'run' ? M.walkFast : c.speed === 'slow' ? M.walkSlow : M.walk; (c.path || []).forEach((d, i) => out.push({ f: f + i * sq, len: sq, code: mv(d) })); }
+      else if (c.k === 'jump') out.push({ f, len: 32, code: M.jump(c.dir || 'down') });
+      else if (c.k === 'face') out.push({ f, len: 1, code: M.face(c.dir || 'down') });
+      else if (c.k === 'emote') out.push({ f, len: 1, code: M.emote[c.kind || '!'] || M.emote['!'] });
+      else if (c.k === 'hide') out.push({ f, len: 1, code: M.invisible });
+      else if (c.k === 'show') out.push({ f, len: 1, code: M.visible });
+    }
+    return out;
+  }
+  const DELAYS = [[16, 0x1C], [8, 0x1B], [4, 0x1A]];                   // waits of 16 / 8 / 4 frames (a few frames less are not seen)
+  // the parts of the scene, cut by text: [{ from, to, say }] in frames
+  function parts(sc) {
+    const says = sc.clips.filter(c => c.k === 'say').sort((x, y) => x.t - y.t), out = [];
+    let from = 0;
+    for (const c of says) { out.push({ from, to: c.t * 16, say: c }); from = Math.max(from, (c.t + dur(c)) * 16); }
+    out.push({ from, to: Infinity, say: null });
+    return out;
+  }
+  const gameId = a => a.kind === 'player' ? Script.PLAYER : a.kind === 'npc' ? a.localId : a._id;
+  function emit(st, a, ctx) {
+    const sc = scene(st), C = Script.C, P = parts(sc);
+    const inScene = sc.actors.filter(x => gameId(x) != null);
+    // new characters and Pokémon: their flag hid them when the map loaded; now they come out
+    for (const x of inScene) if ((x.kind === 'new' || x.kind === 'mon') && x.flag) { C.clearflag(a, x.flag); C.addobject(a, x._id); }
+    // each action in its part: one that starts while a text is on starts right after it
+    const lists = new Map(inScene.map(x => [x.id, P.map(() => [])]));
+    for (const x of inScene) for (const act of actionsOf(sc, x)) {
+      let f = act.f, k = 0;
+      for (; k < P.length - 1; k++) { if (f < P[k].to) break; if (f < P[k + 1].from) f = P[k + 1].from; }
+      lists.get(x.id)[k].push(Object.assign({}, act, { f }));
+    }
+    P.forEach((part, k) => {
+      const moving = [];
+      for (const x of inScene) {
+        const acts = lists.get(x.id)[k].sort((p, q) => p.f - q.f); if (!acts.length) continue;
+        const seq = []; let cur = part.from;
+        for (const act of acts) {
+          let gap = act.f - cur;
+          for (const [n, code] of DELAYS) while (gap >= n) { seq.push(code); gap -= n; }
+          seq.push(act.code); cur = Math.max(cur, act.f) + act.len;
+        }
+        C.move(a, gameId(x), seq); moving.push(gameId(x));
+      }
+      for (const id of moving) C.waitmove(a, id);
+      if (part.say) {
+        const sp = sc.actors.find(x => x.id === part.say.a), who = !sp ? '' : sp.kind === 'player' ? '{PLAYER}' : (sp.name || '');
+        C.msg(a, (who ? who + ': ' : '') + (part.say.text || ' '), 4); C.closemessage(a);
+      }
+    });
+    // after the scene the new ones stay until the player leaves the map; the flag keeps them away next time
+    for (const x of inScene) if ((x.kind === 'new' || x.kind === 'mon') && x.flag) C.setflag(a, x.flag);
+  }
+  // before the scripts: new characters and Pokémon become people of the map (hidden by their flag whenever the map
+  // loads), so the scene can move them. meta: the story's undo record
+  function prepare(st, meta) {
+    const sc = scene(st), r = R(), m = MapsTab.api.loadMap(st.g, st.n), flags = [];
+    for (const a of sc.actors) {
+      if (a.kind !== 'new' && a.kind !== 'mon') continue;
+      if (!sc.clips.some(c => c.a === a.id)) { a._id = null; continue; }
+      a.flag = a.flag || Objects._freeFlag();
+      const p = startOf(a, st, m), e = MapsTab.api.addEvent(st.g, st.n, 'obj', p.x, p.y), id = r.u8[e.off];
+      r.w8(e.off + 1, a.gfx); r.w8(e.off + 9, ({ up: 7, left: 9, right: 10 })[p.dir] || 8); r.w16(e.off + 20, a.flag); r.w32(e.off + 16, 0);
+      a._id = id; flags.push(a.flag);
+      meta.created.push({ kind: 'obj', g: st.g, n: st.n, localId: id });
+    }
+    if (!flags.length) return;
+    // the map's "on transition" script (type 3) hides them: ours first, then the map's own
+    const hdr = G().mapGroups[st.g][st.n], ms = r.ptr(hdr + 8), entries = [];
+    if (ms >= 0) for (let i = 0; i < 16 && r.u8[ms + i * 5]; i++) entries.push([r.u8[ms + i * 5], r.r32(ms + i * 5 + 1)]);
+    if (!meta.frames.some(f => f.g === st.g && f.n === st.n)) meta.frames.push({ g: st.g, n: st.n, orig: r.r32(hdr + 8) });
+    const as = new Script.Asm(); for (const f of flags) Script.C.setflag(as, f);
+    const k = entries.findIndex(x => x[0] === 3);
+    if (k >= 0) Script.C.gotoAbs(as, entries[k][1] - 0x08000000); else Script.C.end(as);
+    const w = as.write(); meta.allocs.push(...w.allocs);
+    if (k >= 0) entries[k][1] = (0x08000000 + w.off) >>> 0; else entries.push([3, (0x08000000 + w.off) >>> 0]);
+    const lst = new Uint8Array(entries.length * 5 + 1), dl = new DataView(lst.buffer);
+    entries.forEach(([t, q], i) => { lst[i * 5] = t; dl.setUint32(i * 5 + 1, q, true); });
+    const lo = r.writeNew(lst); meta.allocs.push([lo, lst.length]); r.wptr(hdr + 8, lo);
+  }
+  // where the player starts a test: their place in the scene; for a scene on a square, the free square next to it (they walk on)
+  function playSpot(st) {
+    const sc = scene(st), m = MapsTab.api.loadMap(st.g, st.n), p = startOf(sc.actors.find(a => a.kind === 'player'), st, m);
+    if (st.trig !== 'step' || p.x !== st.x || p.y !== st.y) return { x: p.x, y: p.y };
+    const ok = walkGrid(m); for (const [dx, dy] of [[0, 1], [0, -1], [-1, 0], [1, 0]]) { const x = p.x + dx, y = p.y + dy; if (x >= 0 && y >= 0 && x < m.w && y < m.h && ok[y * m.w + x]) return { x, y }; }
+    return { x: p.x, y: p.y };
+  }
+  // the scene as one block for the story compiler
+  const blocks = st => [{ op: 'emit', fn: (a, ctx) => emit(st, a, ctx) }];
   function toBlocks(st) {
     const sc = scene(st), out = [], who = id => { const a = sc.actors.find(x => x.id === id); return !a ? null : a.kind === 'player' ? 'player' : a.kind === 'npc' ? String(a.localId) : null; };
     let cur = 0;
@@ -437,6 +536,7 @@ const Cutscene = (() => {
           h('b', { dir: 'auto' }, '🎞 ' + (st.title || T('An animated scene'))), h('span', { class: 'muted', dir: 'auto' }, m.name + ' · ' + trigText),
           h('span', { style: { flex: 1 } }),
           h('button', { title: T('Back to the start'), onclick: () => { stop(); E.t = 0; drawMap(); } }, '⏮'), playBtn, timeLabel,
+          opts.play ? h('button', { title: T('Applies the story and starts the game right before this scene'), onclick: () => { stop(); opts.play(); } }, '🎮 ' + T('Play in the game')) : null,
           h('button', { title: T('Undo') + ' (Ctrl+Z)', onclick: undo }, '↶'), h('button', { title: T('Redo') + ' (Ctrl+Y)', onclick: redo }, '↷'),
           h('button', { title: T('Zoom out'), onclick: () => { E.zoom = Math.max(0.4, E.zoom / 1.25); drawTimeline(); } }, '−'), h('button', { title: T('Zoom in'), onclick: () => { E.zoom = Math.min(3, E.zoom * 1.25); drawTimeline(); } }, '+'),
           h('button', { onclick: close }, '✓ ' + T('Done'))),
@@ -466,5 +566,5 @@ const Cutscene = (() => {
     return { close, E, sc };
   }
 
-  return { open, scene, toBlocks, problems, summary, stateAt, dur, endOf, KINDS };
+  return { open, scene, toBlocks, blocks, prepare, emit, playSpot, problems, summary, stateAt, dur, endOf, KINDS };
 })();

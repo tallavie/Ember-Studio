@@ -114,6 +114,7 @@ const Script = (() => {
       case 'heal': C.special(a, 0); break;
       case 'shop': C.mart(a, bl.items || [13]); break;
       case 'goto_script': C.gotoAbs(a, bl.off); break;
+      case 'emit': bl.fn(a, ctx); break;                                // a compiler of its own (an animated scene)
       case 'end': C.end(a); break;
       default: throw new Error('unknown block: ' + bl.op);
     }

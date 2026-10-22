@@ -50,7 +50,8 @@ const Script = (() => {
     setvar: (a, v, x) => a.b(0x16).h(v).h(x), copyvarIfNotZero: (a, v, x) => a.b(0x1A).h(v).h(x),
     compare: (a, v, x) => a.b(0x21).h(v).h(x),
     setflag: (a, f) => a.b(0x29).h(f), clearflag: (a, f) => a.b(0x2A).h(f), checkflag: (a, f) => a.b(0x2B).h(f),
-    lock: a => a.b(0x6A), lockall: a => a.b(0x6B), release: a => a.b(0x6C), releaseall: a => a.b(0x68, 0x6D), faceplayer: a => a.b(0x5A),   // releaseall: closemessage first, releaseall leaves the box on screen
+    // 0x69 lockall, 0x6A lock, 0x6B releaseall, 0x6C release, 0x6D waitbuttonpress (the game's own trigger scripts start with 0x69)
+    lock: a => a.b(0x6A), lockall: a => a.b(0x69), release: a => a.b(0x6C), releaseall: a => a.b(0x68, 0x6B), faceplayer: a => a.b(0x5A),   // releaseall: closemessage first, releaseall leaves the box on screen
     closemessage: a => a.b(0x68), waitmessage: a => a.b(0x66),
     giveitem: (a, item, qty) => { C.copyvarIfNotZero(a, 0x8000, item); C.copyvarIfNotZero(a, 0x8001, qty); a.b(0x09, 0x00); },
     additem: (a, item, qty) => a.b(0x44).h(item).h(qty), removeitem: (a, item, qty) => a.b(0x45).h(item).h(qty), checkitem: (a, item, qty) => a.b(0x47).h(item).h(qty),

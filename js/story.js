@@ -269,6 +269,9 @@ const StoryTab = (() => {
       if (!meta.frames.some(f => f.g === st.g && f.n === st.n)) meta.frames.push({ g: st.g, n: st.n, v: nd.V, orig: r.r32(G().mapGroups[st.g][st.n] + 8) });
       addAllocs(Script.addFrameScript(st.g, st.n, nd.V, nd.stage, w.off));
     }
+    // where each step is in the game (its story line's variable and number, what it waits for): the tests start there
+    s.at = {};
+    for (const nd of nodes) s.at[nd.st.id] = { V: nd.V, stage: nd.stage, cond: nd.cond || null, req: nd.req || null };
     s.meta = meta; s.applied = new Date().toISOString(); s.stages = lines[0].end;
     save(s);
     return { steps: nodes.length, stageVar: V };
@@ -467,10 +470,8 @@ const StoryTab = (() => {
     const testBtn = h('button', { title: T('Starts the game at a spot you pick, with the story at this step'), onclick: async () => {
       const gm = st.type === 'beat' ? trainerObj(st) : st;
       if (!gm || gm.g == null) { toast(T('Choose the map of this step first'), 'err'); return; }
-      if (!s.stageVar) { toast(T('Apply the story to the game first'), 'err'); return; }
       const p = await Blocks.pickOnMap(gm.g, gm.n, {}); if (!p) return;
-      const nd = flatten(s).find(x => x.st === st);
-      Emu.playFrom({ g: gm.g, n: gm.n, x: p.x, y: p.y, team: Emu.team(), story: { stageVar: s.stageVar, stage: nd ? nd.stage : 0 }, flags: nd && nd.cond && nd.cond.set ? [nd.cond.flag] : [], label: st.title || T(TYPES[st.type][1]) });
+      await testAt(st, s, gm.g, gm.n, p.x, p.y);
     } }, '▶ ' + T('Test from this step'));
     box.append(h('div', { class: 'row' }, h('h3', { style: { flex: 1 } }, TYPES[st.type][0] + ' ' + T(TYPES[st.type][1])), testBtn, h('button', { title: T('Test team'), onclick: () => Emu.teamDialog() }, '🎒')),
       field(T('Title (only for you)'), h('input', { value: st.title || '', dir: 'auto', placeholder: T(TYPES[st.type][1]), onchange: e => { st.title = e.target.value; rer(); } })));
@@ -543,11 +544,22 @@ const StoryTab = (() => {
         field(T('What the guard says'), (() => { const t = h('textarea', { rows: 2, dir: 'auto', placeholder: T("You can't go this way yet."), onchange: e => { gd.text = e.target.value; save(s); } }); t.value = gd.text || ''; return t; })())) : ''));
     return box;
   }
-  // an animated scene in the game: the story goes in, and the game starts on its map with the story at this step
+  // a test from a step: the whole story goes into the game first (also the steps added since the last time), then the
+  // game starts with the story exactly at that step - its line's variable, the YES / NO of a choice before it, and the
+  // moment of the game it comes after already done. The next steps follow in the game as they would.
+  async function testAt(st, s, g, n, x, y) {
+    try { apply(); } catch (e) { await ask(e.message, { ok: T('OK'), cancel: T('Close') }); return false; }
+    s = story();
+    const at = (s.at || {})[st.id] || { V: s.stageVar, stage: 0 }, flags = [], vars = [];
+    if (at.cond && at.cond.set) flags.push(at.cond.flag);
+    if (at.req && at.req.k === 'flag') flags.push(at.req.f); else if (at.req && at.req.k === 'var') vars.push([at.req.v, at.req.n]);
+    Emu.playFrom({ g, n, x, y, team: Emu.team(), story: { stageVar: at.V, stage: at.stage }, flags, vars, clear: at.cond && !at.cond.set ? [at.cond.flag] : [], label: st.title || T(TYPES[st.type][1]) });
+    return true;
+  }
+  // an animated scene in the game: the game starts on its map with the story at this step
   async function playScene(st, s) {
-    try { apply(); } catch (e) { await ask(e.message, { ok: T('OK'), cancel: T('Close') }); return; }
-    const nd = flatten(s).find(x => x.st === st), p = Cutscene.playSpot(st);
-    Emu.playFrom({ g: st.g, n: st.n, x: p.x, y: p.y, team: Emu.team(), story: { stageVar: s.stageVar, stage: nd ? nd.stage : 0 }, flags: nd && nd.cond && nd.cond.set ? [nd.cond.flag] : [], label: st.title || T(TYPES.cutscene[1]) });
+    const p = Cutscene.playSpot(st);
+    if (!(await testAt(st, s, st.g, st.n, p.x, p.y))) return;
     if (st.trig === 'step') toast(T('Walk onto the square to start the scene'));
     else if (st.trig === 'talk') toast(T('Talk to the person to start the scene'));
   }

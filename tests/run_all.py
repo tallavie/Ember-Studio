@@ -8,7 +8,7 @@
 # 3. exe: dist/EmberStudio.exe --selftest (when it is there).
 # 4. kl: the Kachol-Lavan example project (../projects/KacholLavan) builds to the same bytes as KL_EXPECT, when both are there.
 # Writes tests/out/report.md and exits with 1 when something failed.
-import os, sys, json, time, shutil, subprocess, urllib.parse, zlib, argparse
+import os, sys, json, time, shutil, subprocess, urllib.parse, zlib, argparse, glob
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -85,7 +85,8 @@ def lua_table(v):
 
 def exe(rom):
     """the built EmberStudio.exe opens its window, loads the ROM and runs the emulator (--selftest)"""
-    path = os.environ.get('EMBER_EXE') or os.path.join(os.path.dirname(APP), 'dist', 'EmberStudio.exe')
+    found = sorted(glob.glob(os.path.join(os.path.dirname(APP), 'dist', 'EmberStudio*.exe')), key=os.path.getmtime)   # EmberStudio-<version>.exe, the newest
+    path = os.environ.get('EMBER_EXE') or (found[-1] if found else '')
     if not os.path.isfile(path): return [('exe', True, 0, 'skipped (no EmberStudio.exe)')]
     out = os.path.join(OUT, 'selftest.json')
     if os.path.isfile(out): os.remove(out)

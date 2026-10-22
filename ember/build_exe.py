@@ -1,4 +1,4 @@
-# Builds dist/EmberStudio.exe (one file) with PyInstaller, then signs it.
+# Builds dist/EmberStudio-<version>.exe (one file) with PyInstaller, then signs it.
 #   D:\GBA\.venv-ember\Scripts\python ember\build_exe.py [--no-mgba] [--no-sign]
 # The EXE holds the editor (index.html, js, css, lib, data), the Python backend (ember/*.py), the ROM tools
 # (tools/kl/*.py, run by the bundled Python), mGBA (copied to %LOCALAPPDATA%\EmberStudio\mgba on first start) and
@@ -55,7 +55,7 @@ def main():
         datas.append((dst, 'mgba'))
     py = glob.glob(os.path.join(APP, 'tools', 'kl', '*.py')) + glob.glob(os.path.join(HERE, '*.py'))
     hidden = imports_of(py) + ['webview', 'webview.platforms.edgechromium', 'clr', 'PIL.Image', 'PIL.ImageDraw', 'PIL.ImageFont', 'PIL.ImageFilter']
-    args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--name', 'EmberStudio',
+    args = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed', '--name', exe_name(),
             '--icon', os.path.join(HERE, 'icon.ico'), '--distpath', DIST, '--workpath', os.path.join(stage, 'work'),
             '--specpath', stage, '--collect-submodules', 'PIL', '--paths', HERE, '--paths', os.path.join(APP, 'tools', 'kl'),
             '--version-file', write_version(stage)]
@@ -64,10 +64,13 @@ def main():
     args.append(os.path.join(HERE, 'app.py'))
     print('PyInstaller with %d data folders, %d hidden imports' % (len(datas), len(hidden)))
     subprocess.check_call(args)
-    exe = os.path.join(DIST, 'EmberStudio.exe')
+    exe = os.path.join(DIST, exe_name() + '.exe')
     print('built', exe, '%.1f MB' % (os.path.getsize(exe) / 1048576))
     if not no_sign:
         subprocess.call(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', os.path.join(ROOT, 'tools', 'signing', 'sign.ps1'), exe])
+
+
+def exe_name(): return 'EmberStudio-' + server.VERSION        # the version in the file name: EmberStudio-0.4.0.exe
 
 
 def write_version(stage):
@@ -79,7 +82,7 @@ def write_version(stage):
   ffi=FixedFileInfo(filevers=%r, prodvers=%r, mask=0x3f, flags=0x0, OS=0x40004, fileType=0x1, subtype=0x0, date=(0, 0)),
   kids=[StringFileInfo([StringTable('040904B0', [StringStruct('CompanyName', 'Ember Studio (open source)'),
     StringStruct('FileDescription', 'Ember Studio - Pokemon FireRed game editor'), StringStruct('FileVersion', '%s'),
-    StringStruct('InternalName', 'EmberStudio'), StringStruct('LegalCopyright', 'GPL-3.0'), StringStruct('OriginalFilename', 'EmberStudio.exe'),
+    StringStruct('InternalName', 'EmberStudio'), StringStruct('LegalCopyright', 'GPL-3.0'), StringStruct('OriginalFilename', exe_name() + '.exe'),
     StringStruct('ProductName', 'Ember Studio'), StringStruct('ProductVersion', '%s')])]), VarFileInfo([VarStruct('Translation', [1033, 1200])])])
 ''' % (t, t, server.VERSION, server.VERSION))
     return p

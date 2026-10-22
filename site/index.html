@@ -107,14 +107,14 @@ footer .wrap { display: flex; gap: 20px; justify-content: space-between; flex-wr
 <header><div class="wrap">
   <a class="brand" href="#"><img src="img/icon.png" alt="">Ember Studio</a>
   <nav><a href="#features">Features</a><a href="#see">See it work</a><a href="#gallery">Gallery</a><a href="#guides">Guides</a><a href="#changes">What's new</a></nav>
-  <a class="btn primary dl" href="https://github.com/tallavie/Ember-Studio/releases/latest/download/EmberStudio.exe">⬇ Download</a>
+  <a class="btn primary dl" href="https://github.com/tallavie/Ember-Studio/releases/latest">⬇ Download</a>
 </div></header>
 
 <div class="hero"><div class="wrap">
   <h1>Make your own <span class="fire">Pokémon</span> game</h1>
   <p class="lead">Ember Studio is a free editor for building your own game on top of Pokémon FireRed: maps, story, Pokémon, trainers, items, text, graphics and music, with the game running right inside it.</p>
   <div class="cta">
-    <a class="btn primary big dl" href="https://github.com/tallavie/Ember-Studio/releases/latest/download/EmberStudio.exe">⬇ Download for Windows</a>
+    <a class="btn primary big dl" href="https://github.com/tallavie/Ember-Studio/releases/latest">⬇ Download for Windows</a>
     <a class="btn big" href="https://github.com/tallavie/Ember-Studio">View the source</a>
   </div>
   <div class="meta"><span>Version <b id="ver">0.3.0</b></span><span>One file · nothing to install</span><span>Windows 10 / 11</span><span id="dlcount-line" hidden><b id="dlcount-small"></b> <span id="dlword">downloads</span></span></div>
@@ -188,7 +188,7 @@ footer .wrap { display: flex; gap: 20px; justify-content: space-between; flex-wr
           <li>Your own copy of <b>Pokémon FireRed (US) v1.1</b> (CRC <code>84EE4776</code>). No ROM is included, and none will be.</li>
           <li>The first time, Windows may warn because the file is not signed: choose <i>More info → Run anyway</i>.</li>
         </ul>
-        <a class="btn primary dl" href="https://github.com/tallavie/Ember-Studio/releases/latest/download/EmberStudio.exe">⬇ Download the latest version</a>
+        <a class="btn primary dl" href="https://github.com/tallavie/Ember-Studio/releases/latest">⬇ Download the latest version</a>
       </div>
     </div>
   </div>
@@ -242,6 +242,9 @@ fetch(`https://api.github.com/repos/${REPO}/releases`).then(r => r.ok ? r.json()
   document.getElementById('dlword').textContent = total === 1 ? 'download' : 'downloads';
   document.getElementById('dlcount-line').hidden = false;
   if (rels[0]) document.getElementById('ver').textContent = rels[0].tag_name.replace(/^v/, '');
+  // the download buttons: the EXE of the newest release (its name has the version in it, e.g. EmberStudio-0.4.0.exe)
+  const exe = rels.length && rels[0].assets.find(a => /\.exe$/i.test(a.name));
+  if (exe) document.querySelectorAll('a.dl').forEach(a => { a.href = exe.browser_download_url; });
   document.getElementById('notes').innerHTML = rels.map(r =>
     `<h3>${esc(r.name || r.tag_name)}<small>${new Date(r.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</small></h3>` +
     md((r.body || '').replace(/^[\s\S]*?(?=^### )/m, '').split(/^### Guides/m)[0])).join('');

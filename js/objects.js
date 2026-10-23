@@ -183,7 +183,12 @@ const Objects = (() => {
     return scanCache = { flags, hidden, trainers, trainerAt };
   }
   const reserved = { flags: new Set(), trainers: new Set() };          // handed out in this session, maybe not written yet
-  function freeFlag() { const u = usage(); for (let f = 0x3E7; f > 0x370; f--) if (!u.flags.has(f) && !reserved.flags.has(f)) { reserved.flags.add(f); return f; } throw new Error('No free flag left'); }
+  // a flag no script uses: FireRed 0x371-0x3E7; Emerald's unused flags 0x020-0x04F (FLAG_UNUSED_0x020…)
+  function freeFlag() {
+    const u = usage(), [hi, lo] = G().isEmerald ? [0x04F, 0x020] : [0x3E7, 0x371];
+    for (let f = hi; f >= lo; f--) if (!u.flags.has(f) && !reserved.flags.has(f)) { reserved.flags.add(f); return f; }
+    throw new Error('No free flag left');
+  }
   function freeHidden() { const u = usage(); for (let k = 0; k < 256; k++) if (!u.hidden.has(k)) return k; throw new Error('No free hidden-item flag left'); }
   function freeTrainer() { const u = usage(); for (let id = 1; id < 743; id++) if (!u.trainers.has(id) && !reserved.trainers.has(id)) { reserved.trainers.add(id); return id; } throw new Error('No unused trainer left'); }
 

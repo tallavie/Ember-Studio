@@ -13,27 +13,30 @@ const Cutscene = (() => {
     emote: ['❗', 'Emote', '#0284c7'], say: ['💬', 'Say', '#2563eb'], ask: ['❓', 'Ask yes / no', '#1d4ed8'], hide: ['👻', 'Disappear', '#7c3aed'], show: ['✨', 'Appear', '#7c3aed'],
     battle: ['⚔', 'Battle', '#dc2626'], give: ['🎁', 'Give', '#16a34a'], cry: ['🔊', 'Cry', '#0891b2'],
     shake: ['📳', 'Shake the screen', '#b45309'], flash: ['⚡', 'Flash', '#ca8a04'], fade: ['🌑', 'Fade', '#334155'], tiles: ['🧱', 'Change blocks', '#78716c'],
-    music: ['🎵', 'Music', '#9333ea'], sound: ['🔔', 'Sound', '#a855f7'], silence: ['🔇', 'Silence', '#6b21a8'],
+    music: ['🎵', 'Music', '#9333ea'], sound: ['🔔', 'Sound', '#a855f7'], silence: ['🔇', 'Silence', '#6b21a8'], weather: ['🌦', 'Weather', '#0e7490'],
   };
+  // the game's weathers (setweather): 0 = back to the map's own
+  const WEATHERS = [[0, 'the map\'s own weather'], [2, 'sunny'], [3, 'rain'], [5, 'thunderstorm'], [13, 'downpour'], [4, 'snow'], [6, 'fog'], [8, 'sandstorm'], [7, 'volcanic ash'], [11, 'dark clouds']];
   const STRETCH = new Set(['wait', 'emote', 'say', 'ask', 'shake']);
   const MOVES = new Set(['walk', 'jump', 'face', 'emote', 'hide', 'show']);    // what moves a character (one at a time)
   // the scene stops for these (they run between the parts of the scene); these run while everyone goes on moving
-  const BLOCK = new Set(['say', 'ask', 'battle', 'give', 'tiles', 'fade', 'flash']), TIMED = new Set(['shake', 'cry', 'music', 'sound', 'silence']);
+  const BLOCK = new Set(['say', 'ask', 'battle', 'give', 'tiles', 'fade', 'flash']), TIMED = new Set(['shake', 'cry', 'music', 'sound', 'silence', 'weather']);
   // what each row can do
   function kindsFor(a) {
     if (!a) return [];
-    if (a.kind === 'scene') return ['shake', 'flash', 'fade', 'tiles', 'music', 'sound', 'silence', 'wait'];
+    if (a.kind === 'scene') return ['shake', 'flash', 'fade', 'weather', 'tiles', 'music', 'sound', 'silence', 'wait'];
     const move = ['walk', 'jump', 'face', 'wait', 'emote', 'say', 'ask', 'hide', 'show'];
     if (a.kind === 'player') return [...move, 'give'];
     if (a.kind === 'mon') return [...move, 'cry', 'battle'];
     return [...move, 'battle'];
   }
-  const SPEED = { walk: 1, run: 0.5, slow: 1.5 };               // steps of time per square (measured in the game: 16 / 8 / 24 frames)
+  // steps of time per square, measured in the game: walk 16, run 8 frames; slowly 24 in FireRed, 32 in Emerald
+  const SPEED = { walk: 1, run: 0.5, get slow() { return App.game && App.game.isEmerald ? 2 : 1.5; } };
   const D = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }, ARROW = { up: '↑', down: '↓', left: '←', right: '→' };
   const EMOTES = { '!': '❗', '?': '❓', '♥': '♥' };
   const uid = () => 'c' + Math.random().toString(36).slice(2, 8);
   const clone = o => JSON.parse(JSON.stringify(o));
-  const FIXED = { jump: 2, face: 1, hide: 1, show: 1, battle: 4, give: 3, cry: 2, flash: 2, fade: 2, tiles: 1, music: 1, sound: 1, silence: 1 };
+  const FIXED = { jump: 2, face: 1, hide: 1, show: 1, battle: 4, give: 3, cry: 2, flash: 2, fade: 2, tiles: 1, music: 1, sound: 1, silence: 1, weather: 1 };
   const dur = c => c.k === 'walk' ? Math.max(1, Math.ceil((c.path || []).length * (SPEED[c.speed] || 1)))
     : FIXED[c.k] || Math.max(1, c.len || (c.k === 'say' || c.k === 'ask' || c.k === 'shake' ? 3 : 2));
   const endOf = sc => Math.max(0, ...sc.clips.map(c => c.t + dur(c)));
@@ -97,7 +100,7 @@ const Cutscene = (() => {
   }
   // what the whole screen shows at time t: a shake, a flash, the fade, blocks changed, and a line about what happens
   function effectsAt(sc, t) {
-    const out = { shake: 0, white: 0, black: 0, tiles: new Map(), note: null };
+    const out = { shake: 0, white: 0, black: 0, tiles: new Map(), note: null, weather: 0 };
     let dark = 0;
     for (const c of sc.clips.slice().sort((x, y) => x.t - y.t)) {
       if (c.t > t) break;
@@ -112,6 +115,7 @@ const Cutscene = (() => {
       else if (c.k === 'music' && on) out.note = '🎵 ' + T('Music') + ' #' + (c.song || 0);
       else if (c.k === 'sound' && on) out.note = '🔔 ' + T('Sound') + ' #' + (c.se || 1);
       else if (c.k === 'silence' && on) out.note = '🔇 ' + T('Silence');
+      else if (c.k === 'weather') out.weather = c.w || 0;
     }
     out.black = dark;
     return out;
@@ -171,7 +175,6 @@ const Cutscene = (() => {
   // ---------- into the game ----------
   function problems(st) {
     const sc = scene(st), out = [];
-    if (G().isEmerald && sc.clips.length) out.push(T('animated scenes go into FireRed for now (Emerald comes later)'));
     for (const c of sc.clips) {
       const a = sc.actors.find(x => x.id === c.a) || {}, at = (a.name || '') + ' · ' + Tf('Step {n}', { n: c.t }) + ': ';
       if (c.k === 'battle' && a.kind === 'mon' && !a.sp) out.push(at + T('choose which Pokémon it is (for the battle)'));
@@ -186,7 +189,7 @@ const Cutscene = (() => {
   // walked, a jump, a turn, an emote, appear / disappear) in frames (one step = 16). Text splits the scene into parts: in
   // each part every character gets one movement list (waits fill the gaps) and all of them start together; then the
   // script waits for all, shows the text and waits for A. Whatever starts while the text is on comes after it.
-  const SQ = { walk: 16, run: 8, slow: 24 };
+  const SQ = { walk: 16, run: 8, get slow() { return SPEED.slow * 16; } };
   function actionsOf(sc, a) {
     const M = Script.MOVE, out = [];
     const mine = sc.clips.filter(c => c.a === a.id).sort((x, y) => x.t - y.t);
@@ -203,7 +206,7 @@ const Cutscene = (() => {
     }
     return out;
   }
-  const DELAYS = [[16, 0x1C], [8, 0x1B], [4, 0x1A]];                   // waits of 16 / 8 / 4 frames (a few frames less are not seen)
+  const DELAYS = () => { const M = Script.MOVE; return [[16, M.delay16], [8, M.delay8], [4, M.delay4]]; };   // waits of 16 / 8 / 4 frames (a few frames less are not seen)
   // the parts of the scene, cut by what stops it (text, a question, a battle…) and by the steps a NO jumps to:
   // [{ from, to, ev }] in frames; ev = the stopping clip at the end of the part, or null
   function parts(sc) {
@@ -226,9 +229,10 @@ const Cutscene = (() => {
     const C = Script.C;
     a.b(0xB6).h(sp).b(lvl).h(0);                                       // setwildbattle
     if (cry) a.b(0xA1).h(sp).h(2).b(0xC5);                             // playmoncry (encounter), waitmoncry
-    if (legendary) { C.setflag(a, 0x807); C.special(a, 0x138); a.b(0x27); C.clearflag(a, 0x807); }   // StartLegendaryBattle, waitstate
+    const SP = Script.SPECIAL;
+    if (legendary) { C.setflag(a, SP.legFlag); C.special(a, SP.legendary); a.b(0x27); C.clearflag(a, SP.legFlag); }   // StartLegendaryBattle, waitstate
     else a.b(0xB7);                                                    // dowildbattle
-    a.b(0x26).h(0x800D).h(0xB4);                                       // specialvar VAR_RESULT, GetBattleOutcome
+    a.b(0x26).h(0x800D).h(SP.outcome);                                 // specialvar VAR_RESULT, GetBattleOutcome
   }
   function block(c, sc, a, labels, lEnd) {
     const C = Script.C, L = App.getLists(), who = sc.actors.find(x => x.id === c.a) || {};
@@ -253,20 +257,21 @@ const Cutscene = (() => {
       } else if (c.trainer) { if (c.intro) { C.msg(a, c.intro, 4); C.closemessage(a); } C.trainerNoIntro(a, c.trainer, c.defeat || '...'); }
     } else if (c.k === 'give') {
       if (c.what === 'item') C.giveitem(a, c.item || 13, c.qty || 1);
-      else { C.givemon(a, c.sp || 25, c.lvl || 5); C.msg(a, c.text || Tf('{PLAYER} received {who}!', { who: L.species[c.sp || 25] || '' }), 4); C.closemessage(a); }
+      else { C.givemon(a, c.sp || 25, c.lvl || 5); C.msg(a, c.text || (App.settings.rtl ? T('{PLAYER} received {who}!') : '{PLAYER} received {who}!').replace('{who}', L.species[c.sp || 25] || ''), 4); C.closemessage(a); }
     } else if (c.k === 'tiles') {
       for (const q of c.cells || []) a.b(0xA2).h(q.x).h(q.y).h(q.v & 0x3FF).h((q.v >> 10) & 3 ? 1 : 0);   // setmetatile
-      C.special(a, 0x8E);                                              // DrawWholeMapView
+      C.special(a, Script.SPECIAL.redraw);                             // DrawWholeMapView
     } else if (c.k === 'fade') C.fadescreen(a, c.out === false ? 0 : 1);
     else if (c.k === 'flash') { C.fadescreen(a, 3); C.fadescreen(a, 2); }   // to white and back
   }
   function timed(c, sc, a) {
     const C = Script.C, who = sc.actors.find(x => x.id === c.a) || {};
-    if (c.k === 'shake') { const [hz, vt, d] = SHAKE[c.strength || 2]; C.setvar(a, 0x8004, hz); C.setvar(a, 0x8005, vt); C.setvar(a, 0x8006, d); C.setvar(a, 0x8007, Math.max(1, Math.round(dur(c) * 16 / (d * 2)))); C.special(a, 0x136); }
+    if (c.k === 'shake') { const [hz, vt, d] = SHAKE[c.strength || 2]; C.setvar(a, 0x8004, hz); C.setvar(a, 0x8005, vt); C.setvar(a, 0x8006, d); C.setvar(a, 0x8007, Math.max(1, Math.round(dur(c) * 16 / (d * 2)))); C.special(a, Script.SPECIAL.shake); }
     else if (c.k === 'cry' && (c.sp || who.sp)) a.b(0xA1).h(c.sp || who.sp).h(0);   // playmoncry, normal
     else if (c.k === 'music') { if (c.song) C.playbgm(a, c.song); else C.fadedefaultbgm(a); }
     else if (c.k === 'sound') C.playse(a, c.se || 1);
     else if (c.k === 'silence') a.b(0x37, 4);                          // fadeoutbgm
+    else if (c.k === 'weather') { if (c.w) a.b(0xA4).h(c.w); else a.b(0xA3); a.b(0xA5); }   // setweather / resetweather, doweather
   }
   const gameId = a => a.kind === 'player' ? Script.PLAYER : a.kind === 'npc' ? a.localId : a._id;
   function emit(st, a, ctx) {
@@ -293,7 +298,7 @@ const Cutscene = (() => {
         const seq = []; let cur = part.from;
         for (const act of acts) {
           let gap = act.f - cur;
-          for (const [n, code] of DELAYS) while (gap >= n) { seq.push(code); gap -= n; }
+          for (const [n, code] of DELAYS()) while (gap >= n) { seq.push(code); gap -= n; }
           seq.push(act.code); cur = Math.max(cur, act.f) + act.len;
         }
         C.move(a, gameId(x), seq); moving.push(gameId(x));
@@ -465,6 +470,7 @@ const Cutscene = (() => {
         const s = S.actors.get(a.id); if (!s || s.vis) continue;
         c2.globalAlpha = 0.25; const spr = Objects.sprite(s.gfx, s.dir); if (spr) c2.drawImage(spr, Math.round(s.x * 16 + 8 - spr.width / 2), Math.round(s.y * 16 + 16 - spr.height)); c2.globalAlpha = 1;
       }
+      if (S.weather) drawWeather(S.weather);
       if (S.white || S.black) { c2.setTransform(1, 0, 0, 1, 0, 0); c2.fillStyle = S.white ? 'rgba(255,255,255,' + S.white + ')' : 'rgba(0,0,0,' + S.black + ')'; c2.fillRect(0, 0, cv.width, cv.height); }
       c2.setTransform(1, 0, 0, 1, 0, 0);
       const text = S.say ? nameOf(S.say.a) + ': ' + S.say.text + (S.say.ask ? '   [' + T('YES') + ' / ' + T('NO') + ']' : '') : S.note || '';
@@ -472,6 +478,18 @@ const Cutscene = (() => {
       sayBox.style.display = text ? '' : 'none';
       timeLabel.textContent = Tf('Step {n}', { n: (Math.round(E.t * 10) / 10) }) + ' · ' + (E.t * STEP_MS / 1000).toFixed(1) + ' ' + T('s');
       if (playhead) playhead.style.left = (LEFT + E.t * PX()) + 'px';
+    }
+    // a rough picture of the weather over the map (the game draws its own)
+    function drawWeather(w) {
+      c2.save(); c2.setTransform(1, 0, 0, 1, 0, 0);
+      const W = cv.width, H = cv.height, ph = (performance.now() / 40) | 0;
+      if ([3, 5, 13].includes(w)) { c2.fillStyle = 'rgba(30,40,80,.18)'; c2.fillRect(0, 0, W, H); c2.strokeStyle = 'rgba(200,220,255,.7)'; c2.beginPath(); const n = w === 13 ? 240 : 120; for (let i = 0; i < n; i++) { const x = (i * 97 + ph * 3) % W, y = (i * 53 + ph * 9) % H; c2.moveTo(x, y); c2.lineTo(x - 3, y + 8); } c2.stroke(); }
+      else if (w === 4) { c2.fillStyle = 'rgba(255,255,255,.9)'; for (let i = 0; i < 120; i++) c2.fillRect((i * 97 + ph) % W, (i * 53 + ph * 2) % H, 2, 2); }
+      else if (w === 6 || w === 11) { c2.fillStyle = w === 6 ? 'rgba(230,230,240,.45)' : 'rgba(20,20,40,.35)'; c2.fillRect(0, 0, W, H); }
+      else if (w === 8 || w === 7) { c2.fillStyle = w === 8 ? 'rgba(210,170,90,.35)' : 'rgba(90,90,90,.35)'; c2.fillRect(0, 0, W, H); }
+      else if (w === 2) { c2.fillStyle = 'rgba(255,230,120,.15)'; c2.fillRect(0, 0, W, H); }
+      if (w === 5 && ph % 40 < 2) { c2.fillStyle = 'rgba(255,255,255,.6)'; c2.fillRect(0, 0, W, H); }
+      c2.restore();
     }
     const cellOf = e => { const r = cv.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / (r.width / m.w)), Math.floor((e.clientY - r.top) / (r.height / m.h))]; };
     const walk = walkGrid(m), still = new Set();                     // people of the map who are not in the scene stand in the way
@@ -562,7 +580,7 @@ const Cutscene = (() => {
     // --- adding ---
     const NEW_CLIP = { walk: { path: [], speed: 'walk' }, jump: { dir: 'down' }, face: { dir: 'down' }, wait: { len: 2 }, emote: { kind: '!', len: 2 }, say: { text: '', len: 3 }, hide: {}, show: {},
       ask: { text: '', len: 3, no: 'continue' }, battle: { lvl: 50, legendary: true, cry: true }, give: { what: 'mon', sp: 25, lvl: 5, item: 13, qty: 1 }, cry: {},
-      shake: { strength: 2, len: 3 }, flash: {}, fade: { out: true }, tiles: { cells: [], keep: true }, music: { song: 0 }, sound: { se: 1 }, silence: {} };
+      shake: { strength: 2, len: 3 }, flash: {}, fade: { out: true }, tiles: { cells: [], keep: true }, music: { song: 0 }, sound: { se: 1 }, silence: {}, weather: { w: 3 } };
     function addClip(k, aId = E.actor, t = Math.round(E.t)) {
       const mine = sc.clips.filter(c => c.a === aId), free = mine.reduce((v, c) => c.t <= t && c.t + dur(c) > t ? c.t + dur(c) : v, t);   // after a clip already there
       const c = Object.assign({ id: uid(), a: aId, t: free, k }, clone(NEW_CLIP[k]));
@@ -596,6 +614,91 @@ const Cutscene = (() => {
       document.body.append(back);
     }
 
+    // --- arrivals: ready-made beginnings for a character (at the playhead) ---
+    // the free square next to a target that is nearest to a: where someone walking up to the target stops
+    const besideOf = (a, target, t) => { const free = freeFor(a, t); let best = null; for (const [dx, dy] of [[0, -1], [-1, 0], [1, 0], [0, 1]]) { const x = target.x + dx, y = target.y + dy; if (x >= 0 && y >= 0 && x < m.w && y < m.h && free(x, y)) { const d = Math.abs(x - target.x0) + Math.abs(y - target.y0); if (!best || d < best.d) best = { x, y, d }; } } return best; };
+    // a square on the edge of the map with a way to the target, the closest one
+    function edgeFor(a, target, t) {
+      const free = freeFor(a, t), out = [];
+      for (let x = 0; x < m.w; x++) out.push([x, 0], [x, m.h - 1]);
+      for (let y = 1; y < m.h - 1; y++) out.push([0, y], [m.w - 1, y]);
+      let best = null;
+      for (const [x, y] of out.sort((p, q) => (Math.abs(p[0] - target.x) + Math.abs(p[1] - target.y)) - (Math.abs(q[0] - target.x) + Math.abs(q[1] - target.y))).slice(0, 40)) {
+        if (!free(x, y)) continue;
+        const path = findPath(m, free, { x, y }, target); if (path && (!best || path.length < best.path.length)) best = { x, y, path };
+      }
+      return best;
+    }
+    const facing = (from, to) => Math.abs(to.x - from.x) > Math.abs(to.y - from.y) ? (to.x > from.x ? 'right' : 'left') : (to.y > from.y ? 'down' : 'up');
+    function arrive(a, how) {
+      const t = Math.round(E.t), S = stateAt(sc, st, m, t), pl = sc.actors.find(x => x.kind === 'player'), ps = S.actors.get(pl.id), me = S.actors.get(a.id);
+      const add = c => sc.clips.push(Object.assign({ id: uid(), a: a.id, t }, c));
+      if (how === 'edge') {                                          // walks in from the edge of the map up to the player
+        const stop = besideOf(a, { x: Math.round(ps.x), y: Math.round(ps.y), x0: Math.round(me.x), y0: Math.round(me.y) }, t);
+        if (!stop) { toast(T('There is no free square next to the player'), 'err'); return; }
+        const e = edgeFor(a, stop, t); if (!e) { toast(T('There is no way from the edge of the map to the player'), 'err'); return; }
+        commit(() => { a.x = e.x; a.y = e.y; add({ k: 'show' }); add({ k: 'walk', t: t + 1, path: e.path, speed: 'walk' }); add({ k: 'face', t: t + 1 + e.path.length, dir: facing(stop, { x: Math.round(ps.x), y: Math.round(ps.y) }) }); });
+      } else if (how === 'flash') commit(() => { sc.clips.push({ id: uid(), a: 'scene', t, k: 'flash' }); add({ k: 'show', t: t + 1 }); });
+      else if (how === 'drop') commit(() => {                         // lands from above: it appears, the ground shakes, (a Pokémon) cries
+        add({ k: 'show' }); sc.clips.push({ id: uid(), a: 'scene', t, k: 'shake', strength: 3, len: 2 }); if (a.kind === 'mon') add({ k: 'cry', t: t + 1 });
+      });
+      else if (how === 'door') {                                      // comes out of a door of the map and takes a step out
+        const doors = (m.events.warp || []).map(w => MapsTab.api.evXY(w));
+        if (!doors.length) { toast(T('This map has no doors'), 'err'); return; }
+        const d = doors.sort((p, q) => (Math.abs(p[0] - me.x) + Math.abs(p[1] - me.y)) - (Math.abs(q[0] - me.x) + Math.abs(q[1] - me.y)))[0];
+        commit(() => { a.x = d[0]; a.y = d[1]; a.dir = 'down'; add({ k: 'show' }); add({ k: 'walk', t: t + 1, path: ['down'], speed: 'walk' }); });
+      }
+      toast(T('Added at the playhead: play to see it'));
+    }
+    // --- templates: a whole scene to start from ---
+    const GT = x => App.settings.rtl ? T(x) : x;                  // a default line of the game: Hebrew only in a Hebrew game
+    function template(kind) {
+      const pl = sc.actors.find(x => x.kind === 'player'), S0 = stateAt(sc, st, m, 0), ps = S0.actors.get(pl.id), P = { x: Math.round(ps.x), y: Math.round(ps.y) };
+      const fresh = (k, gfx, name, extra) => Object.assign({ id: uid(), kind: k, gfx, name, x: null, y: null, dir: 'down' }, extra);
+      const walkIn = (a, t0) => {                                    // from the edge to the square next to the player: [clips, the square]
+        const stop = besideOf(a, { x: P.x, y: P.y, x0: P.x, y0: P.y - 3 }, t0); if (!stop) return null;
+        const e = edgeFor(a, stop, t0); if (!e) return null;
+        a.x = e.x; a.y = e.y;
+        return { stop, path: e.path };
+      };
+      const c = (a, t, k, more) => Object.assign({ id: uid(), a: a.id || a, t, k }, more);
+      commit(() => {
+        if (kind === 'legend') {                                     // the ground shakes, it cries, comes to the player, "!", a battle
+          let sp = 144, gfx = 138; try { const ks = Legends.knownSprites(); if (ks.has(144)) gfx = ks.get(144); } catch (e) { /* none */ }
+          const a = fresh('mon', gfx, App.getLists().species[sp], { sp }); sc.actors.push(a);
+          const w = walkIn(a, 0); if (!w) { a.x = P.x; a.y = Math.max(0, P.y - 3); }
+          const n = w ? w.path.length : 0;
+          sc.clips.push(c('scene', 0, 'shake', { strength: 3, len: 3 }), c(a, 0, 'show'), c(a, 1, 'cry'), c(pl, 2, 'emote', { kind: '!', len: 2 }));
+          if (w) sc.clips.push(c(a, 3, 'walk', { path: w.path, speed: 'slow' }));
+          const tEnd = 3 + Math.ceil(n * SPEED.slow);
+          sc.clips.push(c(a, tEnd + 1, 'say', { text: GT('Kyaaa!'), len: 3 }), c(a, tEnd + 4, 'battle', { lvl: 50, legendary: true, cry: true }));
+          E.actor = a.id;
+        } else if (kind === 'rival') {                               // "!", the rival runs to the player, talks, battles
+          const a = fresh('new', 18, GT('The rival'), { after: 'gone' }); sc.actors.push(a);
+          const w = walkIn(a, 0);
+          sc.clips.push(c(pl, 0, 'emote', { kind: '!', len: 2 }), c(a, 0, 'show'));
+          let t = 2; if (w) { sc.clips.push(c(a, 2, 'walk', { path: w.path, speed: 'run' })); t += Math.ceil(w.path.length * SPEED.run); sc.clips.push(c(pl, t, 'face', { dir: facing(P, w.stop) })); }
+          sc.clips.push(c(a, t + 1, 'say', { text: GT('Hey! Wait! Let\'s battle!'), len: 3 }), c(a, t + 4, 'battle', {}), c(a, t + 8, 'say', { text: GT('Next time I\'ll win!'), len: 3 }));
+          if (w) sc.clips.push(c(a, t + 11, 'walk', { path: w.path.slice().reverse().map(d => ({ up: 'down', down: 'up', left: 'right', right: 'left' })[d]), speed: 'run' }));
+          E.actor = a.id;
+        } else if (kind === 'professor') {                           // "Wait!", the player turns, the professor walks up and talks
+          const a = fresh('new', 18, GT('The professor'), { after: 'gone' }); sc.actors.push(a);
+          const w = walkIn(a, 0);
+          sc.clips.push(c(a, 0, 'show'), c(a, 0, 'say', { text: GT('Wait! Don\'t go out yet!'), len: 3 }), c(pl, 3, 'emote', { kind: '!', len: 2 }));
+          let t = 5; if (w) { sc.clips.push(c(a, 5, 'walk', { path: w.path, speed: 'walk' })); t += w.path.length; sc.clips.push(c(pl, t, 'face', { dir: facing(P, w.stop) })); }
+          sc.clips.push(c(a, t + 1, 'say', { text: GT('It is dangerous to go alone. Come with me!'), len: 4 }));
+          E.actor = a.id;
+        } else if (kind === 'block') {                               // someone stands in the way and sends the player back
+          const a = fresh('new', 18, GT('A guard'), { after: 'stay' }); sc.actors.push(a);
+          a.x = P.x; a.y = Math.max(0, P.y - 1); a.dir = 'down';
+          sc.clips.push(c(a, 0, 'emote', { kind: '!', len: 2 }), c(a, 2, 'say', { text: GT('Stop! You can\'t go this way yet.'), len: 3 }), c(pl, 5, 'walk', { path: ['down'], speed: 'walk' }));
+          E.actor = a.id;
+        }
+        E.sel = null; E.t = 0;
+      });
+      toast(T('The template is in: change the characters, texts and sprites as you like'));
+    }
+
     // --- properties of the selected clip / character ---
     const props = h('div', { class: 'cs-props' });
     function drawProps() {
@@ -603,6 +706,7 @@ const Cutscene = (() => {
       const add = (...kids) => props.append(...kids.filter(k => k != null && k !== ''));
       const c = clipOf(E.sel), a = actorOf(E.actor);
       const field = (label, ...kids) => h('div', { class: 'st-field' }, h('label', {}, label), ...kids);
+      if (!sc.clips.length && !c) add(templateBox());
       const set = (fn) => commit(fn);
       if (c) {
         const ac = actorOf(c.a);
@@ -650,6 +754,8 @@ const Cutscene = (() => {
         else if (c.k === 'music') add(field(T('Song #'), h('input', { type: 'number', min: 0, max: 400, value: c.song || 0, style: { width: '80px' }, onchange: e => set(() => { c.song = Math.max(0, +e.target.value || 0); }) })), h('p', { class: 'muted' }, T('0 = back to the map music')));
         else if (c.k === 'sound') add(field(T('Sound #'), h('input', { type: 'number', min: 0, max: 300, value: c.se || 1, style: { width: '80px' }, onchange: e => set(() => { c.se = Math.max(0, +e.target.value || 1); }) })));
         else if (c.k === 'silence') add(h('p', { class: 'muted' }, T('The music fades out.')));
+        else if (c.k === 'weather') add(field(T('Weather'), h('select', { onchange: e => set(() => { c.w = +e.target.value; }) }, ...WEATHERS.map(([v, l]) => h('option', { value: v, selected: (c.w || 0) === v }, T(l))))),
+          h('p', { class: 'muted' }, T('It stays until the player leaves the map; choose "the map\'s own weather" to bring it back in the scene.')));
         else if (c.k === 'tiles') {
           const bv = c.block, pic = h('canvas', { class: 'pixel', width: 16, height: 16, style: { width: '32px', verticalAlign: 'middle', border: '1px solid var(--line)' } });
           if (bv != null) pic.getContext('2d').drawImage(MapsTab.api.metatileCanvas(m, bv & 0x3FF), 0, 0);
@@ -668,7 +774,7 @@ const Cutscene = (() => {
         const p = startOf(a, st, m);
         if (a.kind === 'scene') {
           add(h('h3', {}, '🎬 ' + T('The whole scene')), h('p', { class: 'muted' }, T('Effects of the whole screen: shaking, a flash, darkness, music and sounds, blocks of the map that change.')),
-            h('div', { class: 'cs-addrow' }, ...kindsFor(a).map(k => h('button', { onclick: () => addClip(k) }, KINDS[k][0] + ' ' + T(KINDS[k][1])))));
+            h('div', { class: 'cs-addrow' }, ...kindsFor(a).map(k => h('button', { onclick: () => addClip(k) }, KINDS[k][0] + ' ' + T(KINDS[k][1])))), templateBox());
           return;
         }
         add(h('h3', {}, nameOf(a)), h('div', { class: 'muted' }, { player: T('The player'), npc: T('A person on the map'), new: T('A new character for the scene'), mon: T('A Pokémon or a legendary') }[a.kind]));
@@ -679,6 +785,9 @@ const Cutscene = (() => {
         if (a.kind === 'new' || a.kind === 'mon') add(field(T('Looks like'), h('button', { onclick: () => Objects.gallery(a.gfx, v => set(() => { a.gfx = v; })) }, '🖼 ' + Objects.gfxName(a.gfx))));
         if (a.kind !== 'npc') add(field(T('Starts at'), h('div', { class: 'row' }, h('span', {}, '(' + p.x + ', ' + p.y + ')'), h('button', { class: E.placing === a.id ? 'sel' : '', onclick: () => { E.placing = a.id; toast(T('Click on the map where the character starts')); drawProps(); } }, '👆 ' + T('Pick on the map')))));
         else add(h('p', { class: 'muted' }, Tf('Starts where they stand on the map ({x}, {y}).', { x: p.x, y: p.y })));
+        if (a.kind === 'mon' || a.kind === 'new') add(field(T('How it arrives (at the playhead)'), h('div', { class: 'cs-addrow' },
+          h('button', { onclick: () => arrive(a, 'edge') }, '🏃 ' + T('walks in from the edge')), h('button', { onclick: () => arrive(a, 'flash') }, '✨ ' + T('appears in a flash')),
+          h('button', { onclick: () => arrive(a, 'drop') }, '🪂 ' + T('lands from above')), h('button', { onclick: () => arrive(a, 'door') }, '🚪 ' + T('comes out of a door')))));
         if (a.kind === 'mon' || a.kind === 'new') add(h('label', {}, h('input', { type: 'checkbox', checked: !!a.fly, onchange: e => set(() => { a.fly = e.target.checked; }) }), ' 🪽 ' + T('Flies (goes over walls, trees and water)')));
         add(field(T('Looks at first'), h('select', { onchange: e => set(() => { a.dir = e.target.value; }) }, ...Object.keys(ARROW).map(d => h('option', { value: d, selected: p.dir === d }, ARROW[d] + ' ' + T(d))))));
         add(h('div', { class: 'cs-addrow' }, ...kindsFor(a).map(k => h('button', { title: T(KINDS[k][1]), onclick: () => addClip(k) }, KINDS[k][0] + ' ' + T(KINDS[k][1])))),
@@ -686,6 +795,12 @@ const Cutscene = (() => {
           h('p', { class: 'muted' }, '🖱 ' + T('To make them walk: drag from the character on the map to where they go. The way goes around walls, water and people by itself.')),
           a.kind !== 'player' ? h('button', { class: 'danger', onclick: async () => { if (!(await ask(Tf('Remove {a} and their actions from the scene?', { a: nameOf(a) }), { danger: true }))) return; commit(() => { sc.clips = sc.clips.filter(c => c.a !== a.id); sc.actors = sc.actors.filter(x => x !== a); E.actor = 'player'; }); } }, '✕ ' + T('Remove from the scene')) : null);
       }
+    }
+    function templateBox() {
+      const go = async k => { if (sc.clips.length && !(await ask(T('Add the template to this scene? (what is there stays)')))) return; template(k); };
+      return h('div', { class: 'cs-templates' }, h('b', {}, '📋 ' + T('Start from a template')),
+        h('div', { class: 'cs-addrow' }, h('button', { onclick: () => go('legend') }, '🐉 ' + T('A legendary arrives')), h('button', { onclick: () => go('rival') }, '🥊 ' + T('The rival appears')),
+          h('button', { onclick: () => go('professor') }, '🧑‍🔬 ' + T('The professor calls you')), h('button', { onclick: () => go('block') }, '🚧 ' + T('Someone blocks the way'))));
     }
     const duplicate = () => { const c = clipOf(E.sel); if (!c) return; const d = Object.assign(clone(c), { id: uid(), t: c.t + dur(c) }); commit(() => { sc.clips.push(d); E.sel = d.id; }); };
     const del = () => { const c = clipOf(E.sel); if (!c) return; commit(() => { sc.clips = sc.clips.filter(x => x !== c); E.sel = null; }); };

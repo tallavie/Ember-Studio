@@ -6,13 +6,21 @@
 const Script = (() => {
   const R = () => App.rom;
   const VAR_RESULT = 0x800D, PLAYER = 0xFF;
-  // FireRed movement actions (verified in mGBA, see HANDOFF)
+  // movement actions (FireRed verified in mGBA, see HANDOFF; Emerald from its own scripts, checked in mGBA)
   const DIRS = { down: 0, up: 1, left: 2, right: 3 };
-  const MOVE = {
+  const MOVE_FR = {
     face: d => 0x00 + DIRS[d], walkSlow: d => 0x0C + DIRS[d], walk: d => 0x10 + DIRS[d], jump: d => 0x14 + DIRS[d], walkFast: d => 0x1D + DIRS[d],
     turn: d => 0x2D + DIRS[d], delay16: 0x1C, delay8: 0x1B, delay4: 0x1A,
     emote: { '!': 0x62, '?': 0x63, '♥': 0x64 }, invisible: 0x60, visible: 0x61, end: 0xFE,
   };
+  const MOVE_EM = {
+    face: d => 0x00 + DIRS[d], walkSlow: d => 0x04 + DIRS[d], walk: d => 0x08 + DIRS[d], jump: d => 0x0C + DIRS[d], walkFast: d => 0x15 + DIRS[d],
+    turn: d => 0x25 + DIRS[d], delay16: 0x14, delay8: 0x13, delay4: 0x12,
+    emote: { '!': 0x56, '?': 0x57, '♥': 0x58 }, invisible: 0x54, visible: 0x55, end: 0xFE,
+  };
+  const M = () => App.game && App.game.isEmerald ? MOVE_EM : MOVE_FR;
+  // specials the scene editor uses: DrawWholeMapView, ShakeScreen, StartLegendaryBattle, GetBattleOutcome, the flag of a special wild battle
+  const SPECIALS = { fr: { redraw: 0x8E, shake: 0x136, legendary: 0x138, outcome: 0xB4, legFlag: 0x807 }, em: { redraw: 0x91, shake: 0x138, legendary: 0x13A, outcome: 0xB7, legFlag: 0x8C1 } };
 
   // ---------- assembler ----------
   class Asm {
@@ -58,7 +66,7 @@ const Script = (() => {
     givemon: (a, sp, lvl, item = 0) => a.b(0x79).h(sp).b(lvl).h(item).w(0).w(0).b(0),
     wildbattle: (a, sp, lvl) => a.b(0xB6).h(sp).b(lvl).h(0).b(0xB7),
     trainerNoIntro: (a, id, defeat) => a.b(0x5C, 0x03).h(id).h(0).data(text(defeat)),
-    move: (a, who, actions) => a.b(0x4F).h(who).data(Uint8Array.from([...actions, MOVE.end])),
+    move: (a, who, actions) => a.b(0x4F).h(who).data(Uint8Array.from([...actions, M().end])),
     waitmove: (a, who = 0) => a.b(0x51).h(who),
     removeobject: (a, id) => a.b(0x53).h(id), addobject: (a, id) => a.b(0x55).h(id),
     delay: (a, frames) => a.b(0x28).h(frames),
@@ -96,15 +104,15 @@ const Script = (() => {
       case 'if_stage': branch(a, ctx, () => C.compare(a, ctx.stageVar, bl.value), ({ '<': '>=', '<=': '>', '=': '!=', '>=': '<', '>': '<=', '!=': '=' })[bl.cmp || '>='], bl.then, bl.else); break;
       case 'set_stage': C.setvar(a, ctx.stageVar, bl.value); break;
       case 'move': {
-        const id = whoId(bl.who, ctx), sp = bl.speed === 'fast' ? MOVE.walkFast : bl.speed === 'slow' ? MOVE.walkSlow : MOVE.walk;
-        const acts = (bl.steps || []).map(d => sp(d)); if (bl.face) acts.push(MOVE.turn(bl.face));
+        const MV = M(), id = whoId(bl.who, ctx), sp = bl.speed === 'fast' ? MV.walkFast : bl.speed === 'slow' ? MV.walkSlow : MV.walk;
+        const acts = (bl.steps || []).map(d => sp(d)); if (bl.face) acts.push(MV.turn(bl.face));
         if (acts.length) { C.move(a, id, acts); if (bl.wait !== false) C.waitmove(a, id); }
         break;
       }
-      case 'face': { const id = whoId(bl.who, ctx); C.move(a, id, [MOVE.turn(bl.dir || 'down')]); C.waitmove(a, id); break; }
-      case 'jump': { const id = whoId(bl.who, ctx); C.move(a, id, [MOVE.jump(bl.dir || 'down')]); C.waitmove(a, id); break; }
+      case 'face': { const id = whoId(bl.who, ctx); C.move(a, id, [M().turn(bl.dir || 'down')]); C.waitmove(a, id); break; }
+      case 'jump': { const id = whoId(bl.who, ctx); C.move(a, id, [M().jump(bl.dir || 'down')]); C.waitmove(a, id); break; }
       case 'face_player': C.faceplayer(a); break;
-      case 'emote': { const id = whoId(bl.who, ctx); C.move(a, id, [MOVE.emote[bl.kind || '!'] || MOVE.emote['!']]); C.waitmove(a, id); break; }
+      case 'emote': { const id = whoId(bl.who, ctx), MV = M(); C.move(a, id, [MV.emote[bl.kind || '!'] || MV.emote['!']]); C.waitmove(a, id); break; }
       case 'wait': C.delay(a, Math.max(1, Math.round((bl.seconds || 1) * 60))); break;
       case 'hide': C.removeobject(a, whoId(bl.who, ctx)); if (bl.flag) C.setflag(a, bl.flag); break;
       case 'show': if (bl.flag) C.clearflag(a, bl.flag); C.addobject(a, whoId(bl.who, ctx)); break;
@@ -161,5 +169,5 @@ const Script = (() => {
     for (let v = 0x40F0; v > 0x4060; v--) if (!used.has(v)) return v;
     throw new Error('No free variable left');
   }
-  return { Asm, C, MOVE, compile, emit: steps, free, addFrameScript, freeVar, VAR_RESULT, PLAYER };
+  return { Asm, C, get MOVE() { return M(); }, get SPECIAL() { return App.game && App.game.isEmerald ? SPECIALS.em : SPECIALS.fr; }, compile, emit: steps, free, addFrameScript, freeVar, VAR_RESULT, PLAYER };
 })();

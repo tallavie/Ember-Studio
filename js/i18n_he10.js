@@ -122,4 +122,17 @@ Object.assign(I18N.dicts.he, {
   '{PLAYER} received {who}!': '{PLAYER} קיבל את {who}!', '{who} cannot do this': '{who} לא יכולה לעשות את זה',
   'Battle': 'קרב', 'Give': 'נתינה', 'Shake the screen': 'רעידת מסך', 'Flash': 'הבזק', 'Fade': 'החשכה', 'Change blocks': 'שינוי אריחים', 'Music': 'מוזיקה', 'Ask yes / no': 'שאלת כן / לא',
   'A trainer battle': 'קרב מאמנים',
+  // scene editor: templates, arrivals, weather
+  'A guard': 'שומר', 'A legendary arrives': 'אגדי מגיע', 'Add the template to this scene? (what is there stays)': 'להוסיף את התבנית לסצנה הזו? (מה שכבר יש נשאר)',
+  'Added at the playhead: play to see it': 'נוסף במקום של סמן הזמן: מנגנים כדי לראות', "Hey! Wait! Let's battle!": 'היי! חכה! בוא נילחם!', 'How it arrives (at the playhead)': 'איך היא מגיעה (בסמן הזמן)',
+  'It is dangerous to go alone. Come with me!': 'מסוכן ללכת לבד. בוא איתי!',
+  "It stays until the player leaves the map; choose \"the map's own weather\" to bring it back in the scene.": 'מזג האוויר נשאר עד שהשחקן יוצא מהמפה; אפשר לבחור "מזג האוויר של המפה" כדי להחזיר אותו בתוך הסצנה.',
+  'Kyaaa!': 'קיאאא!', "Next time I'll win!": 'בפעם הבאה אני אנצח!', 'Someone blocks the way': 'מישהו חוסם את הדרך', 'Start from a template': 'להתחיל מתבנית',
+  "Stop! You can't go this way yet.": 'עצור! אי אפשר לעבור כאן עדיין.', 'The professor calls you': 'הפרופסור קורא לך', 'The rival appears': 'היריב מופיע', 'The rival': 'היריב', 'The professor': 'הפרופסור',
+  'The template is in: change the characters, texts and sprites as you like': 'התבנית נוספה: אפשר לשנות דמויות, טקסטים ותמונות כרצונך',
+  'There is no free square next to the player': 'אין משבצת פנויה ליד השחקן', 'There is no way from the edge of the map to the player': 'אין דרך מקצה המפה אל השחקן',
+  'This map has no doors': 'במפה הזו אין דלתות', "Wait! Don't go out yet!": 'חכה! אל תצא עדיין!',
+  'appears in a flash': 'מופיעה בהבזק', 'comes out of a door': 'יוצאת מדלת', 'lands from above': 'נוחתת מלמעלה', 'walks in from the edge': 'נכנסת מהקצה',
+  'Weather': 'מזג אוויר', "the map's own weather": 'מזג האוויר של המפה', 'sunny': 'שמש חזקה', 'rain': 'גשם', 'thunderstorm': 'סופת רעמים', 'downpour': 'מבול', 'snow': 'שלג',
+  'fog': 'ערפל', 'sandstorm': 'סופת חול', 'volcanic ash': 'אפר געשי', 'dark clouds': 'עננים כהים',
 });

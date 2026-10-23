@@ -508,3 +508,4 @@ html:not([dir="rtl"]) .cs-who { direction: ltr; justify-content: flex-start; }
 .cs-menu button { text-align: start; }
 .cs-open { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
 .cs-scene-ic { display: inline-flex; align-items: center; justify-content: center; font-size: 22px; }
+.cs-templates { background: var(--sel); border-radius: 8px; padding: 8px; margin: 8px 0; }

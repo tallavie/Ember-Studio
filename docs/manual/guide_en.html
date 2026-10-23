@@ -27,7 +27,7 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 .tocpage li li { padding-inline-start: 18px; font-size: 9.5pt; font-weight: 400; margin: 1px 0; }
 .tocpage a { color: #1d2230; text-decoration: none; }
 </style></head><body>
-<div class="cover"><img src="../../ember/icon.png"><h1>Ember Studio</h1><div class="sub">User Guide</div><div class="ver">Version 0.1.0</div></div>
+<div class="cover"><img src="../../ember/icon.png"><h1>Ember Studio</h1><div class="sub">User Guide</div><div class="ver">Version 0.4.0</div></div>
 <div class="tocpage"><h1>Contents</h1><div class="toc">
 <ul>
 <li><a href="#welcome">Welcome</a><ul>
@@ -72,6 +72,7 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 <li><a href="#player-view">👁 Player view</a></li>
 <li><a href="#going-through-doors">Going through doors</a></li>
 <li><a href="#play-from-here-world-view">▶ Play from here (world view)</a></li>
+<li><a href="#where-maps-meet">🧩 Where maps meet</a></li>
 <li><a href="#wild-pokémon">Wild Pokémon</a></li>
 </ul>
 </li>
@@ -104,9 +105,19 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 <li><a href="#the-games-own-story">The game's own story</a></li>
 </ul>
 </li>
+<li><a href="#animated-scenes">Animated scenes</a><ul>
+<li><a href="#making-a-scene">Making a scene</a></li>
+<li><a href="#the-timeline">The timeline</a></li>
+<li><a href="#walking">Walking</a></li>
+<li><a href="#what-characters-can-do">What characters can do</a></li>
+<li><a href="#after-the-scene">After the scene</a></li>
+<li><a href="#trying-it">Trying it</a></li>
+</ul>
+</li>
 <li><a href="#pokémon">Pokémon</a><ul>
 <li><a href="#starters-gift-pokémon-and-fixed-battles">Starters, gift Pokémon and fixed battles</a></li>
 <li><a href="#legendaries-in-the-world">Legendaries in the world</a></li>
+<li><a href="#animation-emerald">Animation (Emerald)</a></li>
 </ul>
 </li>
 <li><a href="#trainers_1">Trainers</a><ul>
@@ -187,7 +198,7 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 <p><strong>Tip:</strong> The pictures in this guide come from the example game <em>Ember Quest</em>, made with the wizard. Your screens will look the same, with your own names and Pokémon.</p>
 </blockquote>
 <h2 id="important-the-rom">Important: the ROM</h2>
-<p>Ember Studio does <strong>not</strong> include any Nintendo game. You need your own copy of <strong>Pokémon FireRed (US) version 1.1</strong>, as a <code>.gba</code> file. The original file is never changed: your project stores only <em>your changes</em>. That means you can share a project, or a patch made from it, without sharing the game itself.</p>
+<p>Ember Studio does <strong>not</strong> include any Nintendo game. You need your own copy of <strong>Pokémon FireRed (US) version 1.1</strong> or <strong>Pokémon Emerald (US)</strong>, as a <code>.gba</code> file. Most of the editor works with both. Where something works only in one of them, this guide says so. The original file is never changed: your project stores only <em>your changes</em>. That means you can share a project, or a patch made from it, without sharing the game itself.</p>
 <h1 id="installing-and-starting">Installing and starting</h1>
 <h2 id="what-you-need">What you need</h2>
 <ul>
@@ -197,7 +208,7 @@ blockquote { margin: 10px 0; padding: 6px 12px; background: #fff7e6; border-inli
 <li>About 200 MB of free disk space.</li>
 </ul>
 <h2 id="installing">Installing</h2>
-<p>Ember Studio is a single file, <strong><code>EmberStudio.exe</code></strong>, so there is nothing to install. Download it from the project's <em>Releases</em> page on GitHub and put it in any folder, for example <code>Documents\Ember Studio</code>. Then double-click it.</p>
+<p>Ember Studio is a single file, for example <strong><code>EmberStudio-0.4.0.exe</code></strong> (the version is in the name), so there is nothing to install. Download it from the project's <em>Releases</em> page on GitHub and put it in any folder, for example <code>Documents\Ember Studio</code>. Then double-click it.</p>
 <h3 id="the-windows-protected-your-pc-message">The "Windows protected your PC" message</h3>
 <p>The first time you run it, Windows SmartScreen may show a blue window saying the app is not recognised. This happens with new programs from small open-source projects, not because something is wrong.</p>
 <ol>
@@ -471,6 +482,15 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <li>Press the button.</li>
 <li>Click a spot on the map. The game starts there.</li>
 </ol>
+<h2 id="where-maps-meet">🧩 Where maps meet</h2>
+<p>The world view checks all the time that connected maps fit together where they meet, the way the player will see it. It learns from the original game which blocks stand next to which, and marks what the game never does:</p>
+<ul>
+<li><strong>half a tree, a fence or a cliff</strong> cut off at the edge (orange);</li>
+<li><strong>water against land with no shore</strong> (orange);</li>
+<li><strong>a road that runs into a wall</strong> on the other map, or no way across at all (red).</li>
+</ul>
+<p>A <strong>!</strong> on the line between two maps opens the problem, with a picture before and after the fix. The fix changes only the map you built: a few blocks, or the map grows by up to 4 rows toward its neighbour, and the new rows close the edge naturally. People, doors and connections move with the maps. The fix is one Ctrl+Z, and <strong>Ignore this connection</strong> stops checking it. The side panel lists everything under <strong>🧩 Where maps meet</strong>.</p>
+<p>Only places you changed are marked: the game's own dead ends stay unmarked.</p>
 <h2 id="wild-pokémon">Wild Pokémon</h2>
 <figure><img src="img/en/world-wild.png" alt="Painting wild Pokémon"><figcaption>Painting wild Pokémon</figcaption></figure>
 <p>Choose a map and open the <strong>🌿 Wild</strong> tab in the side panel. For each kind of encounter (<em>grass / cave</em>, <em>surfing</em>, <em>fishing</em>, <em>rock smash</em>) you can:</p>
@@ -726,6 +746,10 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <td>🥊 <strong>Rival battle</strong></td>
 <td>A battle with your rival, whose team depends on the starter the player chose.</td>
 </tr>
+<tr>
+<td>🎞 <strong>An animated scene</strong></td>
+<td>A scene you build like an animation, with a timeline. See <em>Animated scenes</em>.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="writing-a-step">Writing a step</h2>
@@ -735,7 +759,7 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <li><strong>Who</strong> or <strong>Where</strong>: the person, or the map and spot. Use <strong>👆 Pick on the map</strong>.</li>
 <li><strong>What happens</strong>: blocks, exactly like in the blocks editor.</li>
 </ol>
-<p>Each step has a <strong>Test from this step</strong> button (▶). It starts the game right before that step, with the story stage already set. You see exactly what a player sees at that point, without playing the whole game up to it.</p>
+<p>Each step has a <strong>Test from this step</strong> button (▶). It puts the whole story into the game first (also steps you added since the last time), then starts the game right before that step, with the story stage already set. The steps after it follow as they would in the game. You see exactly what a player sees at that point, without playing the whole game up to it.</p>
 <h2 id="choices-and-endings">Choices and endings</h2>
 <figure><img src="img/en/story-choice.png" alt="A choice"><figcaption>A choice</figcaption></figure>
 <p>A <strong>choice</strong> step asks a yes/no question. Under it there are two columns:</p>
@@ -791,6 +815,80 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <blockquote>
 <p><strong>Tip:</strong> Undo is exact. Untick a skip or delete your chapter, put the story into the game again, and the game's scripts are back byte for byte.</p>
 </blockquote>
+<h1 id="animated-scenes">Animated scenes</h1>
+<p>An <strong>🎞 animated scene</strong> is a story step built like an animation: a legendary that lands in town, the rival who runs up to you, the professor who calls you back. Every character gets a row on a <strong>timeline</strong>, and you put on each row what they do and when. The map above shows the scene at the moment under the playhead.</p>
+<figure><img src="img/en/scene.png" alt="The scene editor"><figcaption>The scene editor</figcaption></figure>
+<h2 id="making-a-scene">Making a scene</h2>
+<ol>
+<li>In <strong>📖 Story</strong>, add a step and choose <strong>🎞 An animated scene</strong>.</li>
+<li>Choose when it <strong>starts</strong>: when the player arrives on the map, steps on a square, or talks to someone. Then choose the map.</li>
+<li>Press <strong>🎞 Open the scene editor</strong>. It opens over the whole window.</li>
+</ol>
+<p>An empty scene offers four <strong>📋 templates</strong>: <em>a legendary arrives</em>, <em>the rival appears</em>, <em>the professor calls you</em> and <em>someone blocks the way</em>. A template places the characters around the player, has them come in from the edge of the map by a free way, and fills the timeline. Then change whatever you like.</p>
+<h2 id="the-timeline">The timeline</h2>
+<ul>
+<li>Time is counted in <strong>steps</strong>: one step is the time it takes to walk one square. So what you see in the editor is what the game does.</li>
+<li><strong>+ Add</strong> (next to <em>Characters</em>) adds the player, a person who is already on the map, a new character for the scene, or a Pokémon or legendary.</li>
+<li><strong>Double-click a row</strong> (or right-click it) to add an action at that time. A character's panel on the side has the same buttons.</li>
+<li><strong>Drag a clip</strong> to move it in time, or to another character's row. Drag its right edge to make it longer.</li>
+<li><strong>Click the ruler</strong> to move the playhead and see that moment on the map. <strong>Space</strong> plays the scene at the game's speed.</li>
+<li><strong>Ctrl+Z</strong> / <strong>Ctrl+Y</strong> undo and redo. <strong>Ctrl+C</strong>, <strong>Ctrl+V</strong> and <strong>Ctrl+D</strong> copy, paste and duplicate. <strong>Delete</strong> removes the selected clip. <strong>Ctrl + wheel</strong> zooms the timeline.</li>
+<li>Two movements of the same character at the same time, or a walk into a wall, are marked in red, and the story's check lists them.</li>
+</ul>
+<h2 id="walking">Walking</h2>
+<p><strong>Drag from a character on the map to where they should go.</strong> The way goes around walls, trees, water, ledges and people by itself, with as few turns as it can. Drag the yellow square at the end of a walk to make it longer. If there is no way there, the line turns red and nothing changes.</p>
+<p>A Pokémon or a new character can <strong>🪽 fly</strong>: then the way goes straight over everything.</p>
+<p><strong>How it arrives</strong> (in the character's panel) adds a ready-made arrival at the playhead: <em>walks in from the edge</em>, <em>appears in a flash</em>, <em>lands from above</em> (the ground shakes, a Pokémon cries) or <em>comes out of a door</em>.</p>
+<h2 id="what-characters-can-do">What characters can do</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🚶 Walk, ⤴ Jump, ↻ Turn, ⏱ Wait</td>
+<td>Moving around. Walking can be normal, running or slow.</td>
+</tr>
+<tr>
+<td>❗ Emote</td>
+<td>! ? or ♥ above the head.</td>
+</tr>
+<tr>
+<td>💬 Say</td>
+<td>The game's message box with the speaker's name. The scene waits until the player presses A.</td>
+</tr>
+<tr>
+<td>❓ Ask yes / no</td>
+<td>YES goes on. For NO choose: go on the same, jump to a step of the scene, end the scene, or stop it so it comes again next time. The menu at the top chooses the answer the preview takes.</td>
+</tr>
+<tr>
+<td>👻 Disappear, ✨ Appear</td>
+<td>Someone who appears later is not there at first.</td>
+</tr>
+<tr>
+<td>⚔ Battle</td>
+<td>On a Pokémon's row: a battle with it, with legendary music and its cry. Won or caught, it is gone for good. Ran away, it stays there, and talking to it starts the battle again. Lost, the player blacks out and the scene comes again. On a person's row: a trainer battle.</td>
+</tr>
+<tr>
+<td>🎁 Give</td>
+<td>On the player's row: a Pokémon or an item.</td>
+</tr>
+<tr>
+<td>🔊 Cry</td>
+<td>On a Pokémon's row (choose which Pokémon it is in its panel).</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>🎬 The whole scene</strong> row holds what belongs to no one: <strong>📳 shaking</strong> (a little, medium or strong), <strong>⚡ a flash</strong>, <strong>🌑 darkness</strong> and coming back from it, <strong>🌦 weather</strong>, <strong>🎵 music</strong>, <strong>🔔 a sound</strong>, <strong>🔇 silence</strong>, and <strong>🧱 blocks of the map that change</strong>: take a block from the map (ground, an open door), then click the squares. They can stay changed after the scene.</p>
+<p>Shaking, cries, music and weather go on while everyone moves. Text, questions, battles, gifts, flashes and darkness stop the scene until they are done.</p>
+<h2 id="after-the-scene">After the scene</h2>
+<p>In each character's panel, <strong>After the scene</strong> says what happens next: <em>stays where it ended</em> (also when the player comes back), <em>goes back to its place</em> (people of the map) or <em>is gone for good</em>.</p>
+<h2 id="trying-it">Trying it</h2>
+<p><strong>🎮 Play in the game</strong> (in the editor and in the step) puts the story into the game and starts it right before the scene. Text the editor writes for you, such as a template's lines, is in Hebrew only when your game shows Hebrew.</p>
+<p>Scenes work in FireRed and in Emerald.</p>
 <h1 id="pokémon">Pokémon</h1>
 <figure><img src="img/en/pokemon.png" alt="The Pokémon tab"><figcaption>The Pokémon tab</figcaption></figure>
 <p>Choose a Pokémon from the list (you can search by name or number). You can change:</p>
@@ -821,6 +919,14 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 </ul>
 <p><strong>➕ New legendary</strong> puts a new one on any map: choose the Pokémon, the level, the map and the spot. The player talks to it, hears its cry and battles it; afterwards it is gone, caught or not. If the Pokémon has no sprite of its own, one is made from its picture.</p>
 <p><strong>💾 Export Pokémon changes</strong> saves your Pokémon edits as a file you can share or import into another project.</p>
+<h2 id="animation-emerald">Animation (Emerald)</h2>
+<p>In Emerald, every Pokémon moves when it appears in battle. The <strong>Animation</strong> tab of a Pokémon edits it:</p>
+<ul>
+<li><strong>The frames</strong>: the front picture has two (up to four in the game). A slider moves between them in the same pixel editor, so you can touch up one frame against the other. <em>Show the other frame faintly</em> draws it under the one you edit. You can import a picture into a frame, copy the other frame, swap them, and save both at once.</li>
+<li><strong>The sequence</strong>: which frame shows, and for how long.</li>
+<li><strong>The motion</strong> when it appears, the <strong>delay</strong> before it, and the motion <strong>from behind</strong> (when it is the player's Pokémon).</li>
+</ul>
+<p>The preview plays it beside the editor, and <strong>Test in battle</strong> shows it in the game.</p>
 <h1 id="trainers_1">Trainers</h1>
 <figure><img src="img/en/trainers.png" alt="The Trainers tab"><figcaption>The Trainers tab</figcaption></figure>
 <p>On the left is the list of all trainers. You can filter it to show only <strong>gym leaders and rivals</strong>, by <strong>map</strong>, or by <strong>class</strong>. For each trainer you can change:</p>
@@ -1030,8 +1136,13 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <td><strong>▶ Test from this step</strong> (story)</td>
 <td>Right before that step of the story, with the story stage set.</td>
 </tr>
+<tr>
+<td><strong>🎮 Play in the game</strong> (an animated scene)</td>
+<td>Right before the scene.</td>
+</tr>
 </tbody>
 </table>
+<p>A test starts right on the spot: the intro and choosing a name run quickly in the background first. In a test the player is called <strong>TEST</strong>.</p>
 <h2 id="keys">Keys</h2>
 <table>
 <thead>
@@ -1078,7 +1189,7 @@ python editor/ember/app.py         # the same window as the EXE (pip install pyw
 <li><strong>✕</strong> closes.</li>
 </ul>
 <h2 id="the-test-team">The test team</h2>
-<p><strong>▶ Play from here</strong> and <strong>Test from this step</strong> give the player a test team, so you can battle right away. Change it with the <strong>🎒</strong> button: choose Pokémon and levels.</p>
+<p><strong>▶ Play from here</strong> and <strong>Test from this step</strong> give the player a test team, so you can battle right away. By default it is <strong>one random Pokémon at level 50</strong>, a new one in every test. To choose your own, press <strong>🎒</strong>, untick <em>A random Pokémon at level 50</em>, and choose Pokémon and levels.</p>
 <blockquote>
 <p><strong>Tip:</strong> The test only changes a copy of the game in memory. Your project is not touched.</p>
 </blockquote>

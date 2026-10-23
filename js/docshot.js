@@ -43,6 +43,14 @@ const DocShot = (() => {
     character: async () => { const blob = await (await fetch('docs/manual/assets/hero.png')).blob(); await ArtStudio._load(blob, 'hero.png'); App.show('graphics'); await wait(200); const b = $b('🧍 Characters & title screen'); if (b) b.click(); await wait(500); return null; },
     music: async () => { App.show('music'); await wait(1500); return null; },
     doctor: async () => { App.show('doctor'); await wait(1500); return null; },
+    // the scene editor with the "a legendary arrives" template, the playhead on the legendary's walk (not saved in the project)
+    scene: async () => {
+      const st = { id: 'docshot', type: 'cutscene', title: T('A legendary arrives'), trig: 'arrive', g: 3, n: 0, blocks: [] }, sc = Cutscene.scene(st), pl = sc.actors.find(a => a.kind === 'player'); pl.x = 12; pl.y = 12;
+      const ed = Cutscene.open(st, {}); await wait(300);
+      const b = [...document.querySelectorAll('.cs-templates button')].find(x => x.textContent.startsWith('🐉')); if (b) b.click(); await wait(300);
+      ed.E.t = 7; window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' })); await wait(300);
+      return null;
+    },
     emulator: async () => { MapsTab.api.open(3, 0); await Emu.playFrom({ g: 3, n: 0, x: 10, y: 12, team: Emu.team(), label: '3.0 (10, 12)' }); await wait(4000); return null; },
   };
   // the guide is public: personal folders become generic ones

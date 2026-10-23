@@ -28,7 +28,7 @@ You don't need to know programming, hex editing or assembly. Everything is done 
 
 ## Important: the ROM
 
-Ember Studio does **not** include any Nintendo game. You need your own copy of **Pokémon FireRed (US) version 1.1**, as a `.gba` file. The original file is never changed: your project stores only *your changes*. That means you can share a project, or a patch made from it, without sharing the game itself.
+Ember Studio does **not** include any Nintendo game. You need your own copy of **Pokémon FireRed (US) version 1.1** or **Pokémon Emerald (US)**, as a `.gba` file. Most of the editor works with both. Where something works only in one of them, this guide says so. The original file is never changed: your project stores only *your changes*. That means you can share a project, or a patch made from it, without sharing the game itself.
 
 # Installing and starting
 
@@ -41,7 +41,7 @@ Ember Studio does **not** include any Nintendo game. You need your own copy of *
 
 ## Installing
 
-Ember Studio is a single file, **`EmberStudio.exe`**, so there is nothing to install. Download it from the project's *Releases* page on GitHub and put it in any folder, for example `Documents\Ember Studio`. Then double-click it.
+Ember Studio is a single file, for example **`EmberStudio-0.4.0.exe`** (the version is in the name), so there is nothing to install. Download it from the project's *Releases* page on GitHub and put it in any folder, for example `Documents\Ember Studio`. Then double-click it.
 
 ### The "Windows protected your PC" message
 
@@ -306,6 +306,18 @@ It works the same way as in the map editor:
 2. Press the button.
 3. Click a spot on the map. The game starts there.
 
+## 🧩 Where maps meet
+
+The world view checks all the time that connected maps fit together where they meet, the way the player will see it. It learns from the original game which blocks stand next to which, and marks what the game never does:
+
+- **half a tree, a fence or a cliff** cut off at the edge (orange);
+- **water against land with no shore** (orange);
+- **a road that runs into a wall** on the other map, or no way across at all (red).
+
+A **!** on the line between two maps opens the problem, with a picture before and after the fix. The fix changes only the map you built: a few blocks, or the map grows by up to 4 rows toward its neighbour, and the new rows close the edge naturally. People, doors and connections move with the maps. The fix is one Ctrl+Z, and **Ignore this connection** stops checking it. The side panel lists everything under **🧩 Where maps meet**.
+
+Only places you changed are marked: the game's own dead ends stay unmarked.
+
 ## Wild Pokémon
 
 ![Painting wild Pokémon](img/en/world-wild.png)
@@ -469,6 +481,7 @@ Click a step to edit it. Its settings open on the right.
 | 🎬 **A scene when you arrive** | A scene runs as soon as the player arrives on a map, for example a cutscene in a new town. |
 | ❓ **A choice (yes / no)** | Someone asks a question, and the story splits into two paths. |
 | 🥊 **Rival battle** | A battle with your rival, whose team depends on the starter the player chose. |
+| 🎞 **An animated scene** | A scene you build like an animation, with a timeline. See *Animated scenes*. |
 
 ## Writing a step
 
@@ -478,7 +491,7 @@ For most steps you fill in:
 2. **Who** or **Where**: the person, or the map and spot. Use **👆 Pick on the map**.
 3. **What happens**: blocks, exactly like in the blocks editor.
 
-Each step has a **Test from this step** button (▶). It starts the game right before that step, with the story stage already set. You see exactly what a player sees at that point, without playing the whole game up to it.
+Each step has a **Test from this step** button (▶). It puts the whole story into the game first (also steps you added since the last time), then starts the game right before that step, with the story stage already set. The steps after it follow as they would in the game. You see exactly what a player sees at that point, without playing the whole game up to it.
 
 ## Choices and endings
 
@@ -556,6 +569,65 @@ Now the rival battle does not start until your steps are done. Each such chapter
 
 > **Tip:** Undo is exact. Untick a skip or delete your chapter, put the story into the game again, and the game's scripts are back byte for byte.
 
+# Animated scenes
+
+An **🎞 animated scene** is a story step built like an animation: a legendary that lands in town, the rival who runs up to you, the professor who calls you back. Every character gets a row on a **timeline**, and you put on each row what they do and when. The map above shows the scene at the moment under the playhead.
+
+![The scene editor](img/en/scene.png)
+
+## Making a scene
+
+1. In **📖 Story**, add a step and choose **🎞 An animated scene**.
+2. Choose when it **starts**: when the player arrives on the map, steps on a square, or talks to someone. Then choose the map.
+3. Press **🎞 Open the scene editor**. It opens over the whole window.
+
+An empty scene offers four **📋 templates**: *a legendary arrives*, *the rival appears*, *the professor calls you* and *someone blocks the way*. A template places the characters around the player, has them come in from the edge of the map by a free way, and fills the timeline. Then change whatever you like.
+
+## The timeline
+
+- Time is counted in **steps**: one step is the time it takes to walk one square. So what you see in the editor is what the game does.
+- **+ Add** (next to *Characters*) adds the player, a person who is already on the map, a new character for the scene, or a Pokémon or legendary.
+- **Double-click a row** (or right-click it) to add an action at that time. A character's panel on the side has the same buttons.
+- **Drag a clip** to move it in time, or to another character's row. Drag its right edge to make it longer.
+- **Click the ruler** to move the playhead and see that moment on the map. **Space** plays the scene at the game's speed.
+- **Ctrl+Z** / **Ctrl+Y** undo and redo. **Ctrl+C**, **Ctrl+V** and **Ctrl+D** copy, paste and duplicate. **Delete** removes the selected clip. **Ctrl + wheel** zooms the timeline.
+- Two movements of the same character at the same time, or a walk into a wall, are marked in red, and the story's check lists them.
+
+## Walking
+
+**Drag from a character on the map to where they should go.** The way goes around walls, trees, water, ledges and people by itself, with as few turns as it can. Drag the yellow square at the end of a walk to make it longer. If there is no way there, the line turns red and nothing changes.
+
+A Pokémon or a new character can **🪽 fly**: then the way goes straight over everything.
+
+**How it arrives** (in the character's panel) adds a ready-made arrival at the playhead: *walks in from the edge*, *appears in a flash*, *lands from above* (the ground shakes, a Pokémon cries) or *comes out of a door*.
+
+## What characters can do
+
+| Action | |
+|---|---|
+| 🚶 Walk, ⤴ Jump, ↻ Turn, ⏱ Wait | Moving around. Walking can be normal, running or slow. |
+| ❗ Emote | ! ? or ♥ above the head. |
+| 💬 Say | The game's message box with the speaker's name. The scene waits until the player presses A. |
+| ❓ Ask yes / no | YES goes on. For NO choose: go on the same, jump to a step of the scene, end the scene, or stop it so it comes again next time. The menu at the top chooses the answer the preview takes. |
+| 👻 Disappear, ✨ Appear | Someone who appears later is not there at first. |
+| ⚔ Battle | On a Pokémon's row: a battle with it, with legendary music and its cry. Won or caught, it is gone for good. Ran away, it stays there, and talking to it starts the battle again. Lost, the player blacks out and the scene comes again. On a person's row: a trainer battle. |
+| 🎁 Give | On the player's row: a Pokémon or an item. |
+| 🔊 Cry | On a Pokémon's row (choose which Pokémon it is in its panel). |
+
+The **🎬 The whole scene** row holds what belongs to no one: **📳 shaking** (a little, medium or strong), **⚡ a flash**, **🌑 darkness** and coming back from it, **🌦 weather**, **🎵 music**, **🔔 a sound**, **🔇 silence**, and **🧱 blocks of the map that change**: take a block from the map (ground, an open door), then click the squares. They can stay changed after the scene.
+
+Shaking, cries, music and weather go on while everyone moves. Text, questions, battles, gifts, flashes and darkness stop the scene until they are done.
+
+## After the scene
+
+In each character's panel, **After the scene** says what happens next: *stays where it ended* (also when the player comes back), *goes back to its place* (people of the map) or *is gone for good*.
+
+## Trying it
+
+**🎮 Play in the game** (in the editor and in the step) puts the story into the game and starts it right before the scene. Text the editor writes for you, such as a template's lines, is in Hebrew only when your game shows Hebrew.
+
+Scenes work in FireRed and in Emerald.
+
 # Pokémon
 
 ![The Pokémon tab](img/en/pokemon.png)
@@ -593,6 +665,16 @@ Change the Pokémon or the level, and Ember Studio changes the script and the pi
 **➕ New legendary** puts a new one on any map: choose the Pokémon, the level, the map and the spot. The player talks to it, hears its cry and battles it; afterwards it is gone, caught or not. If the Pokémon has no sprite of its own, one is made from its picture.
 
 **💾 Export Pokémon changes** saves your Pokémon edits as a file you can share or import into another project.
+
+## Animation (Emerald)
+
+In Emerald, every Pokémon moves when it appears in battle. The **Animation** tab of a Pokémon edits it:
+
+- **The frames**: the front picture has two (up to four in the game). A slider moves between them in the same pixel editor, so you can touch up one frame against the other. *Show the other frame faintly* draws it under the one you edit. You can import a picture into a frame, copy the other frame, swap them, and save both at once.
+- **The sequence**: which frame shows, and for how long.
+- **The motion** when it appears, the **delay** before it, and the motion **from behind** (when it is the player's Pokémon).
+
+The preview plays it beside the editor, and **Test in battle** shows it in the game.
 
 # Trainers
 
@@ -795,6 +877,9 @@ Ember Studio has the **mGBA** emulator built in. It opens in a window inside the
 | **▶ Build & play** | Builds `out/game.gba`, then plays it from the beginning. |
 | **▶ Play from here** (map editor or world view) | On the spot you click, with a test team. |
 | **▶ Test from this step** (story) | Right before that step of the story, with the story stage set. |
+| **🎮 Play in the game** (an animated scene) | Right before the scene. |
+
+A test starts right on the spot: the intro and choosing a name run quickly in the background first. In a test the player is called **TEST**.
 
 ## Keys
 
@@ -820,7 +905,7 @@ Click the game picture first so it gets the keys.
 
 ## The test team
 
-**▶ Play from here** and **Test from this step** give the player a test team, so you can battle right away. Change it with the **🎒** button: choose Pokémon and levels.
+**▶ Play from here** and **Test from this step** give the player a test team, so you can battle right away. By default it is **one random Pokémon at level 50**, a new one in every test. To choose your own, press **🎒**, untick *A random Pokémon at level 50*, and choose Pokémon and levels.
 
 > **Tip:** The test only changes a copy of the game in memory. Your project is not touched.
 

@@ -4,7 +4,8 @@
 'use strict';
 
 const I18N = {
-  lang: (() => { try { return localStorage.getItem('ember-lang') || 'he'; } catch (e) { return 'he'; } })(),
+  // a choice kept in the browser; else Hebrew in the program (the EXE / ember/server.py on this computer) and English online
+  lang: (() => { const def = /^(127\.0\.0\.1|localhost)$/.test(location.hostname) ? 'he' : 'en'; try { return localStorage.getItem('ember-lang') || def; } catch (e) { return def; } })(),
   dicts: { he: {} },
   missing: new Set(),
   set(lang) {

@@ -10,16 +10,32 @@ const Cutscene = (() => {
   // kind: [icon, label, colour]
   const KINDS = {
     walk: ['🚶', 'Walk', '#d97706'], jump: ['⤴', 'Jump', '#ea580c'], face: ['↻', 'Turn', '#ca8a04'], wait: ['⏱', 'Wait', '#64748b'],
-    emote: ['❗', 'Emote', '#0284c7'], say: ['💬', 'Say', '#2563eb'], hide: ['👻', 'Disappear', '#7c3aed'], show: ['✨', 'Appear', '#7c3aed'],
+    emote: ['❗', 'Emote', '#0284c7'], say: ['💬', 'Say', '#2563eb'], ask: ['❓', 'Ask yes / no', '#1d4ed8'], hide: ['👻', 'Disappear', '#7c3aed'], show: ['✨', 'Appear', '#7c3aed'],
+    battle: ['⚔', 'Battle', '#dc2626'], give: ['🎁', 'Give', '#16a34a'], cry: ['🔊', 'Cry', '#0891b2'],
+    shake: ['📳', 'Shake the screen', '#b45309'], flash: ['⚡', 'Flash', '#ca8a04'], fade: ['🌑', 'Fade', '#334155'], tiles: ['🧱', 'Change blocks', '#78716c'],
+    music: ['🎵', 'Music', '#9333ea'], sound: ['🔔', 'Sound', '#a855f7'], silence: ['🔇', 'Silence', '#6b21a8'],
   };
-  const STRETCH = new Set(['wait', 'emote', 'say']);
+  const STRETCH = new Set(['wait', 'emote', 'say', 'ask', 'shake']);
+  const MOVES = new Set(['walk', 'jump', 'face', 'emote', 'hide', 'show']);    // what moves a character (one at a time)
+  // the scene stops for these (they run between the parts of the scene); these run while everyone goes on moving
+  const BLOCK = new Set(['say', 'ask', 'battle', 'give', 'tiles', 'fade', 'flash']), TIMED = new Set(['shake', 'cry', 'music', 'sound', 'silence']);
+  // what each row can do
+  function kindsFor(a) {
+    if (!a) return [];
+    if (a.kind === 'scene') return ['shake', 'flash', 'fade', 'tiles', 'music', 'sound', 'silence', 'wait'];
+    const move = ['walk', 'jump', 'face', 'wait', 'emote', 'say', 'ask', 'hide', 'show'];
+    if (a.kind === 'player') return [...move, 'give'];
+    if (a.kind === 'mon') return [...move, 'cry', 'battle'];
+    return [...move, 'battle'];
+  }
   const SPEED = { walk: 1, run: 0.5, slow: 1.5 };               // steps of time per square (measured in the game: 16 / 8 / 24 frames)
   const D = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }, ARROW = { up: '↑', down: '↓', left: '←', right: '→' };
   const EMOTES = { '!': '❗', '?': '❓', '♥': '♥' };
   const uid = () => 'c' + Math.random().toString(36).slice(2, 8);
   const clone = o => JSON.parse(JSON.stringify(o));
+  const FIXED = { jump: 2, face: 1, hide: 1, show: 1, battle: 4, give: 3, cry: 2, flash: 2, fade: 2, tiles: 1, music: 1, sound: 1, silence: 1 };
   const dur = c => c.k === 'walk' ? Math.max(1, Math.ceil((c.path || []).length * (SPEED[c.speed] || 1)))
-    : c.k === 'jump' ? 2 : c.k === 'face' || c.k === 'hide' || c.k === 'show' ? 1 : Math.max(1, c.len || (c.k === 'say' ? 3 : 2));
+    : FIXED[c.k] || Math.max(1, c.len || (c.k === 'say' || c.k === 'ask' || c.k === 'shake' ? 3 : 2));
   const endOf = sc => Math.max(0, ...sc.clips.map(c => c.t + dur(c)));
 
   // ---------- data: st.scene = { actors: [...], clips: [...] } ----------
@@ -27,6 +43,7 @@ const Cutscene = (() => {
     const sc = st.scene = st.scene || { actors: [], clips: [] };
     sc.actors = sc.actors || []; sc.clips = sc.clips || [];
     if (!sc.actors.some(a => a.kind === 'player')) sc.actors.unshift({ id: 'player', kind: 'player', name: T('The player'), gfx: 0, x: null, y: null, dir: 'up' });
+    if (!sc.actors.some(a => a.kind === 'scene')) sc.actors.push({ id: 'scene', kind: 'scene', name: T('The whole scene') });   // effects of the whole screen
     return sc;
   }
   function objOf(g, n, localId) {
@@ -37,6 +54,7 @@ const Cutscene = (() => {
   const FACE_OF = { 7: 'up', 9: 'left', 10: 'right', 15: 'up', 16: 'up', 21: 'up' };
   // where a character stands when the scene starts
   function startOf(a, st, m) {
+    if (a.kind === 'scene') return { x: -9, y: -9, dir: 'down', gfx: -1 };
     if (a.kind === 'npc') {
       const e = objOf(st.g, st.n, a.localId);
       if (e) { const [x, y] = MapsTab.api.evXY(e); return { x, y, dir: a.dir || FACE_OF[R().u8[e.off + 9]] || 'down', gfx: R().u8[e.off + 1] }; }
@@ -49,7 +67,9 @@ const Cutscene = (() => {
   // everyone at time t (in steps): position (fractional while walking), facing, visible, emote; and the text on screen
   function stateAt(sc, st, m, t) {
     const actors = new Map(); let say = null;
+    const fx = effectsAt(sc, t);
     for (const a of sc.actors) {
+      if (a.kind === 'scene') continue;
       const p = startOf(a, st, m), s = { x: p.x, y: p.y, dir: p.dir, gfx: p.gfx, vis: true, emote: null, hop: 0 };
       const mine = sc.clips.filter(c => c.a === a.id).sort((x, y) => x.t - y.t);
       const firstVis = mine.find(c => c.k === 'show' || c.k === 'hide');
@@ -69,11 +89,32 @@ const Cutscene = (() => {
         else if (c.k === 'emote') { if (el < dur(c)) s.emote = c.kind || '!'; }
         else if (c.k === 'hide') s.vis = false;
         else if (c.k === 'show') s.vis = true;
-        else if (c.k === 'say') { if (el < dur(c)) say = { a, text: c.text || '' }; }
+        else if (c.k === 'say' || c.k === 'ask') { if (el < dur(c)) say = { a, text: c.text || '', ask: c.k === 'ask' }; }
       }
       actors.set(a.id, s);
     }
-    return { actors, say };
+    return Object.assign({ actors, say }, fx);
+  }
+  // what the whole screen shows at time t: a shake, a flash, the fade, blocks changed, and a line about what happens
+  function effectsAt(sc, t) {
+    const out = { shake: 0, white: 0, black: 0, tiles: new Map(), note: null };
+    let dark = 0;
+    for (const c of sc.clips.slice().sort((x, y) => x.t - y.t)) {
+      if (c.t > t) break;
+      const el = t - c.t, on = el < dur(c), L = App.getLists();
+      if (c.k === 'shake' && on) out.shake = (c.strength || 2) * 1.5 * Math.sin(el * 16 * 1.3);
+      else if (c.k === 'flash' && on) out.white = 1 - Math.abs(el / dur(c) * 2 - 1);
+      else if (c.k === 'fade') dark = c.out === false ? Math.max(0, 1 - el / dur(c)) : Math.min(1, el / dur(c));
+      else if (c.k === 'tiles') for (const q of c.cells || []) out.tiles.set(q.x + ',' + q.y, q.v);
+      else if (c.k === 'battle' && on) out.note = '⚔ ' + (c.trainer ? T('A trainer battle') : Tf('A battle with {who}', { who: L.species[(sc.actors.find(a => a.id === c.a) || {}).sp] || T('the Pokémon') }));
+      else if (c.k === 'give' && on) out.note = '🎁 ' + (c.what === 'item' ? L.items[c.item || 13] : L.species[c.sp || 25]);
+      else if (c.k === 'cry' && on) out.note = '🔊 ' + T('Cry');
+      else if (c.k === 'music' && on) out.note = '🎵 ' + T('Music') + ' #' + (c.song || 0);
+      else if (c.k === 'sound' && on) out.note = '🔔 ' + T('Sound') + ' #' + (c.se || 1);
+      else if (c.k === 'silence' && on) out.note = '🔇 ' + T('Silence');
+    }
+    out.black = dark;
+    return out;
   }
   // the squares a person can walk on: no collision, not water, not a ledge (a ledge is only jumped down)
   const WATER = () => new Set(G().isEmerald ? [0x10, 0x11, 0x12, 0x14, 0x15, 0x50, 0x51, 0x52, 0x53] : [0x10, 0x11, 0x12, 0x15, 0x1A]), LEDGE = new Set([0x38, 0x39, 0x3A, 0x3B]);
@@ -115,7 +156,8 @@ const Cutscene = (() => {
     const bad = new Map();
     for (const a of sc.actors) {
       const mine = sc.clips.filter(c => c.a === a.id).sort((x, y) => x.t - y.t);
-      for (let i = 1; i < mine.length; i++) if (mine[i].t < mine[i - 1].t + dur(mine[i - 1])) { bad.set(mine[i].id, T('two actions of the same character at the same time')); bad.set(mine[i - 1].id, T('two actions of the same character at the same time')); }
+      const moves = mine.filter(c => MOVES.has(c.k));                  // only movement clashes: a cry or a text while walking is fine
+      for (let i = 1; i < moves.length; i++) if (moves[i].t < moves[i - 1].t + dur(moves[i - 1])) { bad.set(moves[i].id, T('two actions of the same character at the same time')); bad.set(moves[i - 1].id, T('two actions of the same character at the same time')); }
       if (a.fly) continue;
       for (const c of mine) {
         if (c.k !== 'walk' || bad.has(c.id)) continue;
@@ -130,6 +172,13 @@ const Cutscene = (() => {
   function problems(st) {
     const sc = scene(st), out = [];
     if (G().isEmerald && sc.clips.length) out.push(T('animated scenes go into FireRed for now (Emerald comes later)'));
+    for (const c of sc.clips) {
+      const a = sc.actors.find(x => x.id === c.a) || {}, at = (a.name || '') + ' · ' + Tf('Step {n}', { n: c.t }) + ': ';
+      if (c.k === 'battle' && a.kind === 'mon' && !a.sp) out.push(at + T('choose which Pokémon it is (for the battle)'));
+      if (c.k === 'battle' && a.kind !== 'mon' && !c.trainer) out.push(at + T('choose the trainer for the battle'));
+      if (c.k === 'tiles' && !(c.cells || []).length) out.push(at + T('choose the squares whose blocks change'));
+      if (c.k === 'ask' && c.no === 'jump' && (c.jump == null || c.jump < 0)) out.push(at + T('choose the step the scene jumps to on NO'));
+    }
     if (st.g != null) { const m = MapsTab.api.loadMap(st.g, st.n), bad = clipProblems(sc, st, m, walkGrid(m)); for (const [id, why] of bad) { const c = sc.clips.find(x => x.id === id), a = sc.actors.find(x => x.id === c.a); out.push((a.name || '') + ' · ' + Tf('Step {n}', { n: c.t }) + ': ' + why); } }
     return [...new Set(out)];
   }
@@ -155,18 +204,78 @@ const Cutscene = (() => {
     return out;
   }
   const DELAYS = [[16, 0x1C], [8, 0x1B], [4, 0x1A]];                   // waits of 16 / 8 / 4 frames (a few frames less are not seen)
-  // the parts of the scene, cut by text: [{ from, to, say }] in frames
+  // the parts of the scene, cut by what stops it (text, a question, a battle…) and by the steps a NO jumps to:
+  // [{ from, to, ev }] in frames; ev = the stopping clip at the end of the part, or null
   function parts(sc) {
-    const says = sc.clips.filter(c => c.k === 'say').sort((x, y) => x.t - y.t), out = [];
-    let from = 0;
-    for (const c of says) { out.push({ from, to: c.t * 16, say: c }); from = Math.max(from, (c.t + dur(c)) * 16); }
-    out.push({ from, to: Infinity, say: null });
+    const cuts = sc.clips.filter(c => BLOCK.has(c.k)).map(c => ({ f: c.t * 16, ev: c }));
+    for (const c of sc.clips) if (c.k === 'ask' && c.no === 'jump' && c.jump != null) cuts.push({ f: c.jump * 16, ev: null });
+    cuts.sort((x, y) => x.f - y.f || (x.ev ? 1 : 0) - (y.ev ? 1 : 0));
+    const out = []; let from = 0;
+    for (const cut of cuts) {
+      if (!cut.ev && cut.f <= from) continue;                        // a jump target already on a part's start
+      out.push({ from, to: Math.max(from, cut.f), ev: cut.ev });
+      from = cut.ev ? Math.max(from, (cut.ev.t + dur(cut.ev)) * 16) : Math.max(from, cut.f);
+    }
+    out.push({ from, to: Infinity, ev: null });
     return out;
+  }
+  const SHAKE = { 1: [0, 1, 10], 2: [1, 2, 10], 3: [3, 3, 12] };            // ShakeScreen: horizontal, vertical pan, delay
+  // a battle with a Pokémon of the scene: legendary music like the game's own birds; won or caught = gone for good,
+  // ran = it stays (and can be talked to, to battle again); lost = the player blacks out and the scene comes again
+  function wildBattle(a, sp, lvl, cry, legendary) {
+    const C = Script.C;
+    a.b(0xB6).h(sp).b(lvl).h(0);                                       // setwildbattle
+    if (cry) a.b(0xA1).h(sp).h(2).b(0xC5);                             // playmoncry (encounter), waitmoncry
+    if (legendary) { C.setflag(a, 0x807); C.special(a, 0x138); a.b(0x27); C.clearflag(a, 0x807); }   // StartLegendaryBattle, waitstate
+    else a.b(0xB7);                                                    // dowildbattle
+    a.b(0x26).h(0x800D).h(0xB4);                                       // specialvar VAR_RESULT, GetBattleOutcome
+  }
+  function block(c, sc, a, labels, lEnd) {
+    const C = Script.C, L = App.getLists(), who = sc.actors.find(x => x.id === c.a) || {};
+    if (c.k === 'say') { const name = who.kind === 'player' ? '{PLAYER}' : (who.name || ''); C.msg(a, (name ? name + ': ' : '') + (c.text || ' '), 4); C.closemessage(a); }
+    else if (c.k === 'ask') {
+      const name = who.kind === 'player' ? '{PLAYER}' : (who.name || ''), lYes = a.fresh('yes');
+      C.msg(a, (name ? name + ': ' : '') + (c.text || '?'), 5); C.closemessage(a);
+      C.compare(a, Script.VAR_RESULT, 1); C.gotoIf(a, '=', lYes);
+      if (c.no === 'end') { C.releaseall(a); C.end(a); }              // NO: the scene stops and comes again next time
+      else if (c.no === 'done') C.goto(a, lEnd);                       // NO: the scene ends here (and counts as seen)
+      else if (c.no === 'jump') C.goto(a, labels(c.jump));
+      a.label(lYes);
+    } else if (c.k === 'battle') {
+      if (who.kind === 'mon' && who.sp) {
+        const lGone = a.fresh('gone'), lOn = a.fresh('on');
+        wildBattle(a, who.sp, c.lvl || 50, c.cry !== false, c.legendary !== false);
+        C.compare(a, Script.VAR_RESULT, 1); C.gotoIf(a, '=', lGone); C.compare(a, Script.VAR_RESULT, 7); C.gotoIf(a, '=', lGone);
+        if (who._id != null) { const p = who._at || { x: 0, y: 0 }; a.b(0x63).h(who._id).h(p.x).h(p.y); }   // ran: it stays there (setobjectxyperm)
+        who._stays = true; C.goto(a, lOn);
+        a.label(lGone); if (who._id != null) { C.removeobject(a, who._id); if (who.flag) C.setflag(a, who.flag); }
+        a.label(lOn);
+      } else if (c.trainer) { if (c.intro) { C.msg(a, c.intro, 4); C.closemessage(a); } C.trainerNoIntro(a, c.trainer, c.defeat || '...'); }
+    } else if (c.k === 'give') {
+      if (c.what === 'item') C.giveitem(a, c.item || 13, c.qty || 1);
+      else { C.givemon(a, c.sp || 25, c.lvl || 5); C.msg(a, c.text || Tf('{PLAYER} received {who}!', { who: L.species[c.sp || 25] || '' }), 4); C.closemessage(a); }
+    } else if (c.k === 'tiles') {
+      for (const q of c.cells || []) a.b(0xA2).h(q.x).h(q.y).h(q.v & 0x3FF).h((q.v >> 10) & 3 ? 1 : 0);   // setmetatile
+      C.special(a, 0x8E);                                              // DrawWholeMapView
+    } else if (c.k === 'fade') C.fadescreen(a, c.out === false ? 0 : 1);
+    else if (c.k === 'flash') { C.fadescreen(a, 3); C.fadescreen(a, 2); }   // to white and back
+  }
+  function timed(c, sc, a) {
+    const C = Script.C, who = sc.actors.find(x => x.id === c.a) || {};
+    if (c.k === 'shake') { const [hz, vt, d] = SHAKE[c.strength || 2]; C.setvar(a, 0x8004, hz); C.setvar(a, 0x8005, vt); C.setvar(a, 0x8006, d); C.setvar(a, 0x8007, Math.max(1, Math.round(dur(c) * 16 / (d * 2)))); C.special(a, 0x136); }
+    else if (c.k === 'cry' && (c.sp || who.sp)) a.b(0xA1).h(c.sp || who.sp).h(0);   // playmoncry, normal
+    else if (c.k === 'music') { if (c.song) C.playbgm(a, c.song); else C.fadedefaultbgm(a); }
+    else if (c.k === 'sound') C.playse(a, c.se || 1);
+    else if (c.k === 'silence') a.b(0x37, 4);                          // fadeoutbgm
   }
   const gameId = a => a.kind === 'player' ? Script.PLAYER : a.kind === 'npc' ? a.localId : a._id;
   function emit(st, a, ctx) {
-    const sc = scene(st), C = Script.C, P = parts(sc);
-    const inScene = sc.actors.filter(x => gameId(x) != null);
+    const sc = scene(st), C = Script.C, P = parts(sc), m = MapsTab.api.loadMap(st.g, st.n);
+    const inScene = sc.actors.filter(x => x.kind !== 'scene' && gameId(x) != null);
+    const lab = P.map((_, k) => a.fresh('part' + k)), lEnd = a.fresh('end');
+    const labels = step => { const f = step * 16; let k = P.findIndex(q => q.from >= f); if (k < 0) k = P.length - 1; return lab[k]; };
+    for (const x of sc.actors) if (x.kind === 'mon') { const bt = sc.clips.find(c => c.a === x.id && c.k === 'battle'); if (bt) { const s0 = stateAt(sc, st, m, bt.t).actors.get(x.id); x._at = { x: Math.round(s0.x), y: Math.round(s0.y) }; } }
+    const fxOf = k => sc.clips.filter(c => TIMED.has(c.k)).map(c => { let f = c.t * 16, j = 0; for (; j < P.length - 1; j++) { if (f < P[j].to) break; if (f < P[j + 1].from) f = P[j + 1].from; } return { c, f, j }; }).filter(e => e.j === k).sort((p, q) => p.f - q.f);
     // new characters and Pokémon: their flag hid them when the map loaded; now they come out
     for (const x of inScene) if ((x.kind === 'new' || x.kind === 'mon') && x.flag) { C.clearflag(a, x.flag); C.addobject(a, x._id); }
     // each action in its part: one that starts while a text is on starts right after it
@@ -177,6 +286,7 @@ const Cutscene = (() => {
       lists.get(x.id)[k].push(Object.assign({}, act, { f }));
     }
     P.forEach((part, k) => {
+      a.label(lab[k]);
       const moving = [];
       for (const x of inScene) {
         const acts = lists.get(x.id)[k].sort((p, q) => p.f - q.f); if (!acts.length) continue;
@@ -188,20 +298,41 @@ const Cutscene = (() => {
         }
         C.move(a, gameId(x), seq); moving.push(gameId(x));
       }
+      // the effects of this part at their time, while everyone moves (a shake, a cry, music)
+      let cur = part.from;
+      for (const e of fxOf(k)) { if (e.f > cur) C.delay(a, e.f - cur); cur = Math.max(cur, e.f); timed(e.c, sc, a); }
       for (const id of moving) C.waitmove(a, id);
-      if (part.say) {
-        const sp = sc.actors.find(x => x.id === part.say.a), who = !sp ? '' : sp.kind === 'player' ? '{PLAYER}' : (sp.name || '');
-        C.msg(a, (who ? who + ': ' : '') + (part.say.text || ' '), 4); C.closemessage(a);
-      }
+      if (part.ev) block(part.ev, sc, a, labels, lEnd);
     });
-    // after the scene the new ones stay until the player leaves the map; the flag keeps them away next time
-    for (const x of inScene) if ((x.kind === 'new' || x.kind === 'mon') && x.flag) C.setflag(a, x.flag);
+    // after the scene: each character as chosen (stays there / goes back / is gone for good)
+    a.label(lEnd);
+    const S = stateAt(sc, st, m, endOf(sc) + 1);
+    for (const x of inScene) {
+      if (x.kind === 'player') continue;
+      const after = afterOf(x), s = S.actors.get(x.id), fl = x.kind === 'npc' ? x._flag : x.flag;
+      if (x._stays && x.kind === 'mon') continue;                      // ran from its battle: it waits there for the player
+      if (after === 'stay') { a.b(0x63).h(gameId(x)).h(Math.round(s.x)).h(Math.round(s.y)); if (fl && x.kind !== 'npc') C.clearflag(a, fl); }
+      else if (after === 'gone') { if (s.vis) C.removeobject(a, gameId(x)); if (fl) C.setflag(a, fl); }
+    }
+    if (st.doneFlag) C.setflag(a, st.doneFlag);
   }
+  // what a character does after the scene: people of the map go back to their place; new ones and Pokémon are gone
+  const afterOf = x => x.after || (x.kind === 'npc' ? 'back' : 'gone');
   // before the scripts: new characters and Pokémon become people of the map (hidden by their flag whenever the map
   // loads), so the scene can move them. meta: the story's undo record
   function prepare(st, meta) {
-    const sc = scene(st), r = R(), m = MapsTab.api.loadMap(st.g, st.n), flags = [];
+    const sc = scene(st), r = R(), m = MapsTab.api.loadMap(st.g, st.n), flags = [], C = Script.C;
+    st.doneFlag = st.doneFlag || Objects._freeFlag();                  // set when the scene has happened
     for (const a of sc.actors) {
+      a._stays = false;
+      // a person of the map who is gone after the scene needs a flag of their own (the map shows them while it is clear)
+      if (a.kind === 'npc') {
+        a._flag = 0;
+        if (afterOf(a) !== 'gone') continue;
+        const e = objOf(st.g, st.n, a.localId); if (!e) continue;
+        a._flag = r.r16(e.off + 20) || (() => { const f = Objects._freeFlag(); meta.patches.push({ at: e.off + 20, bytes: Array.from(r.u8.slice(e.off + 20, e.off + 22)) }); r.w16(e.off + 20, f); return f; })();
+        continue;
+      }
       if (a.kind !== 'new' && a.kind !== 'mon') continue;
       if (!sc.clips.some(c => c.a === a.id)) { a._id = null; continue; }
       a.flag = a.flag || Objects._freeFlag();
@@ -209,17 +340,34 @@ const Cutscene = (() => {
       r.w8(e.off + 1, a.gfx); r.w8(e.off + 9, ({ up: 7, left: 9, right: 10 })[p.dir] || 8); r.w16(e.off + 20, a.flag); r.w32(e.off + 16, 0);
       a._id = id; flags.push(a.flag);
       meta.created.push({ kind: 'obj', g: st.g, n: st.n, localId: id });
+      // a Pokémon the player battles in the scene: if they run, it stays; talking to it starts the battle again
+      const bt = sc.clips.find(c => c.a === a.id && c.k === 'battle');
+      if (bt && a.sp) {
+        const as = new Script.Asm(), lGone = as.fresh('gone');
+        C.lock(as); C.faceplayer(as); wildBattle(as, a.sp, bt.lvl || 50, bt.cry !== false, bt.legendary !== false);
+        C.compare(as, Script.VAR_RESULT, 1); C.gotoIf(as, '=', lGone); C.compare(as, Script.VAR_RESULT, 7); C.gotoIf(as, '=', lGone);
+        C.release(as); C.end(as);
+        as.label(lGone); C.removeobject(as, id); C.setflag(as, a.flag); C.release(as); C.end(as);
+        const w = as.write(); meta.allocs.push(...w.allocs); r.wptr(e.off + 16, w.off);
+      }
     }
-    if (!flags.length) return;
-    // the map's "on transition" script (type 3) hides them: ours first, then the map's own
     const hdr = G().mapGroups[st.g][st.n], ms = r.ptr(hdr + 8), entries = [];
     if (ms >= 0) for (let i = 0; i < 16 && r.u8[ms + i * 5]; i++) entries.push([r.u8[ms + i * 5], r.r32(ms + i * 5 + 1)]);
+    const tiles = sc.clips.filter(c => c.k === 'tiles' && (c.cells || []).length && c.keep !== false);
+    if (!flags.length && !tiles.length) return;
     if (!meta.frames.some(f => f.g === st.g && f.n === st.n)) meta.frames.push({ g: st.g, n: st.n, orig: r.r32(hdr + 8) });
-    const as = new Script.Asm(); for (const f of flags) Script.C.setflag(as, f);
-    const k = entries.findIndex(x => x[0] === 3);
-    if (k >= 0) Script.C.gotoAbs(as, entries[k][1] - 0x08000000); else Script.C.end(as);
-    const w = as.write(); meta.allocs.push(...w.allocs);
-    if (k >= 0) entries[k][1] = (0x08000000 + w.off) >>> 0; else entries.push([3, (0x08000000 + w.off) >>> 0]);
+    // ours first, then the map's own script of that type
+    const chain = (type, build) => {
+      const as = new Script.Asm(); build(as);
+      const k = entries.findIndex(x => x[0] === type);
+      if (k >= 0) C.gotoAbs(as, entries[k][1] - 0x08000000); else C.end(as);
+      const w = as.write(); meta.allocs.push(...w.allocs);
+      if (k >= 0) entries[k][1] = (0x08000000 + w.off) >>> 0; else entries.push([type, (0x08000000 + w.off) >>> 0]);
+    };
+    // "on transition" (type 3): until the scene has happened, its new characters and Pokémon are hidden
+    if (flags.length) chain(3, as => { const lDone = as.fresh('done'); C.checkflag(as, st.doneFlag); C.gotoIf(as, '=', lDone); for (const f of flags) C.setflag(as, f); as.label(lDone); });
+    // "on load" (type 1): once it has happened, the blocks it changed stay changed
+    if (tiles.length) chain(1, as => { const lNot = as.fresh('not'); C.checkflag(as, st.doneFlag); C.gotoIf(as, '!=', lNot); for (const c of tiles) for (const q of c.cells) as.b(0xA2).h(q.x).h(q.y).h(q.v & 0x3FF).h((q.v >> 10) & 3 ? 1 : 0); as.label(lNot); });
     const lst = new Uint8Array(entries.length * 5 + 1), dl = new DataView(lst.buffer);
     entries.forEach(([t, q], i) => { lst[i * 5] = t; dl.setUint32(i * 5 + 1, q, true); });
     const lo = r.writeNew(lst); meta.allocs.push([lo, lst.length]); r.wptr(hdr + 8, lo);
@@ -257,7 +405,7 @@ const Cutscene = (() => {
   function open(st, opts = {}) {
     if (st.g == null) { toast(T('Choose the map of the scene first'), 'err'); return; }
     const sc = scene(st), m = MapsTab.api.loadMap(st.g, st.n);
-    const E = { t: 0, sel: null, actor: 'player', zoom: 1, playing: false, placing: null, hist: [], fut: [] };
+    const E = { t: 0, sel: null, actor: 'player', zoom: 1, playing: false, placing: null, hist: [], fut: [], answer: 'yes', tilePick: null, blockPick: null };
     const PX = () => 30 * E.zoom, LEFT = 180;
     const save = () => { if (opts.onChange) opts.onChange(); };
     // every change: the old scene goes on the undo list
@@ -267,7 +415,7 @@ const Cutscene = (() => {
     const redo = () => { const j = E.fut.pop(); if (!j) return; E.hist.push(JSON.stringify(sc)); restore(j); };
     const clipOf = id => sc.clips.find(c => c.id === id);
     const actorOf = id => sc.actors.find(a => a.id === id);
-    const nameOf = a => a.name || (a.kind === 'npc' ? '#' + a.localId : Objects.gfxName(a.gfx));
+    const nameOf = a => a.kind === 'scene' ? T('The whole scene') : a.name || (a.kind === 'npc' ? '#' + a.localId : Objects.gfxName(a.gfx));
 
     // --- the map ---
     const bg = h('canvas', { width: m.w * 16, height: m.h * 16 }), bctx = bg.getContext('2d');
@@ -276,7 +424,12 @@ const Cutscene = (() => {
     const sayBox = h('div', { class: 'cs-say', dir: 'auto' });
     function drawMap() {
       const S = stateAt(sc, st, m, E.t);
+      c2.setTransform(1, 0, 0, 1, 0, Math.round(S.shake));          // a shaking screen moves up and down
+      c2.fillStyle = '#000'; c2.fillRect(0, -8, cv.width, cv.height + 16);
       c2.drawImage(bg, 0, 0);
+      for (const [k, v] of S.tiles) { const [x, y] = k.split(',').map(Number); c2.drawImage(MapsTab.api.metatileCanvas(m, v & 0x3FF), x * 16, y * 16); }
+      const tsel = clipOf(E.sel);                                   // the squares of the selected block change
+      if (tsel && tsel.k === 'tiles') { c2.strokeStyle = E.tilePick === tsel.id ? '#ff4dd2' : 'rgba(255,77,210,.7)'; c2.lineWidth = 2; for (const q of tsel.cells || []) c2.strokeRect(q.x * 16 + 1, q.y * 16 + 1, 14, 14); c2.lineWidth = 1; }
       // the people of the map who are not in the scene stay where they are
       const inScene = new Set(sc.actors.filter(a => a.kind === 'npc').map(a => a.localId));
       for (const e of m.events.obj) if (!inScene.has(R().u8[e.off])) { const [x, y] = MapsTab.api.evXY(e); c2.globalAlpha = 0.55; Objects.draw(c2, e, x * 16, y * 16, 16); c2.globalAlpha = 1; }
@@ -312,8 +465,11 @@ const Cutscene = (() => {
         const s = S.actors.get(a.id); if (!s || s.vis) continue;
         c2.globalAlpha = 0.25; const spr = Objects.sprite(s.gfx, s.dir); if (spr) c2.drawImage(spr, Math.round(s.x * 16 + 8 - spr.width / 2), Math.round(s.y * 16 + 16 - spr.height)); c2.globalAlpha = 1;
       }
-      sayBox.textContent = S.say ? nameOf(S.say.a) + ': ' + S.say.text : '';
-      sayBox.style.display = S.say ? '' : 'none';
+      if (S.white || S.black) { c2.setTransform(1, 0, 0, 1, 0, 0); c2.fillStyle = S.white ? 'rgba(255,255,255,' + S.white + ')' : 'rgba(0,0,0,' + S.black + ')'; c2.fillRect(0, 0, cv.width, cv.height); }
+      c2.setTransform(1, 0, 0, 1, 0, 0);
+      const text = S.say ? nameOf(S.say.a) + ': ' + S.say.text + (S.say.ask ? '   [' + T('YES') + ' / ' + T('NO') + ']' : '') : S.note || '';
+      sayBox.textContent = text;
+      sayBox.style.display = text ? '' : 'none';
       timeLabel.textContent = Tf('Step {n}', { n: (Math.round(E.t * 10) / 10) }) + ' · ' + (E.t * STEP_MS / 1000).toFixed(1) + ' ' + T('s');
       if (playhead) playhead.style.left = (LEFT + E.t * PX()) + 'px';
     }
@@ -333,12 +489,18 @@ const Cutscene = (() => {
       if (e.button !== 0) return;
       const [x, y] = cellOf(e);
       if (E.placing) { const a = actorOf(E.placing); E.placing = null; if (a) commit(() => { a.x = x; a.y = y; }); return; }
+      const tc = clipOf(E.blockPick || E.tilePick);
+      if (tc && E.blockPick) { E.blockPick = null; const v = R().r16(m.blocks + (y * m.w + x) * 2); commit(() => { tc.block = v; }); return; }
+      if (tc && E.tilePick) {                                       // a square in / out of the block change
+        const v = tc.block != null ? tc.block : R().r16(m.blocks + (y * m.w + x) * 2), k = (tc.cells || []).findIndex(q => q.x === x && q.y === y);
+        commit(() => { tc.cells = tc.cells || []; if (k >= 0) tc.cells.splice(k, 1); else tc.cells.push({ x, y, v }); }); return;
+      }
       stop();
       const S = stateAt(sc, st, m, E.t), sel = clipOf(E.sel);
       let mode = null;
       if (sel && sel.k === 'walk') { const we = walkEnd(sel); if (we.x === x && we.y === y) mode = { kind: 'extend', clip: sel, a: actorOf(sel.a), from: { x, y }, t: sel.t }; }
       if (!mode) {
-        const hit = sc.actors.find(a => { const s = S.actors.get(a.id); return s && Math.round(s.x) === x && Math.round(s.y) === y; });
+        const hit = sc.actors.find(a => { const s = S.actors.get(a.id); return a.kind !== 'scene' && s && Math.round(s.x) === x && Math.round(s.y) === y; });
         if (!hit) return;
         // a new walk starts at the playhead, or right after what the character is doing then
         const t0 = sc.clips.filter(c => c.a === hit.id).reduce((v, c) => c.t <= v && c.t + dur(c) > v ? c.t + dur(c) : v, Math.round(E.t));
@@ -374,8 +536,8 @@ const Cutscene = (() => {
       const [x, y] = cellOf(e), S = stateAt(sc, st, m, E.t), sel = clipOf(E.sel);
       const onActor = sc.actors.some(a => { const s = S.actors.get(a.id); return s && Math.round(s.x) === x && Math.round(s.y) === y; });
       const onEnd = sel && sel.k === 'walk' && (() => { const we = walkEnd(sel); return we.x === x && we.y === y; })();
-      cv.title = E.placing ? T('Click where the character starts') : onEnd ? T('Drag to make the way longer') : onActor ? T('Drag to where the character walks') : '(' + x + ', ' + y + ')';
-      cv.style.cursor = E.placing ? 'crosshair' : onActor || onEnd ? 'grab' : 'default';
+      cv.title = E.blockPick ? T('Click a square: its block is the one put in') : E.tilePick ? T('Click squares to change them (again to take one out)') : E.placing ? T('Click where the character starts') : onEnd ? T('Drag to make the way longer') : onActor ? T('Drag to where the character walks') : '(' + x + ', ' + y + ')';
+      cv.style.cursor = E.placing || E.tilePick || E.blockPick ? 'crosshair' : onActor || onEnd ? 'grab' : 'default';
     };
 
     // --- playing ---
@@ -385,12 +547,22 @@ const Cutscene = (() => {
       if (E.playing) { stop(); return; }
       if (E.t >= endOf(sc)) E.t = 0;
       E.playing = true; playBtn.textContent = '⏸ ' + T('Pause'); last = performance.now();
-      const tick = now => { if (!E.playing) return; E.t += (now - last) / STEP_MS; last = now; if (E.t >= endOf(sc)) { E.t = endOf(sc); drawMap(); stop(); return; } drawMap(); raf = requestAnimationFrame(tick); };
+      const tick = now => {
+        if (!E.playing) return;
+        const t0 = E.t; E.t += (now - last) / STEP_MS; last = now;
+        if (E.answer === 'no') for (const c of sc.clips) if (c.k === 'ask' && t0 < c.t + dur(c) && E.t >= c.t + dur(c)) {   // the question ends with NO
+          if (c.no === 'jump' && c.jump != null) E.t = c.jump; else if (c.no === 'end' || c.no === 'done') { E.t = endOf(sc); drawMap(); stop(); return; }
+        }
+        if (E.t >= endOf(sc)) { E.t = endOf(sc); drawMap(); stop(); return; }
+        drawMap(); raf = requestAnimationFrame(tick);
+      };
       raf = requestAnimationFrame(tick);
     };
 
     // --- adding ---
-    const NEW_CLIP = { walk: { path: [], speed: 'walk' }, jump: { dir: 'down' }, face: { dir: 'down' }, wait: { len: 2 }, emote: { kind: '!', len: 2 }, say: { text: '', len: 3 }, hide: {}, show: {} };
+    const NEW_CLIP = { walk: { path: [], speed: 'walk' }, jump: { dir: 'down' }, face: { dir: 'down' }, wait: { len: 2 }, emote: { kind: '!', len: 2 }, say: { text: '', len: 3 }, hide: {}, show: {},
+      ask: { text: '', len: 3, no: 'continue' }, battle: { lvl: 50, legendary: true, cry: true }, give: { what: 'mon', sp: 25, lvl: 5, item: 13, qty: 1 }, cry: {},
+      shake: { strength: 2, len: 3 }, flash: {}, fade: { out: true }, tiles: { cells: [], keep: true }, music: { song: 0 }, sound: { se: 1 }, silence: {} };
     function addClip(k, aId = E.actor, t = Math.round(E.t)) {
       const mine = sc.clips.filter(c => c.a === aId), free = mine.reduce((v, c) => c.t <= t && c.t + dur(c) > t ? c.t + dur(c) : v, t);   // after a clip already there
       const c = Object.assign({ id: uid(), a: aId, t: free, k }, clone(NEW_CLIP[k]));
@@ -400,7 +572,7 @@ const Cutscene = (() => {
       const back = h('div', { class: 'cs-menu-back', onclick: e => { if (e.target === back) back.remove(); } });
       const menu = h('div', { class: 'panel cs-menu', style: { left: x + 'px', top: y + 'px' } },
         h('div', { class: 'muted' }, nameOf(actorOf(aId)) + ' · ' + Tf('Step {n}', { n: t })),
-        ...Object.entries(KINDS).map(([k, [ic, l]]) => h('button', { onclick: () => { back.remove(); addClip(k, aId, t); } }, ic + ' ' + T(l))));
+        ...kindsFor(actorOf(aId)).map(k => h('button', { onclick: () => { back.remove(); addClip(k, aId, t); } }, KINDS[k][0] + ' ' + T(KINDS[k][1]))));
       back.append(menu); document.body.append(back);
       const rc = menu.getBoundingClientRect();                      // keep it on the screen
       if (rc.bottom > innerHeight) menu.style.top = Math.max(0, y - rc.height) + 'px';
@@ -416,7 +588,10 @@ const Cutscene = (() => {
             if (sc.actors.some(a => a.kind === 'npc' && a.localId === p.obj.localId)) { toast(T('This person is already in the scene'), 'err'); return; }
             const e = objOf(st.g, st.n, p.obj.localId); commit(() => { const a = { id: uid(), kind: 'npc', localId: p.obj.localId, name: Objects.tooltip(st.g, st.n, e).split(/[·:(]/)[0].trim().slice(0, 24), gfx: R().u8[e.off + 1] }; sc.actors.push(a); E.actor = a.id; E.sel = null; }); } }, '👤 ' + T('A person already on the map')),
           h('button', { onclick: () => Objects.gallery(18, gfx => done({ id: uid(), kind: 'new', gfx, name: Objects.gfxName(gfx), x: null, y: null, dir: 'down' })) }, '✨ ' + T('A new character for the scene')),
-          h('button', { onclick: () => Objects.gallery(138, gfx => done({ id: uid(), kind: 'mon', gfx, name: Objects.gfxName(gfx), x: null, y: null, dir: 'down' })) }, '🐾 ' + T('A Pokémon or a legendary'))),
+          h('button', { onclick: () => Objects.gallery(138, gfx => {                      // which Pokémon: the one the game itself shows with this sprite
+            let sp = 0; try { for (const [k, v] of Legends.knownSprites()) if (v === gfx) { sp = k; break; } } catch (e) { /* no legendaries */ }
+            done({ id: uid(), kind: 'mon', gfx, sp, name: sp ? App.getLists().species[sp] : Objects.gfxName(gfx), x: null, y: null, dir: 'down' });
+          }) }, '🐾 ' + T('A Pokémon or a legendary'))),
         h('button', { onclick: () => back.remove() }, T('Cancel'))));
       document.body.append(back);
     }
@@ -445,19 +620,68 @@ const Cutscene = (() => {
         else if (c.k === 'face') add(field(T('Look'), dirSel(c.dir, v => set(() => { c.dir = v; }))));
         else if (c.k === 'emote') add(field(T('Emote'), h('select', { onchange: e => set(() => { c.kind = e.target.value; }) }, ...Object.entries(EMOTES).map(([k, ic]) => h('option', { value: k, selected: c.kind === k }, ic + ' ' + T({ '!': 'surprised', '?': 'confused', '♥': 'happy' }[k]))))));
         else if (c.k === 'say') { const t = h('textarea', { rows: 3, dir: 'auto', placeholder: T('what they say…'), onchange: e => set(() => { c.text = e.target.value; }) }); t.value = c.text || ''; add(field(T('Text'), t), h('p', { class: 'muted' }, T('In the game the scene waits here until the player presses A.'))); }
+        else if (c.k === 'ask') {
+          const t = h('textarea', { rows: 2, dir: 'auto', placeholder: T('the question…'), onchange: e => set(() => { c.text = e.target.value; }) }); t.value = c.text || '';
+          add(field(T('The question'), t), field(T('If the answer is NO'), h('select', { onchange: e => set(() => { c.no = e.target.value; if (c.no === 'jump' && c.jump == null) c.jump = c.t + dur(c) + 4; }) },
+            ...[['continue', T('the scene goes on the same')], ['jump', T('jump to a step of the scene')], ['done', T('the scene ends here')], ['end', T('the scene stops and comes again next time')]].map(([k, l]) => h('option', { value: k, selected: (c.no || 'continue') === k }, l)))),
+            c.no === 'jump' ? field(T('Jump to step'), h('input', { type: 'number', min: 0, value: c.jump || 0, style: { width: '70px' }, onchange: e => set(() => { c.jump = Math.max(0, Math.round(+e.target.value || 0)); }) })) : null,
+            h('p', { class: 'muted' }, T('YES goes on with the timeline. The preview answers as chosen at the top (YES / NO).')));
+        } else if (c.k === 'battle') {
+          if (ac.kind === 'mon') add(field(T('Level'), h('input', { type: 'number', min: 1, max: 100, value: c.lvl || 50, style: { width: '70px' }, onchange: e => set(() => { c.lvl = Math.max(1, Math.min(100, +e.target.value || 50)); }) })),
+            ac.sp ? h('div', {}, Tf('A battle with {who}', { who: App.getLists().species[ac.sp] })) : h('div', { class: 'warn' }, T('Choose which Pokémon it is: click its row (on the left of the timeline).')),
+            h('label', {}, h('input', { type: 'checkbox', checked: c.legendary !== false, onchange: e => set(() => { c.legendary = e.target.checked; }) }), ' ' + T('Legendary battle (its music, like the birds of the game)')),
+            h('label', {}, h('input', { type: 'checkbox', checked: c.cry !== false, onchange: e => set(() => { c.cry = e.target.checked; }) }), ' ' + T('Its cry before the battle')),
+            h('p', { class: 'muted' }, T('Won or caught: it is gone for good. Ran away: it stays there, and talking to it starts the battle again. Lost: the player blacks out and the scene comes again.')));
+          else {
+            const opts = [[0, T('— choose a trainer —')]]; for (let id = 1; id < (TrainersTab.COUNT || 743); id++) { const tr = Objects.trainer(id); if (tr && tr.team && tr.team.length) opts.push([id, '#' + id + ' ' + (Objects.classNames()[tr.cls] || '') + ' ' + tr.name]); }
+            const ta = (k, ph) => { const x = h('textarea', { rows: 2, dir: 'auto', placeholder: ph, onchange: e => set(() => { c[k] = e.target.value; }) }); x.value = c[k] || ''; return x; };
+            add(field(T('Which trainer'), h('select', { onchange: e => set(() => { c.trainer = +e.target.value || 0; }) }, ...opts.map(([v, l]) => h('option', { value: v, selected: (c.trainer || 0) === v }, l)))),
+              field(T('Before the battle'), ta('intro', T('before the battle…'))), field(T('When you beat them'), ta('defeat', T('when you beat them…'))));
+          }
+        } else if (c.k === 'give') {
+          add(field(T('What'), h('select', { onchange: e => set(() => { c.what = e.target.value; }) }, h('option', { value: 'mon', selected: c.what !== 'item' }, '🐾 ' + T('A Pokémon')), h('option', { value: 'item', selected: c.what === 'item' }, '🎒 ' + T('An item')))));
+          if (c.what === 'item') add(field(T('Item'), Objects.itemPicker(c.item || 13, v => set(() => { c.item = v || 13; }))), field(T('How many'), h('input', { type: 'number', min: 1, max: 99, value: c.qty || 1, style: { width: '70px' }, onchange: e => set(() => { c.qty = Math.max(1, +e.target.value || 1); }) })));
+          else add(field(T('Which Pokémon'), makeSelect(App.getLists().species, c.sp || 25, v => set(() => { c.sp = v; }))), field(T('Level'), h('input', { type: 'number', min: 1, max: 100, value: c.lvl || 5, style: { width: '70px' }, onchange: e => set(() => { c.lvl = Math.max(1, Math.min(100, +e.target.value || 5)); }) })));
+        } else if (c.k === 'cry') add(field(T('Whose cry'), makeSelect(App.getLists().species, c.sp || ac.sp || 25, v => set(() => { c.sp = v; }))));
+        else if (c.k === 'shake') add(field(T('How strong'), h('select', { onchange: e => set(() => { c.strength = +e.target.value; }) }, ...[[1, T('a little')], [2, T('medium')], [3, T('strong')]].map(([v, l]) => h('option', { value: v, selected: (c.strength || 2) === v }, l)))),
+          h('p', { class: 'muted' }, T('Everyone goes on moving while the screen shakes.')));
+        else if (c.k === 'fade') add(field(T('The screen'), h('select', { onchange: e => set(() => { c.out = e.target.value === 'out'; }) }, h('option', { value: 'out', selected: c.out !== false }, T('goes dark')), h('option', { value: 'in', selected: c.out === false }, T('comes back from dark')))));
+        else if (c.k === 'flash') add(h('p', { class: 'muted' }, T('The screen flashes white, like lightning.')));
+        else if (c.k === 'music') add(field(T('Song #'), h('input', { type: 'number', min: 0, max: 400, value: c.song || 0, style: { width: '80px' }, onchange: e => set(() => { c.song = Math.max(0, +e.target.value || 0); }) })), h('p', { class: 'muted' }, T('0 = back to the map music')));
+        else if (c.k === 'sound') add(field(T('Sound #'), h('input', { type: 'number', min: 0, max: 300, value: c.se || 1, style: { width: '80px' }, onchange: e => set(() => { c.se = Math.max(0, +e.target.value || 1); }) })));
+        else if (c.k === 'silence') add(h('p', { class: 'muted' }, T('The music fades out.')));
+        else if (c.k === 'tiles') {
+          const bv = c.block, pic = h('canvas', { class: 'pixel', width: 16, height: 16, style: { width: '32px', verticalAlign: 'middle', border: '1px solid var(--line)' } });
+          if (bv != null) pic.getContext('2d').drawImage(MapsTab.api.metatileCanvas(m, bv & 0x3FF), 0, 0);
+          add(field(T('The block put in'), h('div', { class: 'row' }, bv != null ? pic : h('i', { class: 'muted' }, T('the block of each square, as it is')),
+              h('button', { class: E.blockPick === c.id ? 'sel' : '', onclick: () => { E.blockPick = c.id; E.tilePick = null; toast(T('Click a square: its block is the one put in')); drawProps(); } }, '🎯 ' + T('Take a block from the map')))),
+            field(T('Squares'), h('div', { class: 'row wrap' }, h('span', {}, String((c.cells || []).length)),
+              h('button', { class: E.tilePick === c.id ? 'sel' : '', onclick: () => { E.tilePick = E.tilePick === c.id ? null : c.id; E.blockPick = null; drawProps(); drawMap(); } }, '👆 ' + (E.tilePick === c.id ? T('Done choosing') : T('Choose squares on the map'))),
+              (c.cells || []).length ? h('button', { onclick: () => set(() => { c.cells = []; }) }, T('Clear')) : null)),
+            h('label', {}, h('input', { type: 'checkbox', checked: c.keep !== false, onchange: e => set(() => { c.keep = e.target.checked; }) }), ' ' + T('They stay changed after the scene')),
+            h('p', { class: 'muted' }, T('For example a rock that is gone or a door that opens: take the block (ground, an open door), then click the squares.')));
+        }
         if (STRETCH.has(c.k)) add(field(T('Length (steps)'), h('input', { type: 'number', min: 1, max: 99, value: dur(c), style: { width: '70px' }, onchange: e => set(() => { c.len = Math.max(1, +e.target.value || 1); }) })));
         add(field(T('Starts at step'), h('input', { type: 'number', min: 0, value: c.t, style: { width: '70px' }, onchange: e => set(() => { c.t = Math.max(0, Math.round(+e.target.value || 0)); }) })),
           h('div', { class: 'row wrap' }, h('button', { onclick: () => duplicate() }, '⧉ ' + T('Duplicate')), h('button', { class: 'danger', onclick: () => del() }, '✕ ' + T('Delete'))));
       } else if (a) {
         const p = startOf(a, st, m);
+        if (a.kind === 'scene') {
+          add(h('h3', {}, '🎬 ' + T('The whole scene')), h('p', { class: 'muted' }, T('Effects of the whole screen: shaking, a flash, darkness, music and sounds, blocks of the map that change.')),
+            h('div', { class: 'cs-addrow' }, ...kindsFor(a).map(k => h('button', { onclick: () => addClip(k) }, KINDS[k][0] + ' ' + T(KINDS[k][1])))));
+          return;
+        }
         add(h('h3', {}, nameOf(a)), h('div', { class: 'muted' }, { player: T('The player'), npc: T('A person on the map'), new: T('A new character for the scene'), mon: T('A Pokémon or a legendary') }[a.kind]));
         add(field(T('Name (only for you)'), h('input', { value: a.name || '', dir: 'auto', onchange: e => set(() => { a.name = e.target.value; }) })));
+        if (a.kind === 'mon') add(field(T('Which Pokémon (its cry and battle)'), makeSelect(App.getLists().species, a.sp || 0, v => set(() => { a.sp = v; }))));
+        if (a.kind !== 'player') add(field(T('After the scene'), h('select', { onchange: e => set(() => { a.after = e.target.value; }) },
+          ...[['stay', T('stays where it ended (also next time)')], ...(a.kind === 'npc' ? [['back', T('goes back to its place (next time)')]] : []), ['gone', T('is gone for good')]].map(([k, l]) => h('option', { value: k, selected: afterOf(a) === k }, l)))));
         if (a.kind === 'new' || a.kind === 'mon') add(field(T('Looks like'), h('button', { onclick: () => Objects.gallery(a.gfx, v => set(() => { a.gfx = v; })) }, '🖼 ' + Objects.gfxName(a.gfx))));
         if (a.kind !== 'npc') add(field(T('Starts at'), h('div', { class: 'row' }, h('span', {}, '(' + p.x + ', ' + p.y + ')'), h('button', { class: E.placing === a.id ? 'sel' : '', onclick: () => { E.placing = a.id; toast(T('Click on the map where the character starts')); drawProps(); } }, '👆 ' + T('Pick on the map')))));
         else add(h('p', { class: 'muted' }, Tf('Starts where they stand on the map ({x}, {y}).', { x: p.x, y: p.y })));
         if (a.kind === 'mon' || a.kind === 'new') add(h('label', {}, h('input', { type: 'checkbox', checked: !!a.fly, onchange: e => set(() => { a.fly = e.target.checked; }) }), ' 🪽 ' + T('Flies (goes over walls, trees and water)')));
         add(field(T('Looks at first'), h('select', { onchange: e => set(() => { a.dir = e.target.value; }) }, ...Object.keys(ARROW).map(d => h('option', { value: d, selected: p.dir === d }, ARROW[d] + ' ' + T(d))))));
-        add(h('div', { class: 'cs-addrow' }, ...Object.entries(KINDS).map(([k, [ic, l]]) => h('button', { title: T(l), onclick: () => addClip(k) }, ic + ' ' + T(l)))),
+        add(h('div', { class: 'cs-addrow' }, ...kindsFor(a).map(k => h('button', { title: T(KINDS[k][1]), onclick: () => addClip(k) }, KINDS[k][0] + ' ' + T(KINDS[k][1])))),
           h('p', { class: 'muted' }, T('Adds at the playhead. Or double-click the character\'s row on the timeline.')),
           h('p', { class: 'muted' }, '🖱 ' + T('To make them walk: drag from the character on the map to where they go. The way goes around walls, water and people by itself.')),
           a.kind !== 'player' ? h('button', { class: 'danger', onclick: async () => { if (!(await ask(Tf('Remove {a} and their actions from the scene?', { a: nameOf(a) }), { danger: true }))) return; commit(() => { sc.clips = sc.clips.filter(c => c.a !== a.id); sc.actors = sc.actors.filter(x => x !== a); E.actor = 'player'; }); } }, '✕ ' + T('Remove from the scene')) : null);
@@ -478,14 +702,14 @@ const Cutscene = (() => {
       const scrub = e => { const r = ruler.getBoundingClientRect(); E.t = Math.max(0, Math.min(len, (e.clientX - r.left) / px)); if (!e.shiftKey) E.t = Math.round(E.t * 4) / 4; drawMap(); };
       ruler.onmousedown = e => { stop(); scrub(e); const mv = ev => scrub(ev), up = () => { window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); }; window.addEventListener('mousemove', mv); window.addEventListener('mouseup', up); };
       grid.append(h('div', { class: 'cs-row cs-head' }, h('div', { class: 'cs-who' }, h('b', {}, T('Characters')), h('button', { title: T('Add a character'), onclick: addActor }, '+ ' + T('Add'))), ruler));
-      for (const a of sc.actors) {
-        const p = startOf(a, st, m), icon = h('canvas', { class: 'pixel cs-icon', width: 32, height: 32 }), spr = Objects.sprite(p.gfx, 'down');
+      for (const a of [...sc.actors.filter(x => x.kind !== 'scene'), ...sc.actors.filter(x => x.kind === 'scene')]) {   // the whole scene's row at the bottom
+        const p = startOf(a, st, m), icon = a.kind === 'scene' ? h('span', { class: 'cs-icon cs-scene-ic' }, '🎬') : h('canvas', { class: 'pixel cs-icon', width: 32, height: 32 }), spr = a.kind === 'scene' ? null : Objects.sprite(p.gfx, 'down');
         if (spr) icon.getContext('2d').drawImage(spr, Math.round(16 - spr.width / 2), Math.max(0, 32 - spr.height));
         const track = h('div', { class: 'cs-track', style: { width: W + 'px' } });
         track.ondblclick = e => { if (e.target !== track) return; const r = track.getBoundingClientRect(); addMenu(e.clientX, e.clientY, a.id, Math.max(0, Math.floor((e.clientX - r.left) / px))); };
         track.oncontextmenu = e => { if (e.target !== track) return; e.preventDefault(); track.ondblclick(e); };
         for (const c of sc.clips.filter(x => x.a === a.id)) {
-          const [ic, l, col] = KINDS[c.k], label = c.k === 'walk' ? (c.path || []).map(d => ARROW[d]).join('') || T(l) : c.k === 'say' ? (c.text || T(l)) : c.k === 'emote' ? (EMOTES[c.kind] || '!') : c.k === 'face' || c.k === 'jump' ? ARROW[c.dir || 'down'] : T(l);
+          const [ic, l, col] = KINDS[c.k], label = c.k === 'walk' ? (c.path || []).map(d => ARROW[d]).join('') || T(l) : c.k === 'say' || c.k === 'ask' ? (c.text || T(l)) : c.k === 'emote' ? (EMOTES[c.kind] || '!') : c.k === 'face' || c.k === 'jump' ? ARROW[c.dir || 'down'] : c.k === 'fade' ? (c.out === false ? T('back from dark') : T('to dark')) : T(l);
           const el = h('div', { class: 'cs-clip' + (c.id === E.sel ? ' sel' : '') + (bad.has(c.id) ? ' bad' : ''), title: T(l) + (bad.has(c.id) ? ' · ' + bad.get(c.id) : ''),
             style: { left: c.t * px + 'px', width: Math.max(8, dur(c) * px - 2) + 'px', background: col } }, h('span', {}, ic + ' ' + label));
           if (STRETCH.has(c.k)) el.append(h('div', { class: 'cs-grip', title: T('Drag to make it longer or shorter') }));
@@ -520,6 +744,7 @@ const Cutscene = (() => {
       const up = () => {
         window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up);
         if (!moved) return;
+        if (!grip && na !== c.a && !kindsFor(actorOf(na)).includes(c.k)) { toast(Tf('{who} cannot do this', { who: nameOf(actorOf(na)) }), 'err'); na = c.a; }
         commit(() => { if (grip) c.len = nlen; else { c.t = nt; c.a = na; E.actor = na; } });
       };
       window.addEventListener('mousemove', mv); window.addEventListener('mouseup', up);
@@ -536,6 +761,7 @@ const Cutscene = (() => {
           h('b', { dir: 'auto' }, '🎞 ' + (st.title || T('An animated scene'))), h('span', { class: 'muted', dir: 'auto' }, m.name + ' · ' + trigText),
           h('span', { style: { flex: 1 } }),
           h('button', { title: T('Back to the start'), onclick: () => { stop(); E.t = 0; drawMap(); } }, '⏮'), playBtn, timeLabel,
+          sc.clips.some(c => c.k === 'ask') ? h('select', { title: T('The answer the preview takes'), onchange: e => { E.answer = e.target.value; } }, h('option', { value: 'yes' }, '❓ ' + T('YES')), h('option', { value: 'no' }, '❓ ' + T('NO'))) : null,
           opts.play ? h('button', { title: T('Applies the story and starts the game right before this scene'), onclick: () => { stop(); opts.play(); } }, '🎮 ' + T('Play in the game')) : null,
           h('button', { title: T('Undo') + ' (Ctrl+Z)', onclick: undo }, '↶'), h('button', { title: T('Redo') + ' (Ctrl+Y)', onclick: redo }, '↷'),
           h('button', { title: T('Zoom out'), onclick: () => { E.zoom = Math.max(0.4, E.zoom / 1.25); drawTimeline(); } }, '−'), h('button', { title: T('Zoom in'), onclick: () => { E.zoom = Math.min(3, E.zoom * 1.25); drawTimeline(); } }, '+'),
@@ -547,7 +773,7 @@ const Cutscene = (() => {
     function keys(e) {
       if (!back.isConnected) return;
       const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
-      if (e.key === 'Escape' && !document.querySelector('.modal-back, .cs-menu-back')) { e.preventDefault(); if (E.placing) { E.placing = null; drawProps(); } else close(); return; }
+      if (e.key === 'Escape' && !document.querySelector('.modal-back, .cs-menu-back')) { e.preventDefault(); if (E.placing || E.tilePick || E.blockPick) { E.placing = E.tilePick = E.blockPick = null; drawProps(); drawMap(); } else close(); return; }
       if (typing) return;
       const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
       if (e.code === 'Space') { e.preventDefault(); play(); }
@@ -566,5 +792,5 @@ const Cutscene = (() => {
     return { close, E, sc };
   }
 
-  return { open, scene, toBlocks, blocks, prepare, emit, playSpot, problems, summary, stateAt, dur, endOf, KINDS };
+  return { open, scene, toBlocks, blocks, prepare, emit, playSpot, problems, summary, stateAt, dur, endOf, parts, KINDS, kindsFor };
 })();

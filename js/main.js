@@ -104,7 +104,7 @@ const App = {
     const card = (icon, title, text, onclick, primary) => h('button', { class: 'homecard' + (primary ? ' primary' : ''), onclick }, h('span', { class: 'hc-icon' }, icon), h('b', {}, title), h('span', { class: 'muted' }, text));
     const guard = fn => async () => { try { await fn(); } catch (e) { console.error(e); App.busy(); toast(e.message, 'err'); } };
     const hero = h('div', { class: 'panel home-hero' }, h('h2', {}, '🔥 Ember Studio'),
-      h('p', { class: 'muted' }, 'Build your own Pokémon FireRed game: maps, story, Pokémon, trainers, music and text — in Hebrew or English.'));
+      h('p', { class: 'muted' }, 'Build your own Pokémon FireRed or Emerald game: maps, story, Pokémon, trainers, music and text — in Hebrew or English.'));
     const cards = h('div', { class: 'homecards' });
     if (Host.ok) cards.append(
       card('✨', 'New game', 'A wizard asks a few questions and creates a project', guard(() => Wizard.open()), true),
@@ -113,7 +113,11 @@ const App = {
     cards.append(card('🎮', 'Open a ROM file', 'Edit a .gba file directly (advanced: no project, no rebuilds)', () => FileLink.supported ? FileLink.pick() : $('#romfile').click()));
     const fileIn = h('input', { id: 'romfile', type: 'file', accept: '.gba,.bin', hidden: true, onchange: e => e.target.files[0] && App.openFile(e.target.files[0]) });
     root.append(hero, cards, fileIn);
-    if (!Host.ok) root.append(h('div', { class: 'panel warn' }, 'Projects, building and the emulator need Ember Studio itself (EmberStudio.exe, or python ember/server.py). Right now only ROM files can be edited.'));
+    // without the backend: the online version (or a plain static server). The ROM stays in the browser.
+    if (!Host.ok) root.append(h('div', { class: 'panel home-web' }, h('h3', {}, '🌐 ' + T('The online version')),
+      h('p', {}, T('Open your own FireRed (US) v1.1 or Emerald (US) ROM above. It stays on your computer: nothing is uploaded. Edit it here, then save the game with "Download ROM" or as an IPS patch.')),
+      h('p', { class: 'muted' }, T('Projects, Play from here, story tests and building need the program itself: it is free, one file, nothing to install.')),
+      h('a', { class: 'btn primary', href: 'https://tallavie.github.io/Ember-Studio/', target: '_blank', rel: 'noopener' }, '⬇ ' + T('Download Ember Studio'))));
     if (Host.ok) {
       const rec = h('div');
       Host.settings().then(st => {

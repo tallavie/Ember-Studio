@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ember Studio</title>
 <link rel="stylesheet" href="css/app.css">
+<script>
+// the online version: the emulator needs a cross-origin isolated page; a service worker adds the headers (coi-sw.js),
+// then the page loads once more under it. The EXE / ember/server.py are isolated already and skip this.
+const COI = 'coi-reloaded:' + location.pathname.replace(/[^/]*$/, '');      // once per folder; cleared once it worked
+if (window.crossOriginIsolated) { try { sessionStorage.removeItem(COI); } catch (e) { /* no storage */ } }
+else if (window.isSecureContext && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register('coi-sw.js').then(reg => {
+    const again = () => { try { if (!sessionStorage.getItem(COI)) { sessionStorage.setItem(COI, '1'); location.reload(); } } catch (e) { /* no storage */ } };
+    if (navigator.serviceWorker.controller) again();
+    else navigator.serviceWorker.addEventListener('controllerchange', again);
+  }).catch(e => console.warn('service worker', e));
+}
+</script>
 </head>
 <body>
 <header>

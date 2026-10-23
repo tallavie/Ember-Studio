@@ -1,10 +1,11 @@
-# Publishes the website in site/ to GitHub Pages whenever it changes on main
+# Publishes the website in site/ to GitHub Pages whenever it changes on main, with the editor itself in site/app/
+# (the online version: ROM files only, the emulator through coi-sw.js)
 name: Website
 
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/pages.yml']
+    paths: ['site/**', '.github/workflows/pages.yml', 'index.html', 'coi-sw.js', 'css/**', 'js/**', 'lib/**', 'data/**', 'docs/*.pdf']
   workflow_dispatch:
 
 permissions:
@@ -25,6 +26,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: The editor in site/app
+        run: |
+          mkdir -p site/app/docs
+          cp -r index.html coi-sw.js css js lib data site/app/
+          cp docs/*.pdf site/app/docs/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

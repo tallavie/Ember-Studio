@@ -135,4 +135,10 @@ Object.assign(I18N.dicts.he, {
   'appears in a flash': 'מופיעה בהבזק', 'comes out of a door': 'יוצאת מדלת', 'lands from above': 'נוחתת מלמעלה', 'walks in from the edge': 'נכנסת מהקצה',
   'Weather': 'מזג אוויר', "the map's own weather": 'מזג האוויר של המפה', 'sunny': 'שמש חזקה', 'rain': 'גשם', 'thunderstorm': 'סופת רעמים', 'downpour': 'מבול', 'snow': 'שלג',
   'fog': 'ערפל', 'sandstorm': 'סופת חול', 'volcanic ash': 'אפר געשי', 'dark clouds': 'עננים כהים',
+  // the online version
+  'The online version': 'הגרסה האינטרנטית',
+  'Open your own FireRed (US) v1.1 or Emerald (US) ROM above. It stays on your computer: nothing is uploaded. Edit it here, then save the game with "Download ROM" or as an IPS patch.': 'פותחים למעלה ROM משלכם של FireRed (US) v1.1 או Emerald (US). הוא נשאר במחשב שלכם: שום דבר לא עולה לאינטרנט. עורכים כאן, ואז שומרים את המשחק עם "הורדת ROM" או כטלאי IPS.',
+  'Projects, Play from here, story tests and building need the program itself: it is free, one file, nothing to install.': 'פרויקטים, "שחק מכאן", בדיקות עלילה ובנייה דורשים את התוכנה עצמה: היא חינמית, קובץ אחד, בלי התקנה.',
+  'Download Ember Studio': 'הורדת Ember Studio',
+  'Build your own Pokémon FireRed or Emerald game: maps, story, Pokémon, trainers, music and text — in Hebrew or English.': 'בנו משחק פוקימון משלכם על בסיס FireRed או אמרלד: מפות, עלילה, פוקימונים, מאמנים, מוזיקה וטקסט — בעברית או באנגלית.',
 });
